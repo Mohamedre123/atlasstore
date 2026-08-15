@@ -20,9 +20,18 @@ import {
   normalizeEgyptPhone,
   pluralize,
 } from '@/lib/format'
+import { OrderButton } from '@/components/order-button'
+import { loadProfile, profileToForm, saveOrder, saveProfile } from '@/lib/profile'
 import type { CustomerInfo } from '@/lib/types'
 
 type FormErrors = Partial<Record<keyof CustomerInfo, string>>
+
+/** بنشيل القيم الفاضية عشان ما تمسحش اللي العميل كتبه */
+function stripEmpty(obj: Partial<CustomerInfo>): Partial<CustomerInfo> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => typeof v === 'string' && v.trim() !== '')
+  ) as Partial<CustomerInfo>
+}
 
 const emptyForm: CustomerInfo = {
   fullName: '',
@@ -45,6 +54,7 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
+  const [prefilled, setPrefilled] = useState(false)
 
   /* المراكز بتتغيّر حسب المحافظة المختارة */
   const areas = useMemo(() => getAreas(form.governorate), [form.governorate])
@@ -59,6 +69,28 @@ export default function CheckoutPage() {
       return () => window.clearTimeout(t)
     }
   }, [ready, items.length, submitting, router])
+
+  /* تعبئة البيانات المحفوظة من آخر أوردر — عشان ما يكتبهاش تاني */
+  useEffect(() => {
+    let alive = true
+
+    ;(async () => {
+      const profile = await loadProfile()
+      if (!alive || !profile) return
+
+      const saved = profileToForm(profile)
+      const hasData = Boolean(saved.fullName || saved.phone || saved.address)
+
+      if (hasData) {
+        setForm((prev) => ({ ...prev, ...stripEmpty(saved) }))
+        setPrefilled(true)
+      }
+    })()
+
+    return () => {
+      alive = false
+    }
+  }, [])
 
   const update = (field: keyof CustomerInfo, value: string) => {
     setForm((prev) => {
@@ -98,10 +130,14 @@ export default function CheckoutPage() {
     return Object.keys(next).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (submitting) return
-    if (!validate()) return
+  /**
+   * بيرجع true لو الأوردر اتبعت بنجاح.
+   * زرار الأنيميشن بيستنى القيمة دي: true = يكمّل الحركة،
+   * false = يرجع لمكانه ويعرض الخطأ.
+   */
+  const submitOrder = async (): Promise<boolean> => {
+    if (submitting) return false
+    if (!validate()) return false
 
     setSubmitting(true)
     setServerError('')
@@ -133,14 +169,31 @@ export default function CheckoutPage() {
         JSON.stringify({ orderId: data.orderId, ...payload })
       )
 
-      clearCart()
-      router.push('/checkout/success')
+      /* حفظ بيانات العميل ونسخة من الأوردر — مش بنوقف الطلب لو فشلوا */
+      void saveProfile(payload.customer)
+      void saveOrder({
+        orderCode: data.orderId,
+        customer: payload.customer,
+        items,
+        subtotal,
+        shipping: shipping ?? 0,
+        total,
+      })
+
+      return true
     } catch (err) {
       setServerError(
         err instanceof Error ? err.message : 'حصلت مشكلة — جرّب تاني أو كلّمنا واتساب'
       )
       setSubmitting(false)
+      return false
     }
+  }
+
+  /** بعد ما أنيميشن الزرار يخلّص بنروح لصفحة التأكيد */
+  const finishOrder = () => {
+    clearCart()
+    router.push('/checkout/success')
   }
 
   if (!ready) {
@@ -202,7 +255,21 @@ export default function CheckoutPage() {
         </div>
       </header>
 
-      <form onSubmit={handleSubmit} noValidate className="container-x py-9 lg:py-12">
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        noValidate
+        className="container-x py-9 lg:py-12"
+      >
+        {/* تنبيه إن البيانات اتعبّت من آخر أوردر */}
+        {prefilled && (
+          <p className="mb-7 flex items-start gap-2 border-r-2 border-brand-500 bg-brand-50 px-4 py-3 text-[12.5px] leading-relaxed text-brand-800">
+            <CheckIcon className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              عبّينالك بياناتك المحفوظة من آخر مرة. راجعها وعدّل اللي محتاج تعديل.
+            </span>
+          </p>
+        )}
+
         <div className="grid gap-9 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12">
           {/* ============================================================
               بيانات العميل
@@ -490,20 +557,17 @@ export default function CheckoutPage() {
                     </p>
                   )}
 
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="btn btn-primary w-full py-3.5 text-[13.5px]"
-                  >
-                    {submitting ? (
-                      <>
-                        <SpinnerIcon className="h-4.5 w-4.5 animate-spin" />
-                        <span>جاري إرسال الطلب...</span>
-                      </>
-                    ) : (
-                      <span>تأكيد الطلب — {formatPrice(total)}</span>
-                    )}
-                  </button>
+                  <OrderButton
+                    label="تأكيد الطلب"
+                    labelDone="تم الطلب"
+                    onAction={submitOrder}
+                    onDone={finishOrder}
+                    className="w-full"
+                  />
+
+                  <p className="nums mt-2.5 text-center text-[12.5px] font-bold text-brand-950">
+                    المطلوب عند الاستلام: {formatPrice(total)}
+                  </p>
 
                   <p className="mt-3 text-center text-[11px] leading-relaxed text-muted">
                     بتأكيدك للطلب أنت موافق على شروط الشراء والاستبدال.

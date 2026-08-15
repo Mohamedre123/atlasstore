@@ -186,6 +186,20 @@ export const AlertIcon = (p: IconProps) => (
   </Base>
 )
 
+export const UserIcon = (p: IconProps) => (
+  <Base {...p}>
+    <circle cx="12" cy="8.5" r="4" />
+    <path d="M4.5 20.5a7.5 7.5 0 0 1 15 0" />
+  </Base>
+)
+
+export const LogoutIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M14.5 4.5h3a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-3" />
+    <path d="M10 8.5 6 12l4 3.5M6 12h9" />
+  </Base>
+)
+
 export const SpinnerIcon = (p: IconProps) => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...p}>
     <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" opacity="0.25" />

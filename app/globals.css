@@ -183,6 +183,285 @@ body {
 }
 
 /* ============================================================
+   زرار الأوردر — أنيميشن مدفع التيشيرت
+   الألوان بتتحرك بمتغيرات CSS عشان GSAP يقدر يحرّكها
+   ============================================================ */
+.ob {
+  --ob-h: 214;
+  --ob-s: 71%;
+  --ob-l: 13%;
+  --ob-fg: #ffffff;
+  --ob-shirt: hsl(186, 80%, 60%);
+
+  position: relative;
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: hsl(var(--ob-h), var(--ob-s), var(--ob-l));
+  color: var(--ob-fg);
+  cursor: pointer;
+  outline: transparent;
+  /* بيسمح للمدفع يطلع فوق الزرار من غير ما ينزل تحته */
+  -webkit-clip-path: inset(-1000% -1000% 0 0);
+  clip-path: inset(-1000% -1000% 0 0);
+  transition: box-shadow 0.15s;
+  box-shadow: 0 2px 10px rgba(10, 31, 58, 0.22);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.ob:active {
+  box-shadow: 0 0 0 0 rgba(10, 31, 58, 0);
+}
+
+.ob:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* الجسم الداخلي: مساحة على اليمين للتيشيرت */
+.ob__text {
+  position: relative;
+  display: block;
+  padding: 0.95rem 1.5rem;
+  padding-inline-start: calc(1rem + 46px);
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ob--compact .ob__text {
+  padding: 0.8rem 1.1rem;
+  padding-inline-start: calc(0.75rem + 42px);
+  font-size: 12.5px;
+}
+
+/* نص شبح بيحجز المساحة عشان الزرار ما يرقصش */
+.ob__dummy {
+  color: transparent;
+  pointer-events: none;
+}
+
+.ob__label {
+  position: absolute;
+  inset-block-start: 0.95rem;
+  inset-inline-start: calc(1rem + 46px);
+  display: flex;
+  gap: 0.28em;
+}
+
+.ob--compact .ob__label {
+  inset-block-start: 0.8rem;
+  inset-inline-start: calc(0.75rem + 42px);
+}
+
+/* كل كلمة جوه قناع عشان تطلع وتنزل — بالكلمة مش بالحرف
+   عشان الحروف العربية تفضل متصلة */
+.ob__word-mask {
+  display: inline-block;
+  overflow: hidden;
+  line-height: 1.35;
+  margin-block: -0.18em;
+}
+
+.ob__word {
+  display: inline-block;
+}
+
+/* التيشيرت */
+.ob__container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.ob__shirt {
+  position: absolute;
+  height: 30px;
+  width: 30px;
+  top: 50%;
+  inset-inline-start: calc(0.5rem + 22px);
+  transform: translate(50%, -50%);
+}
+
+.ob--compact .ob__shirt {
+  height: 26px;
+  width: 26px;
+  inset-inline-start: calc(0.4rem + 20px);
+}
+
+.ob__tshirt {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.ob__fill {
+  fill: var(--ob-shirt);
+}
+
+/* المدفع */
+.ob__cannon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  transform: translate(-50%, 0);
+  pointer-events: none;
+}
+
+.ob__cannon svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.ob__cannon-shirt path {
+  fill: var(--ob-shirt);
+}
+
+.ob__cannon-band {
+  fill: #ffd500;
+}
+
+.ob__cannon-plastic {
+  fill: rgba(163, 231, 245, 0.35);
+}
+
+.ob__cannon-shine {
+  fill: rgba(255, 255, 255, 0.5);
+}
+
+/* لو المستخدم مقفّل الحركة: الزرار يفضل زرار عادي محترم */
+@media (prefers-reduced-motion: reduce) {
+  .ob__cannon,
+  .ob__container {
+    display: none;
+  }
+  .ob__text,
+  .ob__label {
+    padding-inline-start: 1.5rem;
+    inset-inline-start: 1.5rem;
+  }
+  .ob--compact .ob__text,
+  .ob--compact .ob__label {
+    padding-inline-start: 1.1rem;
+    inset-inline-start: 1.1rem;
+  }
+}
+
+/* ============================================================
+   مشهد التيشيرت المعلّق في صفحة تسجيل الدخول
+   ============================================================ */
+.hs {
+  width: 100%;
+  height: auto;
+  max-width: 300px;
+  overflow: visible;
+}
+
+.hs__metal {
+  fill: #2a3646;
+}
+
+.hs__hanger {
+  stroke: #46586e;
+  transition: stroke 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hs[data-on='true'] .hs__hanger {
+  stroke: #9fd8ee;
+}
+
+.hs__shirt path {
+  fill: #1d2734;
+  stroke: #2f3d4e;
+  transition: fill 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+    stroke 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hs[data-on='true'] .hs__shirt path {
+  fill: url(#hsShirt);
+  stroke: #6fe1f5;
+}
+
+.hs__glow {
+  fill: #35e0f2;
+  opacity: 0;
+  filter: blur(26px);
+  transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hs[data-on='true'] .hs__glow {
+  opacity: 0.3;
+}
+
+.hs__beam {
+  opacity: 0;
+  transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hs[data-on='true'] .hs__beam {
+  opacity: 1;
+}
+
+.cord-line {
+  stroke: #46586e;
+  stroke-width: 2;
+}
+
+.cord-bead {
+  fill: #35e0f2;
+}
+
+.cord-hit {
+  cursor: grab;
+  touch-action: none;
+}
+
+.cord-hit:active {
+  cursor: grabbing;
+}
+
+/* زرار فورم الدخول */
+.auth-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0a1f3a;
+  background: linear-gradient(135deg, #35e0f2 0%, #12bcda 50%, #1e8fc2 100%);
+  background-size: 180% 180%;
+  background-position: 0% 50%;
+  transition: background-position 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-btn:hover:not(:disabled) {
+  background-position: 100% 50%;
+  transform: translateY(-1px);
+}
+
+.auth-btn:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.auth-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ============================================================
    حقول الإدخال
    ============================================================ */
 .field {

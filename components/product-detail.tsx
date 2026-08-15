@@ -23,6 +23,7 @@ import {
   TruckIcon,
   WhatsAppIcon,
 } from './icons'
+import { OrderButton } from './order-button'
 import { ProductImage } from './product-image'
 
 export function ProductDetail({ product }: { product: Product }) {
@@ -59,19 +60,28 @@ export function ProductDetail({ product }: { product: Product }) {
     setError('')
   }
 
-  const handleAdd = () => {
-    if (soldOut) return
+  /**
+   * بيرجع true لو الإضافة نجحت — زرار الأنيميشن بيستخدم القيمة دي
+   * عشان يكمّل الحركة أو يرجع لمكانه.
+   */
+  const handleAdd = (): boolean => {
+    if (soldOut) return false
 
     /* لازم كل مجموعة متغيرات يتحدد منها اختيار */
     const missing = variants.find((v) => !selected[v.name])
     if (missing) {
       setError(`اختار ${missing.name} الأول`)
-      return
+      /* نوصّل العميل للاختيار الناقص */
+      document
+        .getElementById(`variant-${missing.name}`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return false
     }
 
     addItem(product, selected, quantity)
     setAdded(true)
     window.setTimeout(() => setAdded(false), 2000)
+    return true
   }
 
   /* رسالة واتساب جاهزة بتفاصيل المنتج */
@@ -191,7 +201,11 @@ export function ProductDetail({ product }: { product: Product }) {
 
             {/* --- المتغيرات --- */}
             {variants.map((group) => (
-              <div key={group.name} className="border-b border-line py-7">
+              <div
+                key={group.name}
+                id={`variant-${group.name}`}
+                className="border-b border-line py-6"
+              >
                 <div className="mb-3.5 flex items-baseline justify-between gap-3">
                   <span className="text-[13.5px] font-extrabold text-ink">{group.name}</span>
                   {selected[group.name] && (
@@ -257,21 +271,19 @@ export function ProductDetail({ product }: { product: Product }) {
                 </p>
               )}
 
-              <button
-                type="button"
-                onClick={handleAdd}
-                disabled={soldOut}
-                className="btn btn-primary w-full py-4 text-[14px]"
-              >
-                {added ? (
-                  <>
-                    <CheckIcon className="h-5 w-5" />
-                    <span>اتضاف للسلة</span>
-                  </>
-                ) : (
-                  <span>{soldOut ? 'غير متوفر حاليًا' : 'أضف إلى السلة'}</span>
-                )}
-              </button>
+              {soldOut ? (
+                <button type="button" disabled className="btn btn-primary w-full py-4 text-[14px]">
+                  <span>غير متوفر حاليًا</span>
+                </button>
+              ) : (
+                <OrderButton
+                  label="أضف إلى السلة"
+                  labelDone="في السلة"
+                  onAction={handleAdd}
+                  resetAfter={2600}
+                  className="w-full"
+                />
+              )}
 
               <a
                 href={`https://wa.me/${site.contact.whatsapp}?text=${whatsappText}`}

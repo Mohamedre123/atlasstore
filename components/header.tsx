@@ -7,7 +7,7 @@ import { categories, searchProducts } from '@/data/products'
 import { site } from '@/data/site'
 import { useCart } from '@/lib/cart'
 import { formatPrice } from '@/lib/format'
-import { BagIcon, CloseIcon, MenuIcon, SearchIcon } from './icons'
+import { BagIcon, CloseIcon, MenuIcon, SearchIcon, UserIcon } from './icons'
 import { Logo } from './logo'
 import { ProductImage } from './product-image'
 
@@ -141,6 +141,14 @@ export function Header() {
                   <SearchIcon className="h-[21px] w-[21px]" />
                 )}
               </button>
+
+              <Link
+                href="/account"
+                aria-label="حسابي"
+                className="p-2.5 text-brand-950 transition-opacity hover:opacity-60"
+              >
+                <UserIcon className="h-[21px] w-[21px]" />
+              </Link>
 
               <button
                 type="button"
