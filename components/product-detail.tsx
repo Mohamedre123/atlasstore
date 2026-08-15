@@ -2,11 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import {
-  DELIVERY_WINDOW,
-  SHIPPING_FLAT_RATE,
-  SHIPPING_METHOD_NAME,
-} from '@/data/locations'
+import { DELIVERY_WINDOW } from '@/data/locations'
 import { getCategoryBySlug } from '@/data/products'
 import { site } from '@/data/site'
 import { useCart } from '@/lib/cart'
@@ -27,7 +23,7 @@ import { OrderButton } from './order-button'
 import { ProductImage } from './product-image'
 
 export function ProductDetail({ product }: { product: Product }) {
-  const { addItem } = useCart()
+  const { addItem, openCart } = useCart()
 
   const [activeImage, setActiveImage] = useState(0)
   const [selected, setSelected] = useState<Record<string, string>>({})
@@ -78,7 +74,8 @@ export function ProductDetail({ product }: { product: Product }) {
       return false
     }
 
-    addItem(product, selected, quantity)
+    /* السلة بتتفتح في onDone بعد ما الأنيميشن يخلص */
+    addItem(product, selected, quantity, false)
     setAdded(true)
     window.setTimeout(() => setAdded(false), 2000)
     return true
@@ -126,7 +123,7 @@ export function ProductDetail({ product }: { product: Product }) {
               )}
 
               {/* الصورة الرئيسية */}
-              <div className="relative aspect-[3/4] flex-1 overflow-hidden bg-sand">
+              <div className="relative aspect-[3/4] flex-1 overflow-hidden bg-white">
                 <ProductImage
                   src={product.images[activeImage]}
                   alt={product.name}
@@ -280,6 +277,7 @@ export function ProductDetail({ product }: { product: Product }) {
                   label="أضف إلى السلة"
                   labelDone="في السلة"
                   onAction={handleAdd}
+                  onDone={openCart}
                   resetAfter={2600}
                   className="w-full"
                 />
@@ -300,7 +298,7 @@ export function ProductDetail({ product }: { product: Product }) {
             <div className="grid grid-cols-1 gap-px border border-line bg-line sm:grid-cols-3">
               {[
                 { Icon: CashIcon, text: 'الدفع عند الاستلام' },
-                { Icon: TruckIcon, text: `${SHIPPING_METHOD_NAME} ${SHIPPING_FLAT_RATE} ج.م` },
+                { Icon: TruckIcon, text: 'توصيل لكل محافظات مصر' },
                 { Icon: RefreshIcon, text: 'استبدال خلال ١٤ يوم' },
               ].map((item, i) => (
                 <div
@@ -332,13 +330,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
               <Accordion title="الشحن والتوصيل">
                 <ul className="space-y-2.5 text-[13.5px] leading-relaxed text-muted">
-                  <li>
-                    {SHIPPING_METHOD_NAME} —{' '}
-                    <span className="nums font-bold text-ink">
-                      {formatPrice(SHIPPING_FLAT_RATE)}
-                    </span>{' '}
-                    سعر موحّد لكل محافظات مصر.
-                  </li>
+                  <li>بنوصّل لكل محافظات مصر الـ٢٧.</li>
                   <li>التوصيل خلال {DELIVERY_WINDOW} من تأكيد الأوردر.</li>
                   <li>التوصيل بمندوبنا مباشرة — مش شركة شحن.</li>
                   <li>بنكلّمك على الموبايل لتأكيد الأوردر قبل ما نجهّزه.</li>

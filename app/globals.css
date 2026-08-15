@@ -110,7 +110,7 @@ body {
     border-color 0.35s var(--ease-out-expo), transform 0.2s var(--ease-out-expo);
 }
 .btn:active {
-  transform: scale(0.985);
+  transform: translateY(0) scale(0.985);
 }
 .btn:disabled {
   @apply cursor-not-allowed opacity-40;
@@ -159,6 +159,29 @@ body {
 }
 .btn-ghost:hover:not(:disabled) {
   border-color: var(--color-brand-950);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -10px rgba(10, 31, 58, 0.4);
+}
+
+/* رفع خفيف + ظل عند مرور الماوس على الأزرار الأساسية */
+.btn-primary:hover:not(:disabled),
+.btn-outline:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -12px rgba(10, 31, 58, 0.55);
+}
+
+/* زرار الأوردر — نفس الإحساس */
+.ob:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px -12px rgba(10, 31, 58, 0.5);
+}
+
+/* السهم جوه أي زرار بيتحرك مع الهوفر */
+.btn svg {
+  transition: transform 0.35s var(--ease-out-expo);
+}
+.btn:hover:not(:disabled) svg {
+  transform: translateX(-3px);
 }
 
 /* رابط بخط بيتمد من اليمين (RTL) */
@@ -180,6 +203,41 @@ body {
 }
 .link-underline:hover::after {
   transform: scaleX(1);
+}
+
+/* ============================================================
+   كارت المنتج — حركة الماوس
+   ============================================================ */
+.pc__frame {
+  transition: box-shadow 0.55s var(--ease-out-expo),
+    transform 0.55s var(--ease-out-expo);
+}
+
+.group:hover .pc__frame {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px -18px rgba(10, 31, 58, 0.35);
+}
+
+/* كل صورة بتتلاشى في اللي بعدها + زووم بطيء */
+.pc__slide {
+  transition: opacity 0.55s var(--ease-out-expo),
+    transform 1.4s var(--ease-out-expo);
+  will-change: opacity, transform;
+}
+
+.group:hover .pc__slide {
+  transform: scale(1.06);
+}
+
+/* على الشاشات اللمس مفيش hover — بنلغي الرفع عشان ما يهتزش */
+@media (hover: none) {
+  .group:hover .pc__frame {
+    transform: none;
+    box-shadow: none;
+  }
+  .group:hover .pc__slide {
+    transform: none;
+  }
 }
 
 /* ============================================================
@@ -205,7 +263,8 @@ body {
   /* بيسمح للمدفع يطلع فوق الزرار من غير ما ينزل تحته */
   -webkit-clip-path: inset(-1000% -1000% 0 0);
   clip-path: inset(-1000% -1000% 0 0);
-  transition: box-shadow 0.15s;
+  transition: box-shadow 0.35s var(--ease-out-expo),
+    transform 0.35s var(--ease-out-expo);
   box-shadow: 0 2px 10px rgba(10, 31, 58, 0.22);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -220,21 +279,20 @@ body {
   cursor: not-allowed;
 }
 
-/* الجسم الداخلي: مساحة على اليمين للتيشيرت */
+/* الجسم الداخلي — النص في نص الزرار بالظبط */
 .ob__text {
   position: relative;
   display: block;
-  padding: 0.95rem 1.5rem;
-  padding-inline-start: calc(1rem + 46px);
+  padding: 0.95rem calc(1rem + 46px);
   font-size: 13.5px;
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
+  text-align: center;
 }
 
 .ob--compact .ob__text {
-  padding: 0.8rem 1.1rem;
-  padding-inline-start: calc(0.75rem + 42px);
+  padding: 0.8rem calc(0.75rem + 42px);
   font-size: 12.5px;
 }
 
@@ -244,17 +302,18 @@ body {
   pointer-events: none;
 }
 
+/* اللابل بيغطي عرض الزرار كله والكلام بيتمركز في النص */
 .ob__label {
   position: absolute;
   inset-block-start: 0.95rem;
-  inset-inline-start: calc(1rem + 46px);
+  inset-inline: 0;
   display: flex;
+  justify-content: center;
   gap: 0.28em;
 }
 
 .ob--compact .ob__label {
   inset-block-start: 0.8rem;
-  inset-inline-start: calc(0.75rem + 42px);
 }
 
 /* كل كلمة جوه قناع عشان تطلع وتنزل — بالكلمة مش بالحرف
@@ -343,15 +402,11 @@ body {
   .ob__container {
     display: none;
   }
-  .ob__text,
-  .ob__label {
-    padding-inline-start: 1.5rem;
-    inset-inline-start: 1.5rem;
+  .ob__text {
+    padding-inline: 1.5rem;
   }
-  .ob--compact .ob__text,
-  .ob--compact .ob__label {
-    padding-inline-start: 1.1rem;
-    inset-inline-start: 1.1rem;
+  .ob--compact .ob__text {
+    padding-inline: 1.1rem;
   }
 }
 

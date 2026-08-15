@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { InfoPage } from '@/components/info-page'
-import { DELIVERY_WINDOW, SHIPPING_FLAT_RATE, SHIPPING_METHOD_NAME } from '@/data/locations'
+import { DELIVERY_WINDOW, SHIPPING_METHOD_NAME } from '@/data/locations'
 
 export const metadata: Metadata = {
   title: 'أسئلة متكررة',
@@ -61,8 +61,8 @@ export default function FaqPage() {
         {
           heading: 'الشحن بكام؟',
           paragraphs: [
-            `${SHIPPING_METHOD_NAME} — سعر موحّد ${SHIPPING_FLAT_RATE} ج.م لأي عنوان في مصر، مهما كانت المحافظة أو عدد القطع.`,
-            'سعر الشحن بيظهر في ملخص الطلب بعد ما تحدد المحافظة والمركز، وبيتضاف للإجمالي.',
+            'سعر الشحن بيظهرلك في صفحة إتمام الطلب بعد ما تحدد المحافظة والمركز، وبيتضاف للإجمالي قدامك قبل ما تأكد.',
+            'السعر واحد لكل محافظات مصر مهما كان عدد القطع في الأوردر.',
           ],
         },
         {

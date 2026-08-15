@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useCart } from '@/lib/cart'
 import { formatPrice, pluralize } from '@/lib/format'
-import { SHIPPING_FLAT_RATE, SHIPPING_METHOD_NAME } from '@/data/locations'
 import { BagIcon, CloseIcon, MinusIcon, PlusIcon, TrashIcon, TruckIcon } from './icons'
 import { ProductImage } from './product-image'
 
@@ -65,15 +64,11 @@ export function CartDrawer() {
           </div>
         ) : (
           <>
-            {/* ---------------- شريط الشحن ---------------- */}
+            {/* ---------------- شريط التوصيل ---------------- */}
             <div className="flex shrink-0 items-center gap-2 border-b border-line bg-sand/60 px-6 py-3.5">
               <TruckIcon className="h-4 w-4 shrink-0 text-brand-700" />
               <p className="text-[12.5px] text-ink">
-                {SHIPPING_METHOD_NAME}{' '}
-                <span className="nums font-bold text-brand-700">
-                  {formatPrice(SHIPPING_FLAT_RATE)}
-                </span>{' '}
-                لكل محافظات مصر
+                توصيل لكل محافظات مصر — والدفع عند الاستلام
               </p>
             </div>
 
@@ -88,7 +83,7 @@ export function CartDrawer() {
                   <Link
                     href={`/product/${item.slug}`}
                     onClick={closeCart}
-                    className="relative h-[104px] w-[80px] shrink-0 overflow-hidden bg-sand"
+                    className="relative h-[104px] w-[80px] shrink-0 overflow-hidden bg-white"
                   >
                     <ProductImage
                       src={item.image}
@@ -168,7 +163,7 @@ export function CartDrawer() {
                 </span>
               </div>
               <p className="mb-4 text-[12px] text-muted">
-                سعر الشحن بيتضاف في صفحة إتمام الطلب بعد ما تحدد عنوانك
+                باقي التفاصيل بتظهرلك في صفحة إتمام الطلب
               </p>
 
               <Link href="/checkout" onClick={closeCart} className="btn btn-primary w-full">

@@ -218,7 +218,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
                       onClick={onClose}
                       className="group flex items-center gap-4 py-3 transition-opacity hover:opacity-70"
                     >
-                      <div className="relative h-16 w-14 shrink-0 overflow-hidden bg-sand">
+                      <div className="relative h-16 w-14 shrink-0 overflow-hidden bg-white">
                         <ProductImage
                           src={p.images[0]}
                           alt={p.name}

@@ -92,7 +92,17 @@ type CartContextValue = {
   isOpen: boolean
   /** آخر عنصر اتضاف — بنستخدمه في أنيميشن التأكيد */
   lastAdded: string | null
-  addItem: (product: Product, variants: Record<string, string>, quantity?: number) => void
+  /**
+   * إضافة منتج للسلة.
+   * openDrawer=false بتضيف من غير ما تفتح السلة — بنستخدمها مع زرار
+   * الأنيميشن عشان السلة تفتح بعد ما الحركة تخلص مش في نصها.
+   */
+  addItem: (
+    product: Product,
+    variants: Record<string, string>,
+    quantity?: number,
+    openDrawer?: boolean
+  ) => void
   removeItem: (key: string) => void
   setQuantity: (key: string, quantity: number) => void
   clearCart: () => void
@@ -149,10 +159,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [isOpen])
 
   const addItem = useCallback(
-    (product: Product, variants: Record<string, string>, quantity = 1) => {
+    (
+      product: Product,
+      variants: Record<string, string>,
+      quantity = 1,
+      openDrawer = true
+    ) => {
       dispatch({ type: 'add', product, variants, quantity })
       setLastAdded(makeKey(product.id, variants))
-      setIsOpen(true)
+      if (openDrawer) setIsOpen(true)
     },
     []
   )

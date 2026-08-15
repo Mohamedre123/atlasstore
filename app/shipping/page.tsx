@@ -1,15 +1,10 @@
 import type { Metadata } from 'next'
 import { InfoPage } from '@/components/info-page'
-import {
-  DELIVERY_WINDOW,
-  SHIPPING_FLAT_RATE,
-  SHIPPING_METHOD_NAME,
-  governorates,
-} from '@/data/locations'
+import { DELIVERY_WINDOW, SHIPPING_METHOD_NAME, governorates } from '@/data/locations'
 
 export const metadata: Metadata = {
   title: 'الشحن والتوصيل',
-  description: `${SHIPPING_METHOD_NAME} — ${SHIPPING_FLAT_RATE} ج.م لكل محافظات مصر، والدفع عند الاستلام.`,
+  description: `${SHIPPING_METHOD_NAME} — توصيل لكل محافظات مصر، والدفع عند الاستلام.`,
 }
 
 export default function ShippingPage() {
@@ -18,17 +13,17 @@ export default function ShippingPage() {
       index="/ shipping"
       eyebrow="Shipping & Delivery"
       title="الشحن والتوصيل"
-      description={`${SHIPPING_METHOD_NAME} — سعر موحّد ${SHIPPING_FLAT_RATE} ج.م لكل محافظات مصر، والدفع عند الاستلام.`}
+      description={`${SHIPPING_METHOD_NAME} — بنوصّل لكل محافظات مصر، والدفع عند الاستلام.`}
       blocks={[
         {
           heading: 'سعر الشحن',
           paragraphs: [
-            `سعر الشحن موحّد: ${SHIPPING_FLAT_RATE} ج.م لأي عنوان في مصر، مهما كانت المحافظة أو عدد القطع في الأوردر.`,
-            'مفيش أسعار مختلفة حسب المنطقة، ومفيش مصاريف إضافية بتتضاف عند الاستلام. السعر اللي بتشوفه في صفحة إتمام الطلب هو اللي بتدفعه بالظبط.',
+            'سعر الشحن بيظهرلك في صفحة إتمام الطلب بعد ما تحدد المحافظة والمركز، وبيتضاف للإجمالي قدامك قبل ما تأكد.',
+            'مفيش أسعار مختلفة حسب المنطقة، ومفيش مصاريف إضافية بتتضاف عند الاستلام. المبلغ اللي بتشوفه في ملخص الطلب هو اللي بتدفعه بالظبط.',
           ],
           bullets: [
-            `سعر الشحن بيظهر في ملخص الطلب بعد ما تحدد المحافظة والمركز.`,
             'الشحن بيتحسب مرة واحدة على الأوردر كله، مش على كل قطعة.',
+            'مفيش أي مبلغ بيتطلب منك قبل ما الأوردر يوصلك.',
           ],
         },
         {

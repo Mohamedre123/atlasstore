@@ -115,6 +115,8 @@ export function OrderButton({
           .to('.ob__cannon-content', { duration: 1, y: -35 })
           .to('.ob__cannon-content', { duration: 0.25, y: -37.5 })
           .to('.ob__cannon-content', { duration: 0.015, y: -30.5 })
+          /* الطلقة بتكمّل لبره الشاشة في نفس اتجاه المدفع — مش
+             بتقف في نص الصفحة ولا بتتلاشى في مكانها */
           .to(
             '.ob__cannon-shirt',
             {
@@ -127,8 +129,10 @@ export function OrderButton({
                   })
                 }
               },
-              duration: 0.5,
-              y: '-25vmax',
+              duration: 1.1,
+              ease: 'power1.in',
+              y: '-190vh',
+              rotate: -22,
             },
             '<'
           )

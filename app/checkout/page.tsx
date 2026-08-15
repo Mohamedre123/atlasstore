@@ -484,7 +484,7 @@ export default function CheckoutPage() {
                 <ul className="max-h-[300px] divide-y divide-line overflow-y-auto px-5">
                   {items.map((item) => (
                     <li key={item.key} className="flex gap-3 py-3.5">
-                      <div className="relative h-[70px] w-[54px] shrink-0 overflow-hidden bg-sand">
+                      <div className="relative h-[70px] w-[54px] shrink-0 overflow-hidden bg-white">
                         <ProductImage
                           src={item.image}
                           alt={item.name}

@@ -123,27 +123,31 @@ export function Hero() {
         </div>
       </div>
 
-      {/* ============ شريط المزايا ============ */}
+      {/* ============ شريط المزايا — كاروسيل على الفون ============ */}
       <div className="border-b border-line bg-ivory">
-        <div className="container-x grid grid-cols-2 lg:grid-cols-4">
-          {site.perks.map((perk, i) => (
-            <div
-              key={i}
-              data-reveal=""
-              style={{ '--reveal-delay': `${i * 80}ms` } as React.CSSProperties}
-              className="border-b border-line px-1 py-5 last:border-b-0 sm:border-b-0 lg:border-l lg:border-b-0 lg:px-6 lg:last:border-l-0 [&:nth-child(-n+2)]:border-b lg:[&:nth-child(-n+2)]:border-b-0"
-            >
-              <p className="font-mono mb-1.5 text-[9.5px] text-brand-600">
-                {String(i + 1).padStart(2, '0')}
-              </p>
-              <p className="text-[12.5px] font-extrabold text-brand-950 lg:text-[13px]">
-                {perk.title}
-              </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-muted lg:text-[11.5px]">
-                {perk.text}
-              </p>
-            </div>
-          ))}
+        <div className="container-x">
+          <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 py-5 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-0 lg:overflow-visible lg:px-0">
+            {site.perks.map((perk, i) => (
+              <div
+                key={i}
+                data-reveal=""
+                style={{ '--reveal-delay': `${i * 80}ms` } as React.CSSProperties}
+                className="w-[62vw] shrink-0 snap-start border border-line bg-white px-4 py-3.5
+                           sm:w-[42vw]
+                           lg:w-auto lg:border-0 lg:border-l lg:bg-transparent lg:px-6 lg:py-0 lg:last:border-l-0"
+              >
+                <p className="font-mono mb-1.5 text-[9.5px] text-brand-600">
+                  {String(i + 1).padStart(2, '0')}
+                </p>
+                <p className="text-[12.5px] font-extrabold text-brand-950 lg:text-[13px]">
+                  {perk.title}
+                </p>
+                <p className="mt-1 text-[11px] leading-relaxed text-muted lg:text-[11.5px]">
+                  {perk.text}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
