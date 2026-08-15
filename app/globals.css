@@ -1,0 +1,427 @@
+@import 'tailwindcss';
+
+/* ============================================================
+   ATLAS STORE — نظام تصميم
+   الاتجاه: Editorial Menswear
+   خلفية عاجية · كحلي مسيطر · سماوي كلمسة نادرة · حواف حادة · خطوط شعرة
+   الألوان مستخرجة من اللوجو (الحوت): #35E0F2 → #1E8FC2 → #123A63
+   ============================================================ */
+@theme {
+  /* --- تدرّج اللوجو --- */
+  --color-brand-50: #eefcff;
+  --color-brand-100: #d5f6fd;
+  --color-brand-200: #b0edfb;
+  --color-brand-300: #6fe1f5;
+  --color-brand-400: #35e0f2;
+  --color-brand-500: #12bcda;
+  --color-brand-600: #0895b6;
+  --color-brand-700: #1e8fc2;
+  --color-brand-800: #1a5d85;
+  --color-brand-900: #123a63;
+  --color-brand-950: #0a1f3a;
+
+  /* --- محايدات دافئة (مش رمادي ميّت) --- */
+  --color-ivory: #f8f7f4;
+  --color-sand: #efede7;
+  --color-line: #e2dfd8;
+  --color-line-strong: #cdc9c0;
+  --color-ink: #14181d;
+  --color-muted: #6f7680;
+
+  --color-sale: #b4341f;
+
+  --font-sans: var(--font-body), system-ui, sans-serif;
+  --font-display: var(--font-display), var(--font-body), system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+
+  /* منحنى حركة واحد للموقع كله — ده اللي بيدّي إحساس "متصنّع بإيد" */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root {
+  --nav-h: 68px;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-ivory);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  /* نسيج ورقي خفيف جدًا — بيكسر الفلات الرقمي */
+  background-image: radial-gradient(rgba(18, 58, 99, 0.022) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+::selection {
+  background: var(--color-brand-900);
+  color: #fff;
+}
+
+/* ============================================================
+   تايبوجرافي
+   ============================================================ */
+
+/* لايبل صغير لاتيني — العمود الفقري للإحساس الإديتوريال */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  color: var(--color-brand-950);
+}
+
+/* الأسعار والأرقام — عرض ثابت عشان الأعمدة تتظبط */
+.nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.01em;
+}
+
+/* خط فاصل شعرة */
+.hairline {
+  border-color: var(--color-line);
+}
+
+/* ============================================================
+   أزرار — حواف 3px بس، بدون ظلال منفوخة
+   ============================================================ */
+.btn {
+  @apply relative inline-flex select-none items-center justify-center gap-2 overflow-hidden
+         px-6 py-3.5 text-[13px] font-bold leading-none;
+  border-radius: 3px;
+  transition: color 0.35s var(--ease-out-expo), background-color 0.35s var(--ease-out-expo),
+    border-color 0.35s var(--ease-out-expo), transform 0.2s var(--ease-out-expo);
+}
+.btn:active {
+  transform: scale(0.985);
+}
+.btn:disabled {
+  @apply cursor-not-allowed opacity-40;
+  transform: none;
+}
+
+/* الأساسي: كحلي، وعند الهوفر بيتملي بالسماوي من تحت لفوق */
+.btn-primary {
+  background: var(--color-brand-950);
+  color: #fff;
+}
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--color-brand-400), var(--color-brand-700));
+  transform: translateY(101%);
+  transition: transform 0.45s var(--ease-out-expo);
+  z-index: 0;
+}
+.btn-primary:hover:not(:disabled)::before {
+  transform: translateY(0);
+}
+.btn-primary:hover:not(:disabled) {
+  color: var(--color-brand-950);
+}
+.btn-primary > * {
+  position: relative;
+  z-index: 1;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-brand-950);
+  border: 1px solid var(--color-brand-950);
+}
+.btn-outline:hover:not(:disabled) {
+  background: var(--color-brand-950);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: #fff;
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+}
+.btn-ghost:hover:not(:disabled) {
+  border-color: var(--color-brand-950);
+}
+
+/* رابط بخط بيتمد من اليمين (RTL) */
+.link-underline {
+  position: relative;
+  display: inline-block;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: 0;
+  bottom: -3px;
+  height: 1px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: inline-end;
+  transition: transform 0.4s var(--ease-out-expo);
+}
+.link-underline:hover::after {
+  transform: scaleX(1);
+}
+
+/* ============================================================
+   حقول الإدخال
+   ============================================================ */
+.field {
+  @apply w-full bg-white px-4 py-3.5 text-[15px] text-ink outline-none
+         placeholder:text-muted/50;
+  border: 1px solid var(--color-line);
+  border-radius: 3px;
+  transition: border-color 0.3s var(--ease-out-expo), box-shadow 0.3s var(--ease-out-expo);
+}
+.field:focus {
+  border-color: var(--color-brand-900);
+  box-shadow: 0 0 0 3px rgba(18, 58, 99, 0.08);
+}
+.field-error {
+  border-color: var(--color-sale);
+}
+.field-error:focus {
+  border-color: var(--color-sale);
+  box-shadow: 0 0 0 3px rgba(180, 52, 31, 0.1);
+}
+
+.label {
+  @apply mb-2 block text-[13px] font-bold text-ink;
+}
+
+.container-x {
+  @apply mx-auto w-full max-w-[1400px] px-5 sm:px-8 lg:px-12;
+}
+
+/* ============================================================
+   حركة — Scroll Reveal
+   العناصر بتبدأ مخفية، و JS بيضيف .is-in لما تدخل الشاشة
+   ============================================================ */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.9s var(--ease-out-expo), transform 0.9s var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* كشف نصي بقناع — للعناوين الكبيرة */
+[data-reveal='mask'] {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 1s var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+[data-reveal='mask'].is-in {
+  clip-path: inset(0 0 -12% 0);
+}
+
+/* خط بيتمد */
+[data-reveal='line'] {
+  opacity: 1;
+  transform: scaleX(0);
+  transform-origin: inline-end;
+  transition: transform 1.1s var(--ease-out-expo);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+[data-reveal='line'].is-in {
+  transform: scaleX(1);
+}
+
+/* ============================================================
+   حركات مسمّاة
+   ============================================================ */
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-drawer {
+  animation: drawer-in 0.55s var(--ease-out-expo) both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade {
+  animation: fade-in 0.4s ease-out both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-rise {
+  animation: rise 0.65s var(--ease-out-expo) both;
+}
+
+@keyframes pop-badge {
+  0% {
+    transform: scale(0);
+  }
+  65% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-pop {
+  animation: pop-badge 0.4s var(--ease-out-expo) both;
+}
+
+/* --- حركات الهيرو --- */
+@keyframes maskUp {
+  from {
+    transform: translateY(105%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes sweep {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* شريط الإعلان المتحرك */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(50%);
+  }
+}
+.animate-marquee {
+  animation: marquee 32s linear infinite;
+}
+
+/* لمعة التحميل */
+@keyframes shimmer {
+  100% {
+    transform: translateX(-200%);
+  }
+}
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(200%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  animation: shimmer 1.8s infinite;
+}
+
+/* ============================================================
+   أدوات
+   ============================================================ */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-sand);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border: 3px solid var(--color-sand);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-900);
+}
+
+/* منع اهتزاز الصفحة لما السلة تفتح */
+body.drawer-open {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+}
