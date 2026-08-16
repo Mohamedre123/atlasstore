@@ -11,8 +11,15 @@ export const site = {
 
   logo: '/img/logo.webp',
 
-  /** الدومين النهائي — يُستخدم في روابط SEO */
-  url: 'https://atlasstore.vercel.app',
+  /**
+   * دومين المتجر. بيتستخدم في:
+   * روابط جوجل (canonical) · صورة المشاركة على فيسبوك وواتساب ·
+   * رابط المنتج في رسالة الاستفسار · مصدر الحدث في Meta CAPI
+   *
+   * لو غيّرت الدومين، غيّره هنا (أو حط NEXT_PUBLIC_SITE_URL في
+   * متغيرات البيئة من غير ما تلمس الكود).
+   */
+  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://atlass-clothes.store',
 
   contact: {
     /** رقم الواتساب بصيغة دولية بدون + ولا مسافات */
