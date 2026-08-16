@@ -101,11 +101,13 @@ export function ProductDetail({ product }: { product: Product }) {
           {/* ============================================================
               المعرض
               ============================================================ */}
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            <div className="flex flex-col-reverse gap-3 sm:flex-row-reverse sm:gap-4">
+          {/* min-w-0 ضروري: من غيره عنصر الجريد بيتمدد لعرض محتواه
+              (شريط الصور المصغّرة) والصفحة كلها بتخرج بره الشاشة */}
+          <div className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+            <div className="flex min-w-0 flex-col-reverse gap-3 sm:flex-row-reverse sm:gap-4">
               {/* المصغّرات */}
               {product.images.length > 1 && (
-                <div className="no-scrollbar flex shrink-0 gap-3 overflow-x-auto sm:w-[76px] sm:flex-col sm:overflow-visible">
+                <div className="no-scrollbar flex min-w-0 gap-3 overflow-x-auto sm:w-[76px] sm:shrink-0 sm:flex-col sm:overflow-visible">
                   {product.images.map((img, i) => (
                     <button
                       key={i}
@@ -167,7 +169,7 @@ export function ProductDetail({ product }: { product: Product }) {
           {/* ============================================================
               لوحة الشراء
               ============================================================ */}
-          <div ref={buyPanelRef}>
+          <div ref={buyPanelRef} className="min-w-0">
             {category && (
               <Link
                 href={`/category/${category.slug}`}

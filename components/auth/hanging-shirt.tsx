@@ -82,8 +82,16 @@ export function HangingShirt({
       dragging = true
       pulled = 0
       startClientY = e.clientY
-      hit.setPointerCapture?.(e.pointerId)
       gsap.killTweensOf([bead, glow, hit, line])
+
+      /* الالتقاط بيخلي الحركة تفضل متابعة حتى لو الإصبع خرج بره
+         الكورة. بيرمي خطأ في بعض الحالات على اللمس، ولو ماتعالجش
+         بيوقف باقي الدالة والحبل مابيتشدش خالص. */
+      try {
+        hit.setPointerCapture(e.pointerId)
+      } catch {
+        /* مش مشكلة — بنتابع الحركة من window أصلًا */
+      }
     }
 
     const onPointerMove = (e: PointerEvent) => {
@@ -97,7 +105,13 @@ export function HangingShirt({
     const onPointerUp = (e: PointerEvent) => {
       if (!dragging) return
       dragging = false
-      hit.releasePointerCapture?.(e.pointerId)
+
+      try {
+        hit.releasePointerCapture(e.pointerId)
+      } catch {
+        /* ممكن يكون اتحرر لوحده */
+      }
+
       if (pulled > PULL_THRESHOLD) toggleRef.current()
       pulled = 0
       snapBack()
@@ -200,7 +214,16 @@ export function HangingShirt({
         <line className="cord-line" x1="152" y1="71" x2="152" y2={BASE_Y} />
         <circle className="cord-bead-glow" cx="152" cy="204" r="13" />
         <circle className="cord-bead" cx="152" cy="204" r="7" />
-        <circle className="cord-hit" cx="152" cy="204" r="30" fill="transparent" />
+        {/* touch-action مباشرة عشان المتصفح ما يعملش تمرير للصفحة
+            بدل ما يشد الحبل — مش بنعتمد على CSS هنا */}
+        <circle
+          className="cord-hit"
+          cx="152"
+          cy="204"
+          r="30"
+          fill="transparent"
+          style={{ touchAction: 'none' }}
+        />
       </g>
     </svg>
   )
