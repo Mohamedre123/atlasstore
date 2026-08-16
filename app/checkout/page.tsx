@@ -275,6 +275,58 @@ export default function CheckoutPage() {
     )
   }
 
+  /* ------------------------------------------------------------
+     كتلة التأكيد: الزرار + المطلوب عند الاستلام + التعليمات.
+     بتظهر مكان واحد بس حسب الجهاز — تحت الفورم على الفون،
+     وجوه الملخص الجانبي على الكمبيوتر.
+     ------------------------------------------------------------ */
+  const confirmBlock = (
+    <>
+      {serverError && (
+        <div className="mb-3.5 border-r-2 border-sale bg-sale/5 px-3 py-3">
+          <p className="flex items-start gap-2 text-[12px] leading-relaxed text-sale">
+            <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{serverError}</span>
+          </p>
+
+          {/* طريق بديل — الأوردر بيروح واتساب بكل تفاصيله */}
+          <a
+            href={`https://wa.me/${site.contact.whatsapp}?text=${whatsappOrderText()}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary mt-3 w-full py-3 text-[13px]"
+          >
+            <WhatsAppIcon className="h-4 w-4" />
+            <span>ابعت الأوردر واتساب</span>
+          </a>
+
+          {serverDetail && (
+            <p
+              dir="ltr"
+              className="mt-2.5 break-words text-right text-[10px] leading-relaxed text-muted"
+            >
+              {serverDetail}
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="mx-auto w-full max-w-[290px]">
+        <DroneButton onAction={submitOrder} onDone={finishOrder} />
+      </div>
+
+      <p className="nums mt-2.5 text-center text-[12.5px] font-bold text-ink">
+        المطلوب عند الاستلام: {formatPrice(total)}
+      </p>
+
+      <p className="mt-3 text-center text-[11px] leading-relaxed text-muted">
+        بتأكيدك للطلب أنت موافق على شروط الشراء والاستبدال.
+        <br />
+        مفيش أي دفع أونلاين — الدفع عند الاستلام.
+      </p>
+    </>
+  )
+
   return (
     <>
       {/* ============ رأس الصفحة + مؤشر الخطوات ============ */}
@@ -522,6 +574,14 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </FormSection>
+
+            {/* ============ التأكيد على الفون ============
+                تحت البيانات مباشرة عشان العميل ما يرجعش يطلع فوق.
+                على الكمبيوتر بيظهر جوه الملخص الجانبي بدل كده.
+                ============================================================ */}
+            <div className="mt-8 border-t border-line pt-6 lg:hidden">
+              {confirmBlock}
+            </div>
           </div>
 
           {/* ============================================================
@@ -607,50 +667,10 @@ export default function CheckoutPage() {
                   )}
                 </div>
 
-                {/* التأكيد */}
-                <div className="border-t border-line bg-ivory px-5 py-4">
-                  {serverError && (
-                    <div className="mb-3.5 border-r-2 border-sale bg-sale/5 px-3 py-3">
-                      <p className="flex items-start gap-2 text-[12px] leading-relaxed text-sale">
-                        <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                        <span>{serverError}</span>
-                      </p>
-
-                      {/* طريق بديل — الأوردر بيروح واتساب بكل تفاصيله */}
-                      <a
-                        href={`https://wa.me/${site.contact.whatsapp}?text=${whatsappOrderText()}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-primary mt-3 w-full py-3 text-[13px]"
-                      >
-                        <WhatsAppIcon className="h-4 w-4" />
-                        <span>ابعت الأوردر واتساب</span>
-                      </a>
-
-                      {serverDetail && (
-                        <p
-                          dir="ltr"
-                          className="mt-2.5 break-words text-right text-[10px] leading-relaxed text-muted"
-                        >
-                          {serverDetail}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="mx-auto w-full max-w-[290px]">
-                    <DroneButton onAction={submitOrder} onDone={finishOrder} />
-                  </div>
-
-                  <p className="nums mt-2.5 text-center text-[12.5px] font-bold text-ink">
-                    المطلوب عند الاستلام: {formatPrice(total)}
-                  </p>
-
-                  <p className="mt-3 text-center text-[11px] leading-relaxed text-muted">
-                    بتأكيدك للطلب أنت موافق على شروط الشراء والاستبدال.
-                    <br />
-                    مفيش أي دفع أونلاين — الدفع عند الاستلام.
-                  </p>
+                {/* التأكيد — على الكمبيوتر بس، لأنه جوه الملخص
+                    الجانبي. على الفون بيظهر تحت الفورم. */}
+                <div className="hidden border-t border-line bg-ivory px-5 py-4 lg:block">
+                  {confirmBlock}
                 </div>
               </div>
             </div>
