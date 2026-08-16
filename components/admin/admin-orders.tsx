@@ -144,6 +144,10 @@ export function AdminOrders() {
 
       setOrders((prev) => prev.filter((o) => o.id !== order.id))
       setToast({ ok: true, text: `الأوردر ${order.order_code} اتمسح ✓` })
+
+      /* إعادة تحميل من قاعدة البيانات للتأكد إن الحذف اتسجّل فعلًا
+         ومش شكل بس في الشاشة */
+      void load()
     } catch (err) {
       setToast({ ok: false, text: err instanceof Error ? err.message : 'حصلت مشكلة' })
     } finally {

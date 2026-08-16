@@ -53,10 +53,20 @@ export async function POST(request: Request) {
     .single()
 
   if (updateError || !order) {
+    /* لو سياسة RLS ناقصة، التحديث بيرجّع صفر صفوف من غير خطأ
+       واضح — بنقول للأدمن يشغّل ملف السياسات */
+    const rlsBlocked = !order && !updateError?.message
+
     console.error('فشل تحديث حالة الأوردر:', updateError)
     return NextResponse.json(
-      { ok: false, error: 'ما قدرناش نحدّث الحالة', detail: updateError?.message },
-      { status: 500 }
+      {
+        ok: false,
+        error: rlsBlocked
+          ? 'التحديث اتمنع من قاعدة البيانات. شغّل ملف supabase/admin-policies.sql في Supabase → SQL Editor.'
+          : 'ما قدرناش نحدّث الحالة',
+        detail: updateError?.message ?? 'RLS update policy missing — 0 rows updated',
+      },
+      { status: rlsBlocked ? 403 : 500 }
     )
   }
 

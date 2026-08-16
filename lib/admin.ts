@@ -45,7 +45,7 @@ export const ORDER_STATUSES: {
   {
     key: 'confirmed',
     label: 'تم التأكيد',
-    hint: 'كلّمت العميل وأكّد الأوردر',
+    hint: 'الأوردر اتأكد وجاهز للتجهيز',
     tone: 'cyan',
     notify: true,
   },

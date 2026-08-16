@@ -31,7 +31,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: 'رقم الأوردر ناقص' }, { status: 400 })
   }
 
-  const { error } = await supabase.from('orders').delete().eq('id', body.orderId)
+  /* .select() ضروري: من غيره، لو سياسة RLS منعت الحذف، Supabase
+     بيرجّع نجاح من غير ما يمسح حاجة — والأوردر بيرجع بعد التحديث.
+     كده بنعرف عدد الصفوف اللي اتمسحت فعلًا. */
+  const { data, error } = await supabase
+    .from('orders')
+    .delete()
+    .eq('id', body.orderId)
+    .select('id')
 
   if (error) {
     console.error('فشل حذف الأوردر:', error)
@@ -41,5 +48,17 @@ export async function POST(request: Request) {
     )
   }
 
-  return NextResponse.json({ ok: true })
+  if (!data || data.length === 0) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          'الحذف اتمنع من قاعدة البيانات. شغّل ملف supabase/admin-policies.sql في Supabase → SQL Editor.',
+        detail: 'RLS delete policy missing — 0 rows deleted',
+      },
+      { status: 403 }
+    )
+  }
+
+  return NextResponse.json({ ok: true, deleted: data.length })
 }
