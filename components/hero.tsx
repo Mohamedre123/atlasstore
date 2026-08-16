@@ -41,42 +41,57 @@ export function Hero() {
   return (
     <section aria-label="بانر المتجر" className="relative bg-white">
       {/* ============ البانر ============
-          نفس النسبة الأصلية على كل الأجهزة عشان الشكل يبقى واحد.
+          نسختين: رأسية للفون وعريضة للكمبيوتر — كل واحدة بنسبتها
+          الطبيعية عشان تبان كاملة من غير قص ولا تشويه.
           ============================================================ */}
-      <div className="relative aspect-[1800/563] w-full overflow-hidden">
+      <div className="relative aspect-[761/1280] w-full overflow-hidden sm:aspect-[1800/563]">
         <div ref={imageRef} className="absolute inset-0 lg:scale-[1.04]">
+          {/* --- الفون --- */}
           <Image
-            src={hero.image}
+            src={hero.imageMobile}
             alt={`${site.name} — ${site.tagline}`}
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center"
+            className="object-cover object-center sm:hidden"
+          />
+
+          {/* --- التابلت والكمبيوتر --- */}
+          <Image
+            src={hero.image}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="hidden object-cover object-center sm:block"
           />
         </div>
 
-        {/* تعتيم متدرّج من الجنبين عشان النص يفضل مقروء */}
+        {/* تعتيم متدرّج عشان النص يفضل مقروء.
+            على الفون التعتيم من تحت لأن النص بينزل جنب الموديل. */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-brand-950/55 via-brand-950/10 to-brand-950/25"
+          className="absolute inset-0 bg-gradient-to-t from-brand-950/70 via-brand-950/15 to-brand-950/20 sm:from-brand-950/55 sm:via-brand-950/10 sm:to-brand-950/25"
         />
 
-        {/* --- النص في نص البانر --- */}
-        <div className="absolute inset-0 flex items-center justify-center px-3">
-          <div className="hero-glass animate-[riseIn_0.9s_cubic-bezier(0.16,1,0.3,1)_both] w-full max-w-[min(94%,640px)] rounded-[8px] px-3 py-2 text-center sm:rounded-[10px] sm:px-8 sm:py-6 lg:px-12 lg:py-8">
-            <p className="eyebrow !text-brand-200 text-[7.5px] sm:text-[10px]">
+        {/* --- النص فوق البانر ---
+            الفون: تحت قريّب من الأسفل عشان ما يغطّيش الموديل
+            الكمبيوتر: في نص البانر */}
+        <div className="absolute inset-0 flex items-end justify-center px-4 pb-6 sm:items-center sm:px-3 sm:pb-0">
+          <div className="hero-glass animate-[riseIn_0.9s_cubic-bezier(0.16,1,0.3,1)_both] w-full max-w-[min(94%,640px)] px-4 py-4 text-center sm:px-8 sm:py-6 lg:px-12 lg:py-8">
+            <p className="eyebrow !text-brand-200 text-[9px] sm:text-[10px]">
               {hero.eyebrow}
             </p>
 
-            <h1 className="display mt-0.5 text-[clamp(0.95rem,4.2vw,2.5rem)] !text-white sm:mt-2.5">
+            <h1 className="display mt-1.5 text-[clamp(1.15rem,5.6vw,2.5rem)] !text-white sm:mt-2.5">
               {hero.title}
             </h1>
 
-            <p className="mx-auto mt-1 hidden max-w-[42ch] text-[13px] leading-[1.85] text-white/85 sm:mt-3 sm:block">
+            <p className="mx-auto mt-2 max-w-[42ch] text-[11.5px] leading-[1.8] text-white/85 sm:mt-3 sm:text-[13px] sm:leading-[1.85]">
               {hero.subtitle}
             </p>
 
-            <div className="mt-2 flex justify-center sm:mt-5">
+            <div className="mt-4 flex justify-center sm:mt-5">
               <HeroButton href={hero.href} label={hero.cta} />
             </div>
           </div>
@@ -121,7 +136,7 @@ function HeroButton({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="group relative inline-flex items-center gap-1.5 overflow-hidden rounded-[3px] bg-white px-3.5 py-2 text-[10px] font-bold text-ink transition-transform duration-300 active:scale-[0.98] sm:gap-2.5 sm:px-7 sm:py-3.5 sm:text-[13px]"
+      className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-white px-6 py-3 text-[12.5px] font-bold text-ink shadow-lg transition-transform duration-300 active:scale-[0.98] sm:gap-2.5 sm:px-7 sm:py-3.5 sm:text-[13px]"
     >
       <span
         aria-hidden="true"

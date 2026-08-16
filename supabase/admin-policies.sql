@@ -56,6 +56,12 @@ create policy "الأدمن يعدّل حالة الأوردر"
   using (public.is_admin())
   with check (public.is_admin());
 
+-- حذف نهائي — للأوردرات التجريبية أو الملغية
+drop policy if exists "الأدمن يمسح أوردر" on public.orders;
+create policy "الأدمن يمسح أوردر"
+  on public.orders for delete
+  using (public.is_admin());
+
 
 -- ============================================================
 --  4) الأدمن يشوف بيانات العملاء (للتواصل معاهم)

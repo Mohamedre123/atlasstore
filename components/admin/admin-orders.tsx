@@ -8,6 +8,7 @@ import {
   PhoneIcon,
   RefreshIcon,
   SpinnerIcon,
+  TrashIcon,
   WhatsAppIcon,
 } from '@/components/icons'
 import { ORDER_STATUSES, getStatus, type OrderStatus } from '@/lib/admin'
@@ -114,6 +115,37 @@ export function AdminOrders() {
         ok: false,
         text: err instanceof Error ? err.message : 'حصلت مشكلة',
       })
+    } finally {
+      setBusyId(null)
+      window.setTimeout(() => setToast(null), 5000)
+    }
+  }
+
+  /* ---------------- حذف أوردر ---------------- */
+  const deleteOrder = async (order: Order) => {
+    if (busyId) return
+
+    const sure = window.confirm(
+      `هتمسح الأوردر ${order.order_code} نهائيًا.\n\nمفيش رجوع بعد كده — متأكد؟`
+    )
+    if (!sure) return
+
+    setBusyId(order.id)
+    setToast(null)
+
+    try {
+      const res = await fetch('/api/admin/delete-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: order.id }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) throw new Error(data.error ?? 'فشل الحذف')
+
+      setOrders((prev) => prev.filter((o) => o.id !== order.id))
+      setToast({ ok: true, text: `الأوردر ${order.order_code} اتمسح ✓` })
+    } catch (err) {
+      setToast({ ok: false, text: err instanceof Error ? err.message : 'حصلت مشكلة' })
     } finally {
       setBusyId(null)
       window.setTimeout(() => setToast(null), 5000)
@@ -230,6 +262,7 @@ export function AdminOrders() {
               order={order}
               busy={busyId === order.id}
               onChange={changeStatus}
+              onDelete={deleteOrder}
             />
           ))}
         </div>
@@ -245,10 +278,12 @@ function OrderCard({
   order,
   busy,
   onChange,
+  onDelete,
 }: {
   order: Order
   busy: boolean
   onChange: (order: Order, status: OrderStatus) => void
+  onDelete: (order: Order) => void
 }) {
   const [open, setOpen] = useState(false)
   const status = getStatus(order.status)
@@ -360,9 +395,23 @@ function OrderCard({
 
       {/* --- أزرار الحالة --- */}
       <div className="border-t border-line bg-sand/50 px-4 py-3.5 lg:px-5">
-        <p className="mb-2.5 text-[11.5px] font-bold text-muted">
-          غيّر الحالة — العميل هيوصله إيميل تلقائي
-        </p>
+        <div className="mb-2.5 flex items-center justify-between gap-3">
+          <p className="text-[11.5px] font-bold text-muted">
+            غيّر الحالة — العميل هيوصله إيميل تلقائي
+          </p>
+
+          {/* حذف نهائي — للأوردرات التجريبية */}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => onDelete(order)}
+            title="مسح الأوردر نهائيًا"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[11.5px] font-bold text-muted transition-colors hover:border-sale hover:bg-sale/5 hover:text-sale disabled:opacity-40"
+          >
+            <TrashIcon className="h-3.5 w-3.5" />
+            مسح
+          </button>
+        </div>
 
         <div className="flex flex-wrap gap-2">
           {ACTION_STATUSES.map((s) => {

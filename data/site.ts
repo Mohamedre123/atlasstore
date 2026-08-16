@@ -49,9 +49,16 @@ export const site = {
      بنعرضها بنسبتها الطبيعية عشان تبان كاملة على أي شاشة
      ------------------------------------------------------------ */
   hero: {
+    /* بانر الكمبيوتر — عريض */
     image: '/img/banner.webp',
     imageWidth: 1800,
     imageHeight: 563,
+
+    /* بانر الفون — رأسي. أي بانر جديد لازم يبقى بالنسختين:
+       عريضة للكمبيوتر ورأسية للفون، وكل واحدة بتظهر في مكانها. */
+    imageMobile: '/img/banner-mobile.png',
+    imageMobileWidth: 761,
+    imageMobileHeight: 1280,
     eyebrow: 'ATLAS Store',
     title: 'Your Mood , Your Fit',
     subtitle: 'ملابس رجالي بخامات مختارة وقصّات مضبوطة — والدفع عند الاستلام.',
