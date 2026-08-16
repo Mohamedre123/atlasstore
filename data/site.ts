@@ -19,7 +19,7 @@ export const site = {
     whatsapp: '201039318334',
     phone: '01039318334',
     phoneAlt: '01062185979',
-    email: 'iaomn8406@gmail.com',
+    email: 'atlassstore36@gmail.com',
     address: 'مصر',
   },
 
