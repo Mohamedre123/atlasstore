@@ -99,7 +99,7 @@ export function Hero() {
                 <p className="font-mono mb-1.5 text-[9.5px] text-brand-600">
                   {String(i + 1).padStart(2, '0')}
                 </p>
-                <p className="text-[12.5px] font-extrabold text-brand-950 lg:text-[13px]">
+                <p className="text-[12.5px] font-extrabold text-ink lg:text-[13px]">
                   {perk.title}
                 </p>
                 <p className="mt-1 text-[11px] leading-relaxed text-muted lg:text-[11.5px]">
@@ -121,7 +121,7 @@ function HeroButton({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="group relative inline-flex items-center gap-1.5 overflow-hidden rounded-[3px] bg-white px-3.5 py-2 text-[10px] font-bold text-brand-950 transition-transform duration-300 active:scale-[0.98] sm:gap-2.5 sm:px-7 sm:py-3.5 sm:text-[13px]"
+      className="group relative inline-flex items-center gap-1.5 overflow-hidden rounded-[3px] bg-white px-3.5 py-2 text-[10px] font-bold text-ink transition-transform duration-300 active:scale-[0.98] sm:gap-2.5 sm:px-7 sm:py-3.5 sm:text-[13px]"
     >
       <span
         aria-hidden="true"

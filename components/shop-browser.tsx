@@ -67,14 +67,14 @@ export function ShopBrowser({
             <button
               type="button"
               onClick={() => setFiltersOpen((v) => !v)}
-              className="flex items-center gap-2 border border-line bg-white px-3.5 py-2 text-[12.5px] font-bold text-brand-950 lg:hidden"
+              className="flex items-center gap-2 border border-line bg-white px-3.5 py-2 text-[12.5px] font-bold text-ink lg:hidden"
             >
               <FilterIcon className="h-4 w-4" />
               فلترة
               {hasFilters && <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />}
             </button>
 
-            <p className="nums text-[12.5px] font-bold text-brand-950">
+            <p className="nums text-[12.5px] font-bold text-ink">
               {pluralize(visible.length, 'منتج واحد', 'منتجان', 'منتجات')}
             </p>
           </div>
@@ -86,7 +86,7 @@ export function ShopBrowser({
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
               aria-label="ترتيب المنتجات"
-              className="border border-line bg-white px-3 py-2 text-[12.5px] font-bold text-brand-950 outline-none transition-colors focus:border-brand-900"
+              className="border border-line bg-white px-3 py-2 text-[12.5px] font-bold text-ink outline-none transition-colors focus:border-brand-900"
             >
               {sortOptions.map((o) => (
                 <option key={o.key} value={o.key}>
@@ -137,7 +137,7 @@ export function ShopBrowser({
       {/* ============ النتائج ============ */}
       {visible.length === 0 ? (
         <div className="border border-line bg-white py-24 text-center">
-          <p className="font-display text-xl font-extrabold text-brand-950">
+          <p className="font-display text-xl font-extrabold text-ink">
             مفيش منتجات بالفلاتر دي
           </p>
           <p className="mt-2.5 text-[13.5px] text-muted">
@@ -170,7 +170,7 @@ function FilterChip({
       aria-pressed={active}
       className={`shrink-0 whitespace-nowrap border px-4 py-2 text-[12.5px] font-bold transition-all duration-300 ${
         active
-          ? 'border-brand-950 bg-brand-950 text-white'
+          ? 'border-ink bg-brand-950 text-white'
           : 'border-line bg-white text-ink hover:border-brand-900'
       }`}
     >

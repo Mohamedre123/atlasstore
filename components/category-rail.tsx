@@ -1,17 +1,16 @@
 'use client'
 
-import Link from 'next/link'
 import Image from 'next/image'
+import Link from 'next/link'
+import { pluralize } from '@/lib/format'
 import type { Category } from '@/lib/types'
 import { ArrowLeftIcon } from './icons'
-import { pluralize } from '@/lib/format'
 
 /* ------------------------------------------------------------
-   كروت الأقسام.
+   كروت الأقسام — خلفية فاتحة زي المتجر الأصلي.
    • الفون: كاروسيل صف واحد بالسحب
    • الكمبيوتر: ٣ أعمدة
-   الصور بتتعرض كاملة (object-contain) على خلفية كحلي عشان صور
-   المنتجات ماتتقصّش.
+   الصور بتتعرض كاملة (object-contain) عشان ما تتقصّش.
    ------------------------------------------------------------ */
 export function CategoryRail({
   categories,
@@ -21,49 +20,48 @@ export function CategoryRail({
   counts: Record<string, number>
 }) {
   return (
-    <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-5 pb-1 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-5 lg:overflow-visible lg:px-0">
+    <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:px-0">
       {categories.map((category, i) => (
         <Link
           key={category.slug}
           href={`/category/${category.slug}`}
           data-reveal=""
           style={{ '--reveal-delay': `${i * 80}ms` } as React.CSSProperties}
-          className="cat-card group relative w-[72vw] shrink-0 snap-start overflow-hidden rounded-[4px] bg-brand-950 sm:w-[46vw] lg:w-auto"
+          className="group relative w-[74vw] shrink-0 snap-start sm:w-[48vw] lg:w-auto"
         >
-          <div className="relative aspect-[4/5]">
+          <div className="pc__frame relative aspect-[4/5] overflow-hidden bg-sand">
             {category.image && (
-              <div className="absolute inset-0 p-4 transition-transform duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]">
+              <div className="pc__slide absolute inset-0 p-6">
                 <Image
                   src={category.image}
                   alt={category.name}
                   fill
-                  sizes="(max-width: 1024px) 72vw, 33vw"
+                  sizes="(max-width: 1024px) 74vw, 33vw"
                   className="object-contain p-2"
                 />
               </div>
             )}
 
-            {/* تعتيم سفلي عشان النص يبان */}
-            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-brand-950 via-brand-950/70 to-transparent" />
+            {/* شارة العدد */}
+            <span className="font-mono absolute right-4 top-4 rounded-full bg-white/85 px-3 py-1.5 text-[9.5px] font-bold uppercase tracking-[0.14em] text-brand-700 backdrop-blur">
+              {pluralize(counts[category.slug] ?? 0, 'منتج واحد', 'منتجان', 'منتجات')}
+            </span>
 
-            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4 lg:p-5">
-              <div>
-                <p className="font-mono mb-1 text-[9px] uppercase tracking-[0.18em] text-brand-300">
-                  {String(i + 1).padStart(2, '0')} —{' '}
-                  {pluralize(counts[category.slug] ?? 0, 'منتج واحد', 'منتجان', 'منتجات')}
-                </p>
-                <h3 className="font-display text-[17px] font-extrabold text-white lg:text-[20px]">
+            {/* شريط سفلي أبيض */}
+            <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-[12px] bg-white/92 px-4 py-3 shadow-[0_10px_28px_-16px_rgba(14,23,32,0.4)] backdrop-blur transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:bg-white">
+              <div className="min-w-0">
+                <h3 className="font-display truncate text-[16px] font-extrabold text-ink lg:text-[18px]">
                   {category.name}
                 </h3>
                 {category.description && (
-                  <p className="mt-1 hidden max-w-[30ch] text-[11.5px] leading-relaxed text-white/60 lg:block">
+                  <p className="mt-0.5 truncate text-[11px] text-muted">
                     {category.description}
                   </p>
                 )}
               </div>
 
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] border border-white/30 text-white transition-all duration-300 group-hover:border-brand-400 group-hover:bg-brand-400 group-hover:text-brand-950">
-                <ArrowLeftIcon className="h-4 w-4" />
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sand text-ink transition-all duration-300 group-hover:bg-brand-400">
+                <ArrowLeftIcon className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
               </span>
             </div>
           </div>

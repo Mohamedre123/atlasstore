@@ -43,7 +43,7 @@ export function PageHeader({
             ))}
             <li className="flex items-center gap-2">
               <span className="text-line-strong">/</span>
-              <span className="font-bold text-brand-950">{title}</span>
+              <span className="font-bold text-ink">{title}</span>
             </li>
           </ol>
         </nav>

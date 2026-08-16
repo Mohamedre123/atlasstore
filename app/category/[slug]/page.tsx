@@ -48,7 +48,7 @@ export default async function CategoryPage({
       <div className="container-x py-10 lg:py-14">
         {items.length === 0 ? (
           <div className="border border-line bg-white py-24 text-center">
-            <p className="font-display text-xl font-extrabold text-brand-950">
+            <p className="font-display text-xl font-extrabold text-ink">
               القسم ده لسه فاضي
             </p>
             <p className="mt-2.5 text-[13.5px] text-muted">

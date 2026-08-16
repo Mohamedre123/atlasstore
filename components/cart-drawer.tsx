@@ -27,7 +27,7 @@ export function CartDrawer() {
         <div className="flex shrink-0 items-center justify-between border-b border-line px-6 py-5">
           <div>
             <p className="eyebrow">Your Bag</p>
-            <h2 className="font-display mt-1 text-xl font-extrabold text-brand-950">
+            <h2 className="font-display mt-1 text-xl font-extrabold text-ink">
               سلة المشتريات
               {count > 0 && (
                 <span className="nums mr-2 text-[14px] font-bold text-muted">
@@ -40,7 +40,7 @@ export function CartDrawer() {
             type="button"
             onClick={closeCart}
             aria-label="إغلاق"
-            className="-ml-2 p-2 text-brand-950 transition-opacity hover:opacity-60"
+            className="-ml-2 p-2 text-ink transition-opacity hover:opacity-60"
           >
             <CloseIcon className="h-5.5 w-5.5" />
           </button>
@@ -52,7 +52,7 @@ export function CartDrawer() {
             <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-sand">
               <BagIcon className="h-9 w-9 text-brand-900/40" />
             </div>
-            <p className="font-display text-lg font-extrabold text-brand-950">
+            <p className="font-display text-lg font-extrabold text-ink">
               السلة لسه فاضية
             </p>
             <p className="mt-2 max-w-[26ch] text-[13.5px] leading-relaxed text-muted">
@@ -128,7 +128,7 @@ export function CartDrawer() {
                           type="button"
                           onClick={() => setQuantity(item.key, item.quantity - 1)}
                           aria-label="تقليل الكمية"
-                          className="px-2.5 py-1.5 text-brand-950 transition-colors hover:bg-sand"
+                          className="px-2.5 py-1.5 text-ink transition-colors hover:bg-sand"
                         >
                           <MinusIcon className="h-3.5 w-3.5" />
                         </button>
@@ -139,13 +139,13 @@ export function CartDrawer() {
                           type="button"
                           onClick={() => setQuantity(item.key, item.quantity + 1)}
                           aria-label="زيادة الكمية"
-                          className="px-2.5 py-1.5 text-brand-950 transition-colors hover:bg-sand"
+                          className="px-2.5 py-1.5 text-ink transition-colors hover:bg-sand"
                         >
                           <PlusIcon className="h-3.5 w-3.5" />
                         </button>
                       </div>
 
-                      <span className="nums text-[14px] font-extrabold text-brand-950">
+                      <span className="nums text-[14px] font-extrabold text-ink">
                         {formatPrice(item.price * item.quantity)}
                       </span>
                     </div>
@@ -158,7 +158,7 @@ export function CartDrawer() {
             <div className="shrink-0 border-t border-line bg-white px-6 py-5">
               <div className="mb-1 flex items-baseline justify-between">
                 <span className="text-[14px] font-bold text-ink">الإجمالي الفرعي</span>
-                <span className="nums font-display text-xl font-extrabold text-brand-950">
+                <span className="nums font-display text-xl font-extrabold text-ink">
                   {formatPrice(subtotal)}
                 </span>
               </div>
@@ -173,7 +173,7 @@ export function CartDrawer() {
               <button
                 type="button"
                 onClick={closeCart}
-                className="mt-2.5 w-full py-2 text-[13px] font-bold text-muted transition-colors hover:text-brand-950"
+                className="mt-2.5 w-full py-2 text-[13px] font-bold text-muted transition-colors hover:text-ink"
               >
                 أكمل التسوّق
               </button>

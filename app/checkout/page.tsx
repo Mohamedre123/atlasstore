@@ -3,8 +3,16 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
-import { AlertIcon, CashIcon, CheckIcon, SpinnerIcon, TruckIcon } from '@/components/icons'
+import {
+  AlertIcon,
+  CashIcon,
+  CheckIcon,
+  SpinnerIcon,
+  TruckIcon,
+  WhatsAppIcon,
+} from '@/components/icons'
 import { ProductImage } from '@/components/product-image'
+import { site } from '@/data/site'
 import {
   DELIVERY_WINDOW,
   SHIPPING_FLAT_RATE,
@@ -54,6 +62,7 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
+  const [serverDetail, setServerDetail] = useState('')
   const [prefilled, setPrefilled] = useState(false)
 
   /* المراكز بتتغيّر حسب المحافظة المختارة */
@@ -162,7 +171,11 @@ export default function CheckoutPage() {
       })
 
       const data = await res.json()
-      if (!res.ok || !data.ok) throw new Error(data.error ?? 'حصلت مشكلة أثناء إرسال الطلب')
+
+      if (!res.ok || !data.ok) {
+        if (data.detail) setServerDetail(String(data.detail))
+        throw new Error(data.error ?? 'حصلت مشكلة أثناء إرسال الطلب')
+      }
 
       sessionStorage.setItem(
         'atlas_last_order',
@@ -190,6 +203,32 @@ export default function CheckoutPage() {
     }
   }
 
+  /** رسالة واتساب فيها الأوردر كامل — بتستخدم لو الإيميل فشل */
+  const whatsappOrderText = () => {
+    const lines = [
+      'السلام عليكم، عايز أعمل الأوردر ده:',
+      '',
+      ...items.map((i) => {
+        const v = Object.entries(i.selectedVariants)
+          .map(([k, val]) => `${k}: ${val}`)
+          .join(' / ')
+        return `• ${i.name}${v ? ` (${v})` : ''} × ${i.quantity}`
+      }),
+      '',
+      `الاسم: ${form.fullName}`,
+      `الموبايل: ${form.phone}`,
+      `المحافظة: ${form.governorate}`,
+      `المركز: ${form.area}`,
+      form.village ? `القرية: ${form.village}` : '',
+      `العنوان: ${form.address}`,
+      form.landmark ? `علامة مميزة: ${form.landmark}` : '',
+      '',
+      `الإجمالي: ${formatPrice(total)} — دفع عند الاستلام`,
+    ].filter(Boolean)
+
+    return encodeURIComponent(lines.join('\n'))
+  }
+
   /** بعد ما أنيميشن الزرار يخلّص بنروح لصفحة التأكيد */
   const finishOrder = () => {
     clearCart()
@@ -207,7 +246,7 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="container-x flex min-h-[60vh] flex-col items-center justify-center text-center">
-        <p className="font-display text-xl font-extrabold text-brand-950">السلة فاضية</p>
+        <p className="font-display text-xl font-extrabold text-ink">السلة فاضية</p>
         <p className="mt-2.5 text-[13.5px] text-muted">ضيف منتجات الأول عشان تكمّل الطلب.</p>
         <Link href="/shop" className="btn btn-primary mt-7">
           <span>تصفّح المنتجات</span>
@@ -244,7 +283,7 @@ export default function CheckoutPage() {
                 </span>
                 <span
                   className={`text-[12.5px] font-bold ${
-                    step.current || step.done ? 'text-brand-950' : 'text-muted'
+                    step.current || step.done ? 'text-ink' : 'text-muted'
                   }`}
                 >
                   {step.label}
@@ -422,18 +461,18 @@ export default function CheckoutPage() {
 
             {/* --- الشحن --- */}
             <FormSection index="03" title="طريقة الشحن">
-              <div className="flex items-start gap-3.5 border-2 border-brand-950 bg-white p-4">
-                <span className="mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border-2 border-brand-950">
+              <div className="flex items-start gap-3.5 border-2 border-ink bg-white p-4">
+                <span className="mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border-2 border-ink">
                   <span className="h-2 w-2 rounded-full bg-brand-950" />
                 </span>
 
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="flex items-center gap-2 text-[13.5px] font-extrabold text-brand-950">
+                    <span className="flex items-center gap-2 text-[13.5px] font-extrabold text-ink">
                       <TruckIcon className="h-4.5 w-4.5 text-brand-700" />
                       {SHIPPING_METHOD_NAME}
                     </span>
-                    <span className="nums text-[13.5px] font-extrabold text-brand-950">
+                    <span className="nums text-[13.5px] font-extrabold text-ink">
                       {formatPrice(SHIPPING_FLAT_RATE)}
                     </span>
                   </div>
@@ -446,13 +485,13 @@ export default function CheckoutPage() {
 
             {/* --- الدفع --- */}
             <FormSection index="04" title="طريقة الدفع" last>
-              <div className="flex items-start gap-3.5 border-2 border-brand-950 bg-white p-4">
-                <span className="mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border-2 border-brand-950">
+              <div className="flex items-start gap-3.5 border-2 border-ink bg-white p-4">
+                <span className="mt-0.5 flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border-2 border-ink">
                   <span className="h-2 w-2 rounded-full bg-brand-950" />
                 </span>
 
                 <div className="flex-1">
-                  <span className="flex items-center gap-2 text-[13.5px] font-extrabold text-brand-950">
+                  <span className="flex items-center gap-2 text-[13.5px] font-extrabold text-ink">
                     <CashIcon className="h-4.5 w-4.5 text-brand-700" />
                     الدفع عند الاستلام
                   </span>
@@ -473,7 +512,7 @@ export default function CheckoutPage() {
               <div className="border border-line bg-white">
                 <div className="border-b border-line px-5 py-4">
                   <p className="eyebrow">Order Summary</p>
-                  <h2 className="font-display mt-1 text-[16px] font-extrabold text-brand-950">
+                  <h2 className="font-display mt-1 text-[16px] font-extrabold text-ink">
                     ملخص الطلب
                     <span className="nums mr-2 text-[13px] font-bold text-muted">
                       ({pluralize(count, 'قطعة واحدة', 'قطعتان', 'قطع')})
@@ -507,7 +546,7 @@ export default function CheckoutPage() {
                               .join(' · ')}
                           </p>
                         )}
-                        <p className="nums mt-1 text-[12.5px] font-extrabold text-brand-950">
+                        <p className="nums mt-1 text-[12.5px] font-extrabold text-ink">
                           {formatPrice(item.price * item.quantity)}
                         </p>
                       </div>
@@ -533,10 +572,10 @@ export default function CheckoutPage() {
                   />
 
                   <div className="flex items-baseline justify-between border-t border-line pt-3.5">
-                    <span className="text-[14px] font-extrabold text-brand-950">
+                    <span className="text-[14px] font-extrabold text-ink">
                       الإجمالي
                     </span>
-                    <span className="nums font-display text-[20px] font-extrabold text-brand-950">
+                    <span className="nums font-display text-[20px] font-extrabold text-ink">
                       {formatPrice(total)}
                     </span>
                   </div>
@@ -551,10 +590,32 @@ export default function CheckoutPage() {
                 {/* التأكيد */}
                 <div className="border-t border-line bg-ivory px-5 py-4">
                   {serverError && (
-                    <p className="mb-3.5 flex items-start gap-2 border-r-2 border-sale bg-sale/5 px-3 py-2.5 text-[12px] leading-relaxed text-sale">
-                      <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span>{serverError}</span>
-                    </p>
+                    <div className="mb-3.5 border-r-2 border-sale bg-sale/5 px-3 py-3">
+                      <p className="flex items-start gap-2 text-[12px] leading-relaxed text-sale">
+                        <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span>{serverError}</span>
+                      </p>
+
+                      {/* طريق بديل — الأوردر بيروح واتساب بكل تفاصيله */}
+                      <a
+                        href={`https://wa.me/${site.contact.whatsapp}?text=${whatsappOrderText()}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-primary mt-3 w-full py-3 text-[13px]"
+                      >
+                        <WhatsAppIcon className="h-4 w-4" />
+                        <span>ابعت الأوردر واتساب</span>
+                      </a>
+
+                      {serverDetail && (
+                        <p
+                          dir="ltr"
+                          className="mt-2.5 break-words text-right text-[10px] leading-relaxed text-muted"
+                        >
+                          {serverDetail}
+                        </p>
+                      )}
+                    </div>
                   )}
 
                   <div className="mx-auto w-full max-w-[290px]">
@@ -567,7 +628,7 @@ export default function CheckoutPage() {
                     />
                   </div>
 
-                  <p className="nums mt-2.5 text-center text-[12.5px] font-bold text-brand-950">
+                  <p className="nums mt-2.5 text-center text-[12.5px] font-bold text-ink">
                     المطلوب عند الاستلام: {formatPrice(total)}
                   </p>
 
@@ -605,7 +666,7 @@ function FormSection({
     <section className={last ? '' : 'mb-8 border-b border-line pb-8'}>
       <div className="mb-5 flex items-baseline gap-3.5">
         <span className="font-mono text-[10px] text-brand-600">{index}</span>
-        <h2 className="font-display text-[17px] font-extrabold text-brand-950">{title}</h2>
+        <h2 className="font-display text-[17px] font-extrabold text-ink">{title}</h2>
       </div>
       <div className="space-y-4">{children}</div>
     </section>
@@ -688,7 +749,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
       <span className="text-[12.5px] text-muted">{label}</span>
-      <span className="nums shrink-0 text-[13px] font-bold text-brand-950">{value}</span>
+      <span className="nums shrink-0 text-[13px] font-bold text-ink">{value}</span>
     </div>
   )
 }

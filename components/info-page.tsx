@@ -51,7 +51,7 @@ export function InfoPage({
                   <span className="font-mono shrink-0 text-[11px] text-brand-600">
                     {String(i + 1).padStart(2, '0')}
                   </span>
-                  <h2 className="font-display text-[19px] font-extrabold text-brand-950 lg:text-[22px]">
+                  <h2 className="font-display text-[19px] font-extrabold text-ink lg:text-[22px]">
                     {block.heading}
                   </h2>
                 </div>
@@ -85,7 +85,7 @@ export function InfoPage({
                             {block.table.head.map((cell, j) => (
                               <th
                                 key={j}
-                                className="border border-line px-4 py-3 text-right font-extrabold text-brand-950"
+                                className="border border-line px-4 py-3 text-right font-extrabold text-ink"
                               >
                                 {cell}
                               </th>
@@ -120,7 +120,7 @@ export function InfoPage({
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <div className="border border-line bg-white p-6">
               <p className="eyebrow mb-3">Still Need Help?</p>
-              <h3 className="font-display text-[17px] font-extrabold text-brand-950">
+              <h3 className="font-display text-[17px] font-extrabold text-ink">
                 لسه محتاج مساعدة؟
               </h3>
               <p className="mt-3 text-[13px] leading-[1.9] text-muted">
@@ -157,7 +157,7 @@ export function InfoPage({
               </p>
               <Link
                 href="/shop"
-                className="mt-5 inline-flex w-full items-center justify-center border border-brand-400/50 px-5 py-3 text-[13px] font-bold text-brand-300 transition-colors hover:bg-brand-400 hover:text-brand-950"
+                className="mt-5 inline-flex w-full items-center justify-center border border-brand-400/50 px-5 py-3 text-[13px] font-bold text-brand-300 transition-colors hover:bg-brand-400 hover:text-ink"
               >
                 تصفّح المنتجات
               </Link>

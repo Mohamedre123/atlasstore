@@ -1,45 +1,47 @@
 @import 'tailwindcss';
 
 /* ============================================================
-   ATLAS STORE — نظام تصميم
-   الاتجاه: Editorial Menswear
-   خلفية عاجية · كحلي مسيطر · سماوي كلمسة نادرة · حواف حادة · خطوط شعرة
-   الألوان مستخرجة من اللوجو (الحوت): #35E0F2 → #1E8FC2 → #123A63
+   ATLASs STORE — نظام التصميم
+   الاتجاه: Bright Studio
+   خلفية بيضا نضيفة · السماوي #13E1F4 هو اللون الأساسي ·
+   حواف دايرية ناعمة · ظلال خفيفة بدل الخطوط · مساحات واسعة
    ============================================================ */
 @theme {
-  /* --- تدرّج اللوجو --- */
-  --color-brand-50: #eefcff;
-  --color-brand-100: #d5f6fd;
-  --color-brand-200: #b0edfb;
-  --color-brand-300: #6fe1f5;
-  --color-brand-400: #35e0f2;
-  --color-brand-500: #12bcda;
-  --color-brand-600: #0895b6;
-  --color-brand-700: #1e8fc2;
-  --color-brand-800: #1a5d85;
-  --color-brand-900: #123a63;
-  --color-brand-950: #0a1f3a;
+  /* --- اللون الأساسي --- */
+  --color-brand-50: #ecfeff;
+  --color-brand-100: #d3faff;
+  --color-brand-200: #aef5ff;
+  --color-brand-300: #6eecfd;
+  --color-brand-400: #13e1f4;
+  --color-brand-500: #06c2d8;
+  --color-brand-600: #089cb4;
+  --color-brand-700: #0f7c91;
+  --color-brand-800: #156476;
+  --color-brand-900: #14505f;
+  --color-brand-950: #072b33;
 
-  /* --- محايدات دافئة (مش رمادي ميّت) --- */
-  --color-ivory: #f8f7f4;
-  --color-sand: #efede7;
-  --color-line: #e2dfd8;
-  --color-line-strong: #cdc9c0;
-  --color-ink: #14181d;
-  --color-muted: #6f7680;
+  /* --- محايدات رمادية باردة (مش كحلي) --- */
+  --color-ivory: #ffffff;
+  --color-sand: #f2f6f8;
+  --color-line: #e6ecf0;
+  --color-line-strong: #cbd6dd;
+  --color-ink: #0e1720;
+  --color-muted: #64757f;
 
-  --color-sale: #b4341f;
+  --color-sale: #e0453a;
 
   --font-sans: var(--font-body), system-ui, sans-serif;
   --font-display: var(--font-display), var(--font-body), system-ui, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, monospace;
 
-  /* منحنى حركة واحد للموقع كله — ده اللي بيدّي إحساس "متصنّع بإيد" */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :root {
   --nav-h: 68px;
+  --shadow-soft: 0 2px 8px rgba(14, 23, 32, 0.05);
+  --shadow-lift: 0 18px 40px -20px rgba(14, 23, 32, 0.22);
+  --shadow-pop: 0 22px 50px -24px rgba(6, 194, 216, 0.45);
 }
 
 * {
@@ -56,134 +58,96 @@ body {
 }
 
 body {
-  background: var(--color-ivory);
+  background: #ffffff;
   color: var(--color-ink);
   font-family: var(--font-sans);
-  /* clip أقوى من hidden — بيمنع أي عنصر يخرج بره الكادر أفقيًا
-     من غير ما يعمل حاوية تمرير جديدة */
   overflow-x: clip;
-  /* نسيج ورقي خفيف جدًا — بيكسر الفلات الرقمي */
-  background-image: radial-gradient(rgba(18, 58, 99, 0.022) 1px, transparent 1px);
-  background-size: 22px 22px;
 }
 
 ::selection {
-  background: var(--color-brand-900);
-  color: #fff;
+  background: var(--color-brand-400);
+  color: var(--color-ink);
 }
 
 /* ============================================================
    تايبوجرافي
    ============================================================ */
-
-/* لايبل صغير لاتيني — العمود الفقري للإحساس الإديتوريال */
 .eyebrow {
   font-family: var(--font-mono);
   font-size: 10.5px;
   font-weight: 500;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--color-muted);
+  color: var(--color-brand-600);
 }
 
 .display {
   font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.08;
-  color: var(--color-brand-950);
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  color: var(--color-ink);
 }
 
-/* الأسعار والأرقام — عرض ثابت عشان الأعمدة تتظبط */
 .nums {
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
   letter-spacing: -0.01em;
 }
 
-/* خط فاصل شعرة */
-.hairline {
-  border-color: var(--color-line);
-}
-
 /* ============================================================
-   أزرار — حواف 3px بس، بدون ظلال منفوخة
+   أزرار — حبّة (pill) بحواف كاملة
    ============================================================ */
 .btn {
   @apply relative inline-flex select-none items-center justify-center gap-2 overflow-hidden
          px-6 py-3.5 text-[13px] font-bold leading-none;
-  border-radius: 3px;
+  border-radius: 999px;
   transition: color 0.35s var(--ease-out-expo), background-color 0.35s var(--ease-out-expo),
-    border-color 0.35s var(--ease-out-expo), transform 0.2s var(--ease-out-expo);
+    border-color 0.35s var(--ease-out-expo), transform 0.3s var(--ease-out-expo),
+    box-shadow 0.35s var(--ease-out-expo);
 }
 .btn:active {
-  transform: translateY(0) scale(0.985);
+  transform: translateY(0) scale(0.97);
 }
 .btn:disabled {
   @apply cursor-not-allowed opacity-40;
   transform: none;
 }
 
-/* الأساسي: كحلي، وعند الهوفر بيتملي بالسماوي من تحت لفوق */
+/* الأساسي: سماوي بنص غامق */
 .btn-primary {
-  background: var(--color-brand-950);
-  color: #fff;
-}
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, var(--color-brand-400), var(--color-brand-700));
-  transform: translateY(101%);
-  transition: transform 0.45s var(--ease-out-expo);
-  z-index: 0;
-}
-.btn-primary:hover:not(:disabled)::before {
-  transform: translateY(0);
+  background: var(--color-brand-400);
+  color: var(--color-ink);
+  box-shadow: 0 8px 20px -10px rgba(6, 194, 216, 0.7);
 }
 .btn-primary:hover:not(:disabled) {
-  color: var(--color-brand-950);
-}
-.btn-primary > * {
-  position: relative;
-  z-index: 1;
+  background: var(--color-brand-300);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-pop);
 }
 
 .btn-outline {
   background: transparent;
-  color: var(--color-brand-950);
-  border: 1px solid var(--color-brand-950);
+  color: var(--color-ink);
+  border: 1.5px solid var(--color-line-strong);
 }
 .btn-outline:hover:not(:disabled) {
-  background: var(--color-brand-950);
-  color: #fff;
+  border-color: var(--color-brand-400);
+  background: var(--color-brand-50);
+  color: var(--color-brand-800);
+  transform: translateY(-2px);
 }
 
 .btn-ghost {
-  background: #fff;
+  background: var(--color-sand);
   color: var(--color-ink);
-  border: 1px solid var(--color-line);
 }
 .btn-ghost:hover:not(:disabled) {
-  border-color: var(--color-brand-950);
+  background: var(--color-brand-50);
+  color: var(--color-brand-800);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px -10px rgba(10, 31, 58, 0.4);
 }
 
-/* رفع خفيف + ظل عند مرور الماوس على الأزرار الأساسية */
-.btn-primary:hover:not(:disabled),
-.btn-outline:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px -12px rgba(10, 31, 58, 0.55);
-}
-
-/* زرار الأوردر — نفس الإحساس */
-.ob:not(:disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 26px -12px rgba(10, 31, 58, 0.5);
-}
-
-/* السهم جوه أي زرار بيتحرك مع الهوفر */
 .btn svg {
   transition: transform 0.35s var(--ease-out-expo);
 }
@@ -191,7 +155,7 @@ body {
   transform: translateX(-3px);
 }
 
-/* رابط بخط بيتمد من اليمين (RTL) */
+/* رابط بخط بيتمد من اليمين */
 .link-underline {
   position: relative;
   display: inline-block;
@@ -201,9 +165,9 @@ body {
   position: absolute;
   inset-inline-end: 0;
   bottom: -3px;
-  height: 1px;
+  height: 2px;
   width: 100%;
-  background: currentColor;
+  background: var(--color-brand-400);
   transform: scaleX(0);
   transform-origin: inline-end;
   transition: transform 0.4s var(--ease-out-expo);
@@ -213,367 +177,13 @@ body {
 }
 
 /* ============================================================
-   طبقة البلور تحت نص البانر — بتخلي الكلام مقروء على أي صورة
+   بطاقات وأسطح
    ============================================================ */
-.hero-glass {
-  background: rgba(10, 31, 58, 0.32);
-  -webkit-backdrop-filter: blur(9px) saturate(120%);
-  backdrop-filter: blur(9px) saturate(120%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 18px 50px -22px rgba(0, 0, 0, 0.6);
-}
-
-/* المتصفحات اللي مابتدعمش البلور بتاخد خلفية أغمق بدله */
-@supports not (backdrop-filter: blur(1px)) {
-  .hero-glass {
-    background: rgba(10, 31, 58, 0.72);
-  }
-}
-
-/* ============================================================
-   اللوجو — عوم هادي مستمر
-   ============================================================ */
-@keyframes logo-float {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-5px) rotate(-4deg);
-  }
-}
-
-.logo-float {
-  animation: logo-float 4.5s ease-in-out infinite;
-  transition: transform 0.6s var(--ease-out-expo);
-}
-
-.group:hover .logo-float {
-  animation-play-state: paused;
-  transform: translateY(-4px) rotate(-9deg) scale(1.12);
-}
-
-/* ============================================================
-   كارت المنتج — حركة الماوس
-   ============================================================ */
-.pc__frame {
-  transition: box-shadow 0.55s var(--ease-out-expo),
-    transform 0.55s var(--ease-out-expo);
-}
-
-.group:hover .pc__frame {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 40px -18px rgba(10, 31, 58, 0.35);
-}
-
-/* كل صورة بتتلاشى في اللي بعدها + زووم بطيء */
-.pc__slide {
-  transition: opacity 0.55s var(--ease-out-expo),
-    transform 1.4s var(--ease-out-expo);
-  will-change: opacity, transform;
-}
-
-.group:hover .pc__slide {
-  transform: scale(1.06);
-}
-
-/* على الشاشات اللمس مفيش hover — بنلغي الرفع عشان ما يهتزش */
-@media (hover: none) {
-  .group:hover .pc__frame {
-    transform: none;
-    box-shadow: none;
-  }
-  .group:hover .pc__slide {
-    transform: none;
-  }
-}
-
-/* ============================================================
-   زرار الأوردر — أنيميشن مدفع التيشيرت
-   الألوان بتتحرك بمتغيرات CSS عشان GSAP يقدر يحرّكها
-   ============================================================ */
-.ob {
-  --ob-h: 214;
-  --ob-s: 71%;
-  --ob-l: 13%;
-  --ob-fg: #ffffff;
-  --ob-shirt: hsl(186, 80%, 60%);
-
-  position: relative;
-  display: inline-block;
-  padding: 0;
-  border: 0;
-  border-radius: 4px;
-  background: hsl(var(--ob-h), var(--ob-s), var(--ob-l));
-  color: var(--ob-fg);
-  cursor: pointer;
-  outline: transparent;
-  /* بيسمح للمدفع يطلع فوق الزرار من غير ما ينزل تحته */
-  -webkit-clip-path: inset(-1000% -1000% 0 0);
-  clip-path: inset(-1000% -1000% 0 0);
-  transition: box-shadow 0.35s var(--ease-out-expo),
-    transform 0.35s var(--ease-out-expo);
-  box-shadow: 0 2px 10px rgba(10, 31, 58, 0.22);
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-.ob:active {
-  box-shadow: 0 0 0 0 rgba(10, 31, 58, 0);
-}
-
-.ob:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-/* الجسم الداخلي — النص في نص الزرار بالظبط */
-.ob__text {
-  position: relative;
-  display: block;
-  padding: 0.95rem calc(1rem + 46px);
-  font-size: 13.5px;
-  font-weight: 800;
-  line-height: 1;
-  white-space: nowrap;
-  text-align: center;
-}
-
-.ob--compact .ob__text {
-  padding: 0.8rem calc(0.75rem + 42px);
-  font-size: 12.5px;
-}
-
-/* نص شبح بيحجز المساحة عشان الزرار ما يرقصش */
-.ob__dummy {
-  color: transparent;
-  pointer-events: none;
-}
-
-/* اللابل بيغطي عرض الزرار كله والكلام بيتمركز في النص */
-.ob__label {
-  position: absolute;
-  inset-block-start: 0.95rem;
-  inset-inline: 0;
-  display: flex;
-  justify-content: center;
-  gap: 0.28em;
-}
-
-.ob--compact .ob__label {
-  inset-block-start: 0.8rem;
-}
-
-/* كل كلمة جوه قناع عشان تطلع وتنزل — بالكلمة مش بالحرف
-   عشان الحروف العربية تفضل متصلة */
-.ob__word-mask {
-  display: inline-block;
-  overflow: hidden;
-  line-height: 1.35;
-  margin-block: -0.18em;
-}
-
-.ob__word {
-  display: inline-block;
-}
-
-/* التيشيرت */
-.ob__container {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: 4px;
-}
-
-.ob__shirt {
-  position: absolute;
-  height: 30px;
-  width: 30px;
-  top: 50%;
-  inset-inline-start: calc(0.5rem + 22px);
-  transform: translate(50%, -50%);
-}
-
-.ob--compact .ob__shirt {
-  height: 26px;
-  width: 26px;
-  inset-inline-start: calc(0.4rem + 20px);
-}
-
-.ob__tshirt {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-}
-
-.ob__fill {
-  fill: var(--ob-shirt);
-}
-
-/* المدفع */
-.ob__cannon {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 10px;
-  transform: translate(-50%, 0);
-  pointer-events: none;
-}
-
-.ob__cannon svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.ob__cannon-shirt path {
-  fill: var(--ob-shirt);
-}
-
-.ob__cannon-band {
-  fill: #ffd500;
-}
-
-.ob__cannon-plastic {
-  fill: rgba(163, 231, 245, 0.35);
-}
-
-.ob__cannon-shine {
-  fill: rgba(255, 255, 255, 0.5);
-}
-
-/* لو المستخدم مقفّل الحركة: الزرار يفضل زرار عادي محترم */
-@media (prefers-reduced-motion: reduce) {
-  .ob__cannon,
-  .ob__container {
-    display: none;
-  }
-  .ob__text {
-    padding-inline: 1.5rem;
-  }
-  .ob--compact .ob__text {
-    padding-inline: 1.1rem;
-  }
-}
-
-/* ============================================================
-   مشهد التيشيرت المعلّق في صفحة تسجيل الدخول
-   ============================================================ */
-.hs {
-  width: 100%;
-  height: auto;
-  max-width: 300px;
-  overflow: visible;
-}
-
-.hs__metal {
-  fill: #2a3646;
-}
-
-.hs__hanger {
-  stroke: #46586e;
-  transition: stroke 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hs[data-on='true'] .hs__hanger {
-  stroke: #9fd8ee;
-}
-
-.hs__shirt path {
-  fill: #1d2734;
-  stroke: #2f3d4e;
-  transition: fill 0.55s cubic-bezier(0.4, 0, 0.2, 1),
-    stroke 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hs[data-on='true'] .hs__shirt path {
-  fill: url(#hsShirt);
-  stroke: #6fe1f5;
-}
-
-.hs__glow {
-  fill: #35e0f2;
-  opacity: 0;
-  filter: blur(26px);
-  transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hs[data-on='true'] .hs__glow {
-  opacity: 0.3;
-}
-
-.hs__beam {
-  opacity: 0;
-  transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hs[data-on='true'] .hs__beam {
-  opacity: 1;
-}
-
-.cord-line {
-  stroke: #46586e;
-  stroke-width: 2;
-}
-
-.cord-bead {
-  fill: #35e0f2;
-}
-
-/* توهج حوالين الكورة عشان العميل ياخد باله إنها اللي بتتسحب */
-.cord-bead-glow {
-  fill: #35e0f2;
-  opacity: 0.28;
-  filter: blur(6px);
-  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.hs[data-on='true'] .cord-bead-glow {
-  opacity: 0.55;
-}
-
-.cord-hit {
-  cursor: grab;
-  touch-action: none;
-}
-
-.cord-hit:active {
-  cursor: grabbing;
-}
-
-/* زرار فورم الدخول */
-.auth-btn {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border-radius: 12px;
-  padding: 0.9rem 1rem;
-  font-size: 14px;
-  font-weight: 800;
-  color: #0a1f3a;
-  background: linear-gradient(135deg, #35e0f2 0%, #12bcda 50%, #1e8fc2 100%);
-  background-size: 180% 180%;
-  background-position: 0% 50%;
-  transition: background-position 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.auth-btn:hover:not(:disabled) {
-  background-position: 100% 50%;
-  transform: translateY(-1px);
-}
-
-.auth-btn:active:not(:disabled) {
-  transform: scale(0.985);
-}
-
-.auth-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+.surface {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--color-line);
 }
 
 /* ============================================================
@@ -581,21 +191,21 @@ body {
    ============================================================ */
 .field {
   @apply w-full bg-white px-4 py-3.5 text-[15px] text-ink outline-none
-         placeholder:text-muted/50;
-  border: 1px solid var(--color-line);
-  border-radius: 3px;
+         placeholder:text-muted/45;
+  border: 1.5px solid var(--color-line);
+  border-radius: 12px;
   transition: border-color 0.3s var(--ease-out-expo), box-shadow 0.3s var(--ease-out-expo);
 }
 .field:focus {
-  border-color: var(--color-brand-900);
-  box-shadow: 0 0 0 3px rgba(18, 58, 99, 0.08);
+  border-color: var(--color-brand-400);
+  box-shadow: 0 0 0 4px rgba(19, 225, 244, 0.16);
 }
 .field-error {
   border-color: var(--color-sale);
 }
 .field-error:focus {
   border-color: var(--color-sale);
-  box-shadow: 0 0 0 3px rgba(180, 52, 31, 0.1);
+  box-shadow: 0 0 0 4px rgba(224, 69, 58, 0.14);
 }
 
 .label {
@@ -608,7 +218,6 @@ body {
 
 /* ============================================================
    حركة — Scroll Reveal
-   العناصر بتبدأ مخفية، و JS بيضيف .is-in لما تدخل الشاشة
    ============================================================ */
 [data-reveal] {
   opacity: 0;
@@ -622,7 +231,6 @@ body {
   transform: none;
 }
 
-/* كشف نصي بقناع — للعناوين الكبيرة */
 [data-reveal='mask'] {
   opacity: 1;
   transform: none;
@@ -634,7 +242,6 @@ body {
   clip-path: inset(0 0 -12% 0);
 }
 
-/* خط بيتمد */
 [data-reveal='line'] {
   opacity: 1;
   transform: scaleX(0);
@@ -702,7 +309,6 @@ body {
   animation: pop-badge 0.4s var(--ease-out-expo) both;
 }
 
-/* --- حركات الهيرو --- */
 @keyframes maskUp {
   from {
     transform: translateY(105%);
@@ -741,7 +347,6 @@ body {
   }
 }
 
-/* شريط الإعلان المتحرك */
 @keyframes marquee {
   from {
     transform: translateX(0);
@@ -754,7 +359,6 @@ body {
   animation: marquee 32s linear infinite;
 }
 
-/* لمعة التحميل */
 @keyframes shimmer {
   100% {
     transform: translateX(-200%);
@@ -771,6 +375,362 @@ body {
   transform: translateX(200%);
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
   animation: shimmer 1.8s infinite;
+}
+
+/* ============================================================
+   طبقة البلور تحت نص البانر
+   ============================================================ */
+.hero-glass {
+  background: rgba(7, 43, 51, 0.34);
+  -webkit-backdrop-filter: blur(10px) saturate(125%);
+  backdrop-filter: blur(10px) saturate(125%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  box-shadow: 0 18px 50px -22px rgba(0, 0, 0, 0.55);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .hero-glass {
+    background: rgba(7, 43, 51, 0.74);
+  }
+}
+
+/* ============================================================
+   اللوجو — عوم هادي مستمر
+   ============================================================ */
+@keyframes logo-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(-4deg);
+  }
+}
+
+.logo-float {
+  animation: logo-float 4.5s ease-in-out infinite;
+  transition: transform 0.6s var(--ease-out-expo);
+}
+
+.group:hover .logo-float {
+  animation-play-state: paused;
+  transform: translateY(-4px) rotate(-9deg) scale(1.12);
+}
+
+/* ============================================================
+   كارت المنتج
+   ============================================================ */
+.pc__frame {
+  border-radius: 16px;
+  transition: box-shadow 0.55s var(--ease-out-expo),
+    transform 0.55s var(--ease-out-expo);
+}
+
+.group:hover .pc__frame {
+  transform: translateY(-7px);
+  box-shadow: var(--shadow-lift);
+}
+
+.pc__slide {
+  transition: opacity 0.55s var(--ease-out-expo),
+    transform 1.4s var(--ease-out-expo);
+  will-change: opacity, transform;
+}
+
+.group:hover .pc__slide {
+  transform: scale(1.06);
+}
+
+@media (hover: none) {
+  .group:hover .pc__frame {
+    transform: none;
+    box-shadow: var(--shadow-soft);
+  }
+  .group:hover .pc__slide {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   زرار الأوردر — أنيميشن مدفع التيشيرت
+   ============================================================ */
+.ob {
+  --ob-h: 187;
+  --ob-s: 90%;
+  --ob-l: 52%;
+  --ob-fg: #0e1720;
+  --ob-shirt: #ffffff;
+
+  position: relative;
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: hsl(var(--ob-h), var(--ob-s), var(--ob-l));
+  color: var(--ob-fg);
+  cursor: pointer;
+  outline: transparent;
+  -webkit-clip-path: inset(-1000% -1000% 0 0 round 999px);
+  clip-path: inset(-1000% -1000% 0 0 round 999px);
+  transition: box-shadow 0.35s var(--ease-out-expo),
+    transform 0.35s var(--ease-out-expo);
+  box-shadow: 0 8px 20px -10px rgba(6, 194, 216, 0.7);
+  touch-action: manipulation;
+}
+
+.ob:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-pop);
+}
+
+.ob:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.ob:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ob__text {
+  position: relative;
+  display: block;
+  padding: 0.95rem calc(1rem + 46px);
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.ob--compact .ob__text {
+  padding: 0.8rem calc(0.75rem + 42px);
+  font-size: 12.5px;
+}
+
+.ob__dummy {
+  color: transparent;
+  pointer-events: none;
+}
+
+.ob__label {
+  position: absolute;
+  inset-block-start: 0.95rem;
+  inset-inline: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.28em;
+}
+
+.ob--compact .ob__label {
+  inset-block-start: 0.8rem;
+}
+
+.ob__word-mask {
+  display: inline-block;
+  overflow: hidden;
+  line-height: 1.35;
+  margin-block: -0.18em;
+}
+
+.ob__word {
+  display: inline-block;
+}
+
+.ob__container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.ob__shirt {
+  position: absolute;
+  height: 30px;
+  width: 30px;
+  top: 50%;
+  inset-inline-start: calc(0.5rem + 22px);
+  transform: translate(50%, -50%);
+}
+
+.ob--compact .ob__shirt {
+  height: 26px;
+  width: 26px;
+  inset-inline-start: calc(0.4rem + 20px);
+}
+
+.ob__tshirt {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.ob__fill {
+  fill: var(--ob-shirt);
+}
+
+.ob__cannon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  transform: translate(-50%, 0);
+  pointer-events: none;
+}
+
+.ob__cannon svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.ob__cannon-shirt path {
+  fill: var(--ob-shirt);
+}
+
+.ob__cannon-band {
+  fill: #ffd500;
+}
+
+.ob__cannon-plastic {
+  fill: rgba(255, 255, 255, 0.4);
+}
+
+.ob__cannon-shine {
+  fill: rgba(255, 255, 255, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ob__cannon,
+  .ob__container {
+    display: none;
+  }
+  .ob__text {
+    padding-inline: 1.5rem;
+  }
+  .ob--compact .ob__text {
+    padding-inline: 1.1rem;
+  }
+}
+
+/* ============================================================
+   مشهد التيشيرت المعلّق — صفحة تسجيل الدخول
+   ============================================================ */
+.hs {
+  width: 100%;
+  height: auto;
+  max-width: 300px;
+  overflow: visible;
+}
+
+.hs__metal {
+  fill: #23323c;
+}
+
+.hs__hanger {
+  stroke: #3d5460;
+  transition: stroke 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hs[data-on='true'] .hs__hanger {
+  stroke: #aeeefa;
+}
+
+.hs__shirt path {
+  fill: #18242c;
+  stroke: #2b3b45;
+  transition: fill 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+    stroke 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hs[data-on='true'] .hs__shirt path {
+  fill: url(#hsShirt);
+  stroke: #6eecfd;
+}
+
+.hs__glow {
+  fill: #13e1f4;
+  opacity: 0;
+  filter: blur(26px);
+  transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hs[data-on='true'] .hs__glow {
+  opacity: 0.32;
+}
+
+.hs__beam {
+  opacity: 0;
+  transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hs[data-on='true'] .hs__beam {
+  opacity: 1;
+}
+
+.cord-line {
+  stroke: #3d5460;
+  stroke-width: 2;
+}
+
+.cord-bead {
+  fill: #13e1f4;
+}
+
+.cord-bead-glow {
+  fill: #13e1f4;
+  opacity: 0.3;
+  filter: blur(6px);
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hs[data-on='true'] .cord-bead-glow {
+  opacity: 0.6;
+}
+
+.cord-hit {
+  cursor: grab;
+  touch-action: none;
+}
+
+.cord-hit:active {
+  cursor: grabbing;
+}
+
+/* زرار فورم الدخول */
+.auth-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.95rem 1rem;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0e1720;
+  background: var(--color-brand-400);
+  box-shadow: 0 10px 24px -12px rgba(6, 194, 216, 0.8);
+  transition: background-color 0.35s var(--ease-out-expo),
+    transform 0.3s var(--ease-out-expo), box-shadow 0.35s var(--ease-out-expo);
+}
+
+.auth-btn:hover:not(:disabled) {
+  background: var(--color-brand-300);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-pop);
+}
+
+.auth-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.auth-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* ============================================================
@@ -797,10 +757,9 @@ body {
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-brand-900);
+  background: var(--color-brand-500);
 }
 
-/* منع اهتزاز الصفحة لما السلة تفتح */
 body.drawer-open {
   overflow: hidden;
 }

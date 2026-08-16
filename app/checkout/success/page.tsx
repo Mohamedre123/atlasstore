@@ -62,7 +62,7 @@ export default function OrderSuccessPage() {
           {order && (
             <div className="relative mt-8 inline-flex flex-col items-center border border-line bg-ivory px-8 py-5">
               <span className="eyebrow mb-2">Order Number</span>
-              <span className="font-mono text-[26px] font-bold tracking-[0.1em] text-brand-950">
+              <span className="font-mono text-[26px] font-bold tracking-[0.1em] text-ink">
                 {order.orderId}
               </span>
               <span className="mt-2 text-[11.5px] text-muted">
@@ -108,7 +108,7 @@ export default function OrderSuccessPage() {
                   {item.step}
                 </span>
               </div>
-              <h3 className="text-[14px] font-extrabold text-brand-950">{item.title}</h3>
+              <h3 className="text-[14px] font-extrabold text-ink">{item.title}</h3>
               <p className="mt-2 text-[12.5px] leading-[1.9] text-muted">{item.text}</p>
             </div>
           ))}
@@ -119,7 +119,7 @@ export default function OrderSuccessPage() {
           <div className="mt-8 border border-line bg-white">
             <div className="border-b border-line px-6 py-5">
               <p className="eyebrow">Summary</p>
-              <h2 className="font-display mt-1.5 text-lg font-extrabold text-brand-950">
+              <h2 className="font-display mt-1.5 text-lg font-extrabold text-ink">
                 ملخص الطلب
               </h2>
             </div>
@@ -140,7 +140,7 @@ export default function OrderSuccessPage() {
                       الكمية: {item.quantity}
                     </p>
                   </div>
-                  <span className="nums shrink-0 text-[14px] font-extrabold text-brand-950">
+                  <span className="nums shrink-0 text-[14px] font-extrabold text-ink">
                     {formatPrice(item.price * item.quantity)}
                   </span>
                 </li>
@@ -159,10 +159,10 @@ export default function OrderSuccessPage() {
                 <span className="nums font-bold">{formatPrice(order.shipping)}</span>
               </div>
               <div className="flex items-baseline justify-between border-t border-line pt-4">
-                <span className="text-[15px] font-extrabold text-brand-950">
+                <span className="text-[15px] font-extrabold text-ink">
                   المطلوب عند الاستلام
                 </span>
-                <span className="nums font-display text-2xl font-extrabold text-brand-950">
+                <span className="nums font-display text-2xl font-extrabold text-ink">
                   {formatPrice(order.total)}
                 </span>
               </div>

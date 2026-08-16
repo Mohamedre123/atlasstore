@@ -167,9 +167,17 @@ export async function POST(request: Request) {
     })
 
     if (error) {
-      console.error('فشل إرسال إيميل الأوردر:', error)
+      /* بنطبع الخطأ كامل في لوجز Vercel عشان يبان السبب بالظبط */
+      console.error('فشل إرسال إيميل الأوردر:', JSON.stringify(error))
+
       return NextResponse.json(
-        { ok: false, error: 'ما قدرناش نسجّل الطلب دلوقتي. كلّمنا واتساب من فضلك.' },
+        {
+          ok: false,
+          error: 'ما قدرناش نسجّل الطلب دلوقتي. ابعتلنا الأوردر واتساب وهنسجّله لك.',
+          /* تفاصيل تقنية لصاحب المتجر — بتظهر بخط صغير تحت الرسالة */
+          detail: error.message ?? String(error),
+          orderId,
+        },
         { status: 502 }
       )
     }

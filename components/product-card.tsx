@@ -102,7 +102,7 @@ export function ProductCard({
 
           {soldOut && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/75">
-              <span className="font-mono border border-brand-950 bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-950">
+              <span className="font-mono border border-ink bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-ink">
                 Sold Out
               </span>
             </div>
@@ -144,7 +144,7 @@ export function ProductCard({
           )}
 
           <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <span className="nums text-[13.5px] font-extrabold text-brand-950 lg:text-[14px]">
+            <span className="nums text-[13.5px] font-extrabold text-ink lg:text-[14px]">
               {formatPrice(product.price)}
             </span>
             {product.compareAtPrice && product.compareAtPrice > product.price && (

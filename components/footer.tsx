@@ -146,7 +146,7 @@ export function Footer() {
               href={`https://wa.me/${site.contact.whatsapp}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 border border-brand-400/40 px-4 py-2.5 text-[12.5px] font-bold text-brand-300 transition-colors hover:border-brand-400 hover:bg-brand-400 hover:text-brand-950"
+              className="inline-flex items-center gap-2 border border-brand-400/40 px-4 py-2.5 text-[12.5px] font-bold text-brand-300 transition-colors hover:border-brand-400 hover:bg-brand-400 hover:text-ink"
             >
               <WhatsAppIcon className="h-4 w-4" />
               اطلب عبر واتساب
@@ -224,7 +224,7 @@ function SocialLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="flex h-9 w-9 items-center justify-center border border-white/15 text-brand-200 transition-all hover:border-brand-400 hover:bg-brand-400 hover:text-brand-950"
+      className="flex h-9 w-9 items-center justify-center border border-white/15 text-brand-200 transition-all hover:border-brand-400 hover:bg-brand-400 hover:text-ink"
     >
       {children}
     </a>

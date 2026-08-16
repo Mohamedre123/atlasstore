@@ -130,7 +130,7 @@ export function AccountPanel({ email }: { email: string }) {
       <section>
         <div className="mb-5 flex items-baseline gap-3.5">
           <span className="font-mono text-[10px] text-brand-600">01</span>
-          <h2 className="font-display text-[17px] font-extrabold text-brand-950">
+          <h2 className="font-display text-[17px] font-extrabold text-ink">
             بياناتك المحفوظة
           </h2>
         </div>
@@ -263,7 +263,7 @@ export function AccountPanel({ email }: { email: string }) {
       <aside className="space-y-6">
         <div className="border border-line bg-white p-5">
           <p className="eyebrow mb-2">Account</p>
-          <p dir="ltr" className="text-right text-[13.5px] font-bold text-brand-950">
+          <p dir="ltr" className="text-right text-[13.5px] font-bold text-ink">
             {email}
           </p>
           <button
@@ -278,7 +278,7 @@ export function AccountPanel({ email }: { email: string }) {
         <div className="border border-line bg-white">
           <div className="border-b border-line px-5 py-4">
             <p className="eyebrow">Orders</p>
-            <h3 className="font-display mt-1 text-[15px] font-extrabold text-brand-950">
+            <h3 className="font-display mt-1 text-[15px] font-extrabold text-ink">
               أوردراتك
             </h3>
           </div>
@@ -293,10 +293,10 @@ export function AccountPanel({ email }: { email: string }) {
               {orders.map((order) => (
                 <li key={order.id} className="px-5 py-4">
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="font-mono text-[12.5px] font-bold text-brand-950">
+                    <span className="font-mono text-[12.5px] font-bold text-ink">
                       {order.order_code}
                     </span>
-                    <span className="nums text-[13px] font-extrabold text-brand-950">
+                    <span className="nums text-[13px] font-extrabold text-ink">
                       {formatPrice(order.total)}
                     </span>
                   </div>

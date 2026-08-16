@@ -107,7 +107,7 @@ export function ProductDetail({ product }: { product: Product }) {
                       aria-current={i === activeImage}
                       className={`relative aspect-[3/4] w-[62px] shrink-0 overflow-hidden border transition-all duration-300 sm:w-full ${
                         i === activeImage
-                          ? 'border-brand-950'
+                          ? 'border-ink'
                           : 'border-line hover:border-line-strong'
                       }`}
                     >
@@ -147,7 +147,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
                 {soldOut && (
                   <div className="absolute inset-0 flex items-center justify-center bg-ivory/75">
-                    <span className="font-mono border border-brand-950 bg-ivory px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-950">
+                    <span className="font-mono border border-ink bg-ivory px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-ink">
                       Sold Out
                     </span>
                   </div>
@@ -181,7 +181,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
             {/* --- السعر --- */}
             <div className="mt-5 flex flex-wrap items-baseline gap-2.5 border-b border-line pb-6">
-              <span className="nums font-display text-[25px] font-extrabold text-brand-950">
+              <span className="nums font-display text-[25px] font-extrabold text-ink">
                 {formatPrice(product.price)}
               </span>
               {product.compareAtPrice && product.compareAtPrice > product.price && (
@@ -221,7 +221,7 @@ export function ProductDetail({ product }: { product: Product }) {
                         aria-pressed={isActive}
                         className={`min-w-[52px] border px-4 py-2.5 text-[13px] font-bold transition-all duration-300 ${
                           isActive
-                            ? 'border-brand-950 bg-brand-950 text-white'
+                            ? 'border-ink bg-brand-950 text-white'
                             : 'border-line bg-white text-ink hover:border-brand-900'
                         }`}
                       >
@@ -243,7 +243,7 @@ export function ProductDetail({ product }: { product: Product }) {
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     aria-label="تقليل الكمية"
                     disabled={quantity <= 1}
-                    className="px-3.5 py-3 text-brand-950 transition-colors hover:bg-sand disabled:opacity-30"
+                    className="px-3.5 py-3 text-ink transition-colors hover:bg-sand disabled:opacity-30"
                   >
                     <MinusIcon className="h-4 w-4" />
                   </button>
@@ -254,7 +254,7 @@ export function ProductDetail({ product }: { product: Product }) {
                     type="button"
                     onClick={() => setQuantity((q) => Math.min(99, q + 1))}
                     aria-label="زيادة الكمية"
-                    className="px-3.5 py-3 text-brand-950 transition-colors hover:bg-sand"
+                    className="px-3.5 py-3 text-ink transition-colors hover:bg-sand"
                   >
                     <PlusIcon className="h-4 w-4" />
                   </button>
@@ -368,7 +368,7 @@ export function ProductDetail({ product }: { product: Product }) {
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-[12.5px] font-bold text-ink">{product.name}</p>
-            <p className="nums text-[14px] font-extrabold text-brand-950">
+            <p className="nums text-[14px] font-extrabold text-ink">
               {formatPrice(product.price * quantity)}
             </p>
           </div>
@@ -408,7 +408,7 @@ function Accordion({
         aria-expanded={open}
         className="flex w-full items-center justify-between gap-4 py-5 text-right"
       >
-        <span className="text-[14px] font-extrabold text-brand-950">{title}</span>
+        <span className="text-[14px] font-extrabold text-ink">{title}</span>
         <ChevronDownIcon
           className={`h-4.5 w-4.5 shrink-0 text-muted transition-transform duration-400 ${
             open ? 'rotate-180' : ''

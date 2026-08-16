@@ -41,7 +41,7 @@ export function Logo({
       <span className="flex flex-col leading-none">
         <span
           className={`font-display font-extrabold tracking-[-0.02em] ${dims.title} ${
-            invert ? 'text-white' : 'text-brand-950'
+            invert ? 'text-white' : 'text-ink'
           }`}
         >
           ATLAS<span className="text-brand-500">s</span>

@@ -190,7 +190,7 @@ export default function HomePage() {
                   {item.step}
                 </span>
               </div>
-              <h3 className="text-[14px] font-extrabold text-brand-950">{item.title}</h3>
+              <h3 className="text-[14px] font-extrabold text-ink">{item.title}</h3>
               <p className="mt-2 text-[12.5px] leading-[1.9] text-muted">{item.text}</p>
             </div>
           ))}

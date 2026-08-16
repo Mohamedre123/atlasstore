@@ -7,6 +7,7 @@ import { Logo } from '@/components/logo'
 import { createClient } from '@/lib/supabase/client'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
 import { isValidEmail } from '@/lib/format'
+import { playSwitchClick } from '@/lib/sound'
 import { HangingShirt } from './hanging-shirt'
 
 type Method = 'otp' | 'password'
@@ -34,17 +35,11 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
   const [cooldown, setCooldown] = useState(0)
   const [otpType, setOtpType] = useState<'email' | 'signup'>('email')
 
-  const clickSound = useRef<HTMLAudioElement | null>(null)
   const codeRef = useRef<HTMLInputElement>(null)
 
   const toggleLamp = () => {
-    const a = clickSound.current
-    if (a) {
-      a.currentTime = 0
-      a.play().catch(() => {
-        /* بعض المتصفحات بتمنع الصوت — مش مشكلة */
-      })
-    }
+    /* الصوت مولّد برمجيًا — ملف mp3 الخارجي كان بيفشل في التحميل */
+    playSwitchClick()
     setOn((v) => {
       if (!v) setEverOn(true)
       return !v
@@ -216,9 +211,6 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
 
   return (
     <>
-      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-      <audio ref={clickSound} src="/sfx/click.mp3" preload="auto" className="hidden" />
-
       <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1fr)] lg:gap-16">
         {/* ============ المشهد ============ */}
         <div className="flex flex-col items-center">
@@ -504,7 +496,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={`rounded-[9px] py-2.5 text-[12.5px] font-bold transition-all duration-300 ${
-        active ? 'bg-brand-400 text-brand-950' : 'text-brand-200/70 hover:text-white'
+        active ? 'bg-brand-400 text-ink' : 'text-brand-200/70 hover:text-white'
       }`}
     >
       {children}

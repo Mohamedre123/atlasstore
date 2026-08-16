@@ -42,7 +42,7 @@ export function SectionHeading({
       {href && (
         <Link
           href={href}
-          className="link-underline group flex shrink-0 items-center gap-1.5 text-[12px] font-bold text-brand-950"
+          className="link-underline group flex shrink-0 items-center gap-1.5 text-[12px] font-bold text-ink"
         >
           {hrefLabel}
           <ArrowLeftIcon className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-1" />

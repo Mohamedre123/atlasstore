@@ -101,7 +101,7 @@ export function Header() {
                 type="button"
                 onClick={() => setMenuOpen(true)}
                 aria-label="فتح القائمة"
-                className="-mr-2 p-2 text-brand-950 transition-opacity hover:opacity-60 lg:hidden"
+                className="-mr-2 p-2 text-ink transition-opacity hover:opacity-60 lg:hidden"
               >
                 <MenuIcon className="h-[22px] w-[22px]" />
               </button>
@@ -133,7 +133,7 @@ export function Header() {
                 type="button"
                 onClick={() => setSearchOpen((v) => !v)}
                 aria-label="بحث"
-                className="p-2.5 text-brand-950 transition-opacity hover:opacity-60"
+                className="p-2.5 text-ink transition-opacity hover:opacity-60"
               >
                 {searchOpen ? (
                   <CloseIcon className="h-[21px] w-[21px]" />
@@ -145,7 +145,7 @@ export function Header() {
               <Link
                 href="/account"
                 aria-label="حسابي"
-                className="p-2.5 text-brand-950 transition-opacity hover:opacity-60"
+                className="p-2.5 text-ink transition-opacity hover:opacity-60"
               >
                 <UserIcon className="h-[21px] w-[21px]" />
               </Link>
@@ -154,11 +154,11 @@ export function Header() {
                 type="button"
                 onClick={openCart}
                 aria-label={`السلة — ${count} منتج`}
-                className="relative p-2.5 text-brand-950 transition-opacity hover:opacity-60"
+                className="relative p-2.5 text-ink transition-opacity hover:opacity-60"
               >
                 <BagIcon className={`h-[22px] w-[22px] ${bump ? 'animate-pop' : ''}`} />
                 {count > 0 && (
-                  <span className="nums animate-pop absolute -left-0.5 -top-0.5 flex h-[19px] min-w-[19px] items-center justify-center rounded-full bg-brand-500 px-1 text-[10.5px] font-bold text-brand-950">
+                  <span className="nums animate-pop absolute -left-0.5 -top-0.5 flex h-[19px] min-w-[19px] items-center justify-center rounded-full bg-brand-500 px-1 text-[10.5px] font-bold text-ink">
                     {count}
                   </span>
                 )}
