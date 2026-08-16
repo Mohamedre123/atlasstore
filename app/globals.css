@@ -471,8 +471,11 @@ body {
   color: var(--ob-fg);
   cursor: pointer;
   outline: transparent;
-  -webkit-clip-path: inset(-1000% -1000% 0 0 round 999px);
-  clip-path: inset(-1000% -1000% 0 0 round 999px);
+  /* بيسمح للمدفع يطلع فوق الزرار من غير ما ينزل تحته.
+     من غير round — التدوير هنا بيتطبق على أركان القص البعيدة
+     فبيكسّر شكل الزرار. الاستدارة جاية من border-radius أصلًا. */
+  -webkit-clip-path: inset(-1000% -1000% 0 0);
+  clip-path: inset(-1000% -1000% 0 0);
   transition: box-shadow 0.35s var(--ease-out-expo),
     transform 0.35s var(--ease-out-expo);
   box-shadow: 0 8px 20px -10px rgba(6, 194, 216, 0.7);
@@ -493,10 +496,12 @@ body {
   cursor: not-allowed;
 }
 
+/* الحشو الجانبي كان كبير (62px من كل ناحية) فالنص كان بيتقص
+   في زرار عرضه 290px. 46px كفاية للتيشيرت والنص يفضل مقروء. */
 .ob__text {
   position: relative;
   display: block;
-  padding: 0.95rem calc(1rem + 46px);
+  padding: 0.95rem 46px;
   font-size: 13.5px;
   font-weight: 800;
   line-height: 1;
@@ -505,7 +510,7 @@ body {
 }
 
 .ob--compact .ob__text {
-  padding: 0.8rem calc(0.75rem + 42px);
+  padding: 0.8rem 42px;
   font-size: 12.5px;
 }
 
@@ -613,6 +618,467 @@ body {
   }
   .ob--compact .ob__text {
     padding-inline: 1.1rem;
+  }
+}
+
+/* ============================================================
+   زرار تأكيد الطلب — أنيميشن الدرون
+   ------------------------------------------------------------
+   منقول من الكود الأصلي بنفس التوقيتات، بس كل المسافات بقت
+   محسوبة من عرض الزرار عشان يشتغل على أي مقاس شاشة.
+   ============================================================ */
+.drone {
+  --drone-h: 56px;
+  --drone-pad: 66px;
+  /* مسافة طيران الدرون = العرض ناقص مكان الدايرة */
+  --drone-fly: calc(100% - var(--drone-pad) - 20px);
+  /* الزرار بيبدأ بدرجة أعمق شوية وبينوّر لسماوي الهوية في الآخر —
+     كله في نفس عيلة اللون، من غير أخضر */
+  --drone-idle: #0bc7dd;
+  --drone-idle-dark: #089cb4;
+  --drone-done: #14e2f8;
+  --drone-done-dark: #06c2d8;
+
+  position: relative;
+  display: block;
+  width: 100%;
+  height: var(--drone-h);
+  padding-inline-start: var(--drone-pad);
+  padding-inline-end: 15px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--drone-idle);
+  cursor: pointer;
+  outline: transparent;
+  transition: background-color 1s;
+  box-shadow: 0 10px 24px -12px rgba(6, 194, 216, 0.75);
+  touch-action: manipulation;
+}
+
+.drone:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.drone:not(:disabled):hover {
+  box-shadow: var(--shadow-pop);
+}
+
+.drone svg {
+  overflow: visible;
+  fill: none;
+  stroke-linejoin: round;
+}
+
+/* --- خط المسار اللي بيترسم فوق الزرار --- */
+.drone::before,
+.drone::after {
+  content: '';
+  position: absolute;
+  left: 5%;
+  bottom: 100%;
+  width: 14%;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--drone-idle-dark);
+  transform: scaleX(0);
+  transform-origin: 0 100%;
+}
+.drone::after {
+  left: 19%;
+  width: 66%;
+}
+
+/* اللون بينوّر مع آخر مرحلة — مربوط بالمرحلة مش بتوقيت منفصل
+   عشان يتزامن مع النص بالظبط */
+.drone[data-step='4'] {
+  background-color: var(--drone-done);
+}
+.drone[data-state='processing']::before,
+.drone[data-state='processing']::after {
+  transform: scaleX(1);
+  background-color: var(--drone-done-dark);
+}
+.drone[data-state='processing']::before {
+  transition: transform 0.6s 1.4s, background-color 1s 4.6s;
+}
+.drone[data-state='processing']::after {
+  transition: transform 2.42s 2.4s, background-color 1s 4.6s;
+}
+
+.drone[data-state='reverting'] {
+  background-color: var(--drone-idle);
+  transition: background-color 0.5s 0.96s;
+}
+.drone[data-state='reverting']::before,
+.drone[data-state='reverting']::after {
+  opacity: 0;
+}
+
+.drone__revert-line {
+  position: absolute;
+  left: 5%;
+  bottom: 100%;
+  width: 80%;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--drone-done);
+  transform-origin: 0 50%;
+  opacity: 0;
+}
+.drone[data-state='reverting'] .drone__revert-line {
+  opacity: 1;
+  transform: scaleX(0);
+  transition: transform 0.864s;
+}
+
+/* --- حاويات حركة الدرون --- */
+.drone__cont {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.drone__cont--takeoff {
+  z-index: -1;
+  opacity: 0;
+}
+.drone[data-state='processing'] .drone__cont--takeoff {
+  opacity: 1;
+  transform: translateY(-70px);
+  transition: transform 0.8s, opacity 0.2s;
+  transition-delay: 1.2s;
+}
+.drone[data-state='processing'] .drone__cont--shift {
+  transform: translateX(var(--drone-fly));
+  transition: transform 2.6s 2.4s;
+}
+.drone[data-state='processing'] .drone__cont--landing {
+  transform: translateY(24px);
+  transition: transform 0.3s 5s;
+}
+
+.drone__craft {
+  position: absolute;
+  left: 14px;
+  top: -10px;
+  width: 62px;
+  height: 52px;
+  stroke: #0e1720;
+  stroke-width: 2px;
+  fill: none;
+}
+
+@keyframes droneTilt {
+  8%, 24% {
+    transform: rotate(0);
+  }
+  35%, 70% {
+    transform: rotate(8deg);
+  }
+  85% {
+    transform: rotate(-4deg);
+  }
+  95%, 100% {
+    transform: rotate(0);
+  }
+}
+.drone[data-state='processing'] .drone__craft {
+  transform-origin: 50% 100%;
+  animation: droneTilt 3.8s 1.2s;
+}
+
+.drone[data-state='processing'] .drone__leaving {
+  transform: translate(150px, -150px) rotate(20deg) scale(0.3);
+  opacity: 0;
+  transition: transform 1.1s 5.5s, opacity 0.55s 6.05s;
+}
+
+.drone__arm {
+  --rotation: 0deg;
+  transform-origin: 68px 56px;
+  transform: rotate(var(--rotation));
+}
+.drone__arm--2 {
+  transform: scaleX(-1) rotate(var(--rotation));
+}
+.drone[data-state='processing'] .drone__arm {
+  --rotation: 25deg;
+  transition: transform 0.3s 5.2s;
+}
+
+.drone__body {
+  fill: var(--drone-idle);
+}
+.drone[data-state='processing'] .drone__body {
+  fill: var(--drone-done);
+  transition: fill 1s 4.6s;
+}
+
+.drone__accent {
+  fill: #ffc233;
+}
+
+.drone__package {
+  stroke-width: 4px;
+}
+
+@keyframes droneRevert {
+  40%, 45% {
+    transform: translate(calc(var(--drone-fly) * -2), 0);
+  }
+  75% {
+    transform: translate(calc(var(--drone-fly) * -2), -100px);
+  }
+  100% {
+    transform: translate(calc(var(--drone-fly) * -2), 100px);
+  }
+}
+.drone[data-state='reverting'] .drone__package {
+  opacity: 0;
+  transition: opacity 0s 2s;
+  animation: droneRevert 2s;
+}
+
+/* --- الدايرة --- */
+.drone__circle {
+  position: absolute;
+  left: 26px;
+  top: 50%;
+  width: 38px;
+  height: 38px;
+  margin-top: -19px;
+  border-radius: 50%;
+  background: var(--drone-idle-dark);
+}
+.drone[data-state='processing'] .drone__circle {
+  background-color: var(--drone-done);
+  transition: background-color 1s;
+  transition-delay: 4.6s;
+}
+.drone[data-state='reverting'] .drone__circle {
+  background-color: var(--drone-idle-dark);
+  transition: background-color 0.5s 0.96s;
+}
+
+.drone__circle-inner {
+  overflow: hidden;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: inherit;
+}
+
+.drone__circle-package {
+  width: 13px;
+  height: 17px;
+  stroke: #fff;
+  stroke-width: 3px;
+  stroke-linecap: round;
+}
+.drone[data-state='processing'] .drone__circle-package {
+  transform: translateY(-70px);
+  transition: transform 0.8s 1.2s;
+}
+.drone[data-state='reverting'] .drone__circle-package {
+  transform: translateY(0);
+  transition: transform 0.16s 1.6s;
+}
+
+.drone__grabbers {
+  --grabY: 0px;
+  --grabRotate: 0deg;
+  position: absolute;
+  inset: 0;
+}
+.drone__grabbers::before,
+.drone__grabbers::after {
+  content: '';
+  position: absolute;
+  right: 5px;
+  top: -12px;
+  width: 13px;
+  height: 8px;
+  border: 2px solid #0e1720;
+  border-left: none;
+  border-bottom: none;
+  transform: translateY(var(--grabY)) rotate(var(--grabRotate));
+  transition: transform 0.8s;
+}
+.drone__grabbers::before {
+  right: auto;
+  left: 5px;
+  transform: translateY(var(--grabY)) scaleX(-1) rotate(var(--grabRotate));
+}
+
+@keyframes droneGrab {
+  40%, 59.999% {
+    --grabY: 15px;
+    --grabRotate: 55deg;
+  }
+  60%, 100% {
+    --grabY: -55px;
+    --grabRotate: 55deg;
+  }
+}
+.drone[data-state='processing'] .drone__grabbers {
+  animation: droneGrab 2s forwards;
+}
+
+/* --- دايرة التقدّم وعلامة الصح --- */
+.drone__progress {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  stroke: #fff;
+  stroke-width: 2px;
+}
+.drone__progress-line {
+  stroke-dasharray: 125.68, 125.68;
+  stroke-dashoffset: 125.68;
+}
+.drone[data-state='processing'] .drone__progress-line {
+  stroke-dashoffset: 0;
+  transition: all 0.5s 4.9s;
+}
+.drone[data-state='reverting'] .drone__progress-line {
+  stroke-dashoffset: 125.68;
+  transition: all 0.5s 0.96s;
+}
+
+.drone__progress-check {
+  stroke-dasharray: 21.21, 21.21;
+  stroke-dashoffset: 21.21;
+}
+.drone[data-state='processing'] .drone__progress-check {
+  stroke-dashoffset: 0;
+  transition: all 0.5s 4.9s;
+}
+.drone[data-state='reverting'] .drone__progress-check {
+  stroke-dashoffset: 21.21;
+  transition: all 0.5s 0.96s;
+}
+
+/* --- النصوص --- */
+.drone__texts {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: #0e1720;
+  font-size: 14.5px;
+  font-weight: 800;
+}
+
+.drone__text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.4s, transform 0.4s;
+  will-change: opacity, transform;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* المرحلة الحالية بتتحدد من React عن طريق data-step —
+   النص اللي رقمه يساوي المرحلة هو اللي بيظهر، والباقي بيطلع لفوق */
+.drone[data-step='0'] .drone__text--0,
+.drone[data-step='1'] .drone__text--1,
+.drone[data-step='2'] .drone__text--2,
+.drone[data-step='3'] .drone__text--3,
+.drone[data-step='4'] .drone__text--4 {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* النصوص اللي عدّت بتطلع لفوق، واللي لسه جاية بتيجي من تحت */
+.drone[data-step='1'] .drone__text--0,
+.drone[data-step='2'] .drone__text--0,
+.drone[data-step='2'] .drone__text--1,
+.drone[data-step='3'] .drone__text--0,
+.drone[data-step='3'] .drone__text--1,
+.drone[data-step='3'] .drone__text--2,
+.drone[data-step='4'] .drone__text--0,
+.drone[data-step='4'] .drone__text--1,
+.drone[data-step='4'] .drone__text--2,
+.drone[data-step='4'] .drone__text--3 {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.drone__dots {
+  letter-spacing: -0.5px;
+  font-size: 20px;
+  line-height: 1;
+}
+@keyframes droneDot {
+  10%, 90% {
+    opacity: 0;
+  }
+  40%, 60% {
+    opacity: 1;
+  }
+}
+.drone__dots span {
+  opacity: 0;
+  animation: droneDot 1.2s 0.4s infinite;
+}
+.drone__dots::before,
+.drone__dots::after {
+  content: '.';
+  opacity: 0;
+}
+.drone__dots::before {
+  animation: droneDot 1.2s infinite;
+}
+.drone__dots::after {
+  animation: droneDot 1.2s 0.8s infinite;
+}
+
+/* شاشات صغيرة — الزرار يفضل مريح والدرون يصغّر شوية */
+@media (max-width: 380px) {
+  .drone {
+    --drone-h: 52px;
+    --drone-pad: 58px;
+  }
+  .drone__craft {
+    width: 54px;
+    height: 46px;
+    left: 12px;
+  }
+  .drone__circle {
+    left: 22px;
+    width: 34px;
+    height: 34px;
+    margin-top: -17px;
+  }
+  .drone__texts {
+    font-size: 13.5px;
+  }
+}
+
+/* لو المستخدم مقفّل الحركة: زرار عادي محترم */
+@media (prefers-reduced-motion: reduce) {
+  .drone__cont,
+  .drone__revert-line {
+    display: none;
+  }
+  .drone {
+    padding-inline-start: 15px;
+  }
+  .drone__circle {
+    display: none;
   }
 }
 
