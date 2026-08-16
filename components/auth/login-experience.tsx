@@ -31,6 +31,9 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  /* الرسالة التقنية الأصلية — بتظهر بخط صغير تحت الخطأ عشان
+     تعرف السبب بالظبط بدل ما تفضل تخمّن */
+  const [errorDetail, setErrorDetail] = useState('')
   const [notice, setNotice] = useState('')
   const [cooldown, setCooldown] = useState(0)
   const [otpType, setOtpType] = useState<'email' | 'signup'>('email')
@@ -58,6 +61,7 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
 
   const reset = () => {
     setError('')
+    setErrorDetail('')
     setNotice('')
   }
 
@@ -85,6 +89,7 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
       setNotice(`بعتنا الكود على ${email.trim()}`)
     } catch (err) {
       setError(readableError(err))
+      setErrorDetail(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
     }
@@ -141,6 +146,7 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
       }
     } catch (err) {
       setError(readableError(err))
+      setErrorDetail(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
     }
@@ -185,6 +191,7 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
       router.refresh()
     } catch (err) {
       setError(readableError(err))
+      setErrorDetail(err instanceof Error ? err.message : String(err))
       setCode('')
       codeRef.current?.focus()
     } finally {
@@ -275,10 +282,20 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
             </div>
 
             {error && (
-              <p className="mb-4 flex items-start gap-2 rounded-[10px] border border-red-400/30 bg-red-400/10 px-3.5 py-2.5 text-[12.5px] leading-relaxed text-red-300">
-                <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{error}</span>
-              </p>
+              <div className="mb-4 rounded-[10px] border border-red-400/30 bg-red-400/10 px-3.5 py-2.5">
+                <p className="flex items-start gap-2 text-[12.5px] leading-relaxed text-red-300">
+                  <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </p>
+                {errorDetail && (
+                  <p
+                    dir="ltr"
+                    className="mt-2 break-words text-right text-[10px] leading-relaxed text-red-300/50"
+                  >
+                    {errorDetail}
+                  </p>
+                )}
+              </div>
             )}
             {notice && !error && (
               <p className="mb-4 flex items-start gap-2 rounded-[10px] border border-brand-400/30 bg-brand-400/10 px-3.5 py-2.5 text-[12.5px] leading-relaxed text-brand-200">
@@ -543,6 +560,10 @@ function readableError(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err)
   const m = msg.toLowerCase()
 
+  /* أشهر مشكلة: سيرفر إيميل Supabase المجاني بيقع أو بيوصل حدّه
+     (٢-٤ رسايل في الساعة). الحل إنك تربط SMTP بتاعك من Resend. */
+  if (m.includes('error sending') && m.includes('email'))
+    return 'خدمة إرسال الإيميل واقفة مؤقتًا. جرّب بعد شوية أو كلّمنا واتساب.'
   if (m.includes('invalid login credentials')) return 'الإيميل أو الباسورد غلط'
   if (m.includes('expired')) return 'الكود انتهت صلاحيته — اطلب كود جديد'
   if (m.includes('invalid') && m.includes('token'))
