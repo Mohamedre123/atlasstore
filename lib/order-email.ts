@@ -172,8 +172,10 @@ export function buildAdminEmail(input: EmailInput): { subject: string; html: str
     .filter(Boolean)
     .join('\n')
 
+  /* العنوان بسيط من غير أسعار ولا رموز — المبالغ والعلامات في عنوان
+     الرسالة من أشهر أسباب دخول الإيميل في السبام */
   return {
-    subject: `أوردر ${orderId} — ${customer.fullName} — ${formatPrice(total)} — ${customer.governorate}`,
+    subject: `أوردر جديد ${orderId} — ${customer.fullName}`,
     html,
     text,
   }

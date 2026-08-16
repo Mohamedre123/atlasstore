@@ -164,6 +164,11 @@ export async function POST(request: Request) {
       subject: admin.subject,
       html: admin.html,
       text: admin.text,
+      headers: {
+        /* بيمنع تكرار نفس الأوردر لو الطلب اتبعت مرتين بالغلط */
+        'X-Entity-Ref-ID': orderId,
+      },
+      tags: [{ name: 'type', value: 'new-order' }],
     })
 
     if (error) {
