@@ -5,6 +5,7 @@ import { products } from '@/data/products'
 import { site } from '@/data/site'
 import { isValidEgyptPhone, makeOrderId, normalizeEgyptPhone } from '@/lib/format'
 import { sendPurchaseEvent } from '@/lib/meta/capi'
+import { getCurrentUser } from '@/lib/supabase/server'
 import { buildAdminEmail, buildCustomerEmail } from '@/lib/order-email'
 import type { CartItem, CustomerInfo } from '@/lib/types'
 
@@ -126,8 +127,14 @@ export async function POST(request: Request) {
       .find((c) => c.startsWith(`${name}=`))
       ?.split('=')[1]
 
+  /* بيانات حساب العميل بترفع جودة المطابقة في ميتا — الإيميل
+     اختياري في الفورم، بس هو مسجّل دخول فإيميله عندنا أكيد */
+  const account = await getCurrentUser()
+
   void sendPurchaseEvent({
     eventId: metaEventId || orderId,
+    accountEmail: account?.email ?? undefined,
+    userId: account?.id,
     customer: {
       fullName,
       phone,

@@ -49,6 +49,10 @@ type PurchaseInput = {
   fbp?: string
   fbc?: string
   sourceUrl?: string
+  /** إيميل حساب العميل — بيرفع جودة المطابقة لو ماكتبش إيميل في الفورم */
+  accountEmail?: string
+  /** معرّف العميل عندنا — ميتا بتستخدمه في المطابقة كمان */
+  userId?: string
 }
 
 /**
@@ -60,8 +64,18 @@ export async function sendPurchaseEvent(input: PurchaseInput): Promise<void> {
 
   const { customer, items, value, eventId } = input
 
+  /* الإيميل: اللي كتبه في الفورم، وإلا إيميل حسابه — الاتنين
+     بيتبعتوا لو مختلفين عشان فرصة المطابقة تزيد */
+  const emails = Array.from(
+    new Set([customer.email, input.accountEmail].filter(Boolean) as string[])
+  )
+    .map((e) => hash(e))
+    .filter(Boolean) as string[]
+
   const userData: Record<string, unknown> = {
-    em: hash(customer.email) ? [hash(customer.email)] : undefined,
+    em: emails.length ? emails : undefined,
+    /* معرّف ثابت للعميل — من أقوى وسائل المطابقة عند ميتا */
+    external_id: input.userId ? [hash(input.userId)] : undefined,
     ph: hashPhone(customer.phone) ? [hashPhone(customer.phone)] : undefined,
     /* الاسم بيتقسّم أول وآخر */
     fn: hash(customer.fullName?.split(' ')[0]) ? [hash(customer.fullName.split(' ')[0])] : undefined,

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { CashIcon, CheckIcon, PhoneIcon, TruckIcon, WhatsAppIcon } from '@/components/icons'
+import { CashIcon, CheckIcon, TruckIcon, WhatsAppIcon } from '@/components/icons'
 import { WhaleWatermark } from '@/components/logo'
 import { DELIVERY_WINDOW, SHIPPING_METHOD_NAME } from '@/data/locations'
 import { site } from '@/data/site'
@@ -55,8 +55,8 @@ export default function OrderSuccessPage() {
 
           <p className="relative mx-auto mt-4 max-w-[42ch] text-[14.5px] leading-[1.95] text-muted">
             {order
-              ? `شكرًا يا ${order.customer.fullName.split(' ')[0]} — طلبك وصلنا وهنكلّمك للتأكيد قبل الشحن.`
-              : 'طلبك وصلنا بنجاح وهنكلّمك على الموبايل للتأكيد قبل الشحن.'}
+              ? `شكرًا يا ${order.customer.fullName.split(' ')[0]} — استلمنا طلبك وسجّلناه، وهنبعتلك تحديث بحالته أول بأول.`
+              : 'استلمنا طلبك وسجّلناه، وهنبعتلك تحديث بحالته أول بأول.'}
           </p>
 
           {order && (
@@ -76,10 +76,10 @@ export default function OrderSuccessPage() {
         <div className="mt-8 grid gap-px border border-line bg-line sm:grid-cols-3">
           {[
             {
-              Icon: PhoneIcon,
+              Icon: CheckIcon,
               step: '01',
-              title: 'مكالمة تأكيد',
-              text: 'خلال ٢٤ ساعة بنكلّمك نتأكد من الأوردر والعنوان.',
+              title: 'استلمنا طلبك',
+              text: 'أوردرك اتسجّل عندنا وبنراجعه، وهيوصلك تحديث بحالته.',
             },
             {
               Icon: TruckIcon,

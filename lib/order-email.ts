@@ -223,16 +223,15 @@ export function buildCustomerEmail(input: EmailInput): { subject: string; html: 
 <body style="margin:0;padding:24px 12px;background:#F8F7F4;font-family:'Segoe UI',Tahoma,Arial,sans-serif">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #E2DFD8">
     <tr><td style="background:linear-gradient(135deg,#35E0F2 0%,#1E8FC2 45%,#0A1F3A 100%);padding:30px 24px;text-align:center">
-      <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:1px">ATLAS STORE</div>
+      <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:1px">ATLASs STORE</div>
       <div style="font-size:15px;color:#CFF8FE;margin-top:10px">استلمنا طلبك يا ${esc(customer.fullName.split(' ')[0])}</div>
       <div style="margin-top:16px;display:inline-block;background:rgba(255,255,255,.16);border-radius:3px;padding:8px 18px;font-family:monospace;font-size:18px;font-weight:700;color:#fff">${esc(orderId)}</div>
     </td></tr>
 
     <tr><td style="padding:26px 24px">
       <p style="margin:0 0 18px;font-size:14px;line-height:1.9;color:#14181D">
-        شكرًا لطلبك من ATLAS Store. فريقنا هيكلّمك على
-        <b style="direction:ltr;display:inline-block">${esc(customer.phone)}</b>
-        خلال ٢٤ ساعة لتأكيد الأوردر قبل الشحن.
+        شكرًا لطلبك من ATLASs Store. استلمنا طلبك وسجّلناه عندنا،
+        وهنبعتلك تحديث بحالته أول بأول.
       </p>
 
       <div style="background:#EEFCFF;border-right:3px solid #1E8FC2;padding:14px 16px;margin-bottom:22px">
