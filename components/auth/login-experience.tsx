@@ -32,6 +32,13 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
   const [notice, setNotice] = useState('')
   const [cooldown, setCooldown] = useState(0)
 
+  /**
+   * نوع الكود اللي اتبعت — Supabase بيفرّق بينهم:
+   * 'email'  = كود دخول عادي (signInWithOtp)
+   * 'signup' = كود تأكيد حساب جديد بباسورد (signUp)
+   */
+  const [otpType, setOtpType] = useState<'email' | 'signup'>('email')
+
   const codeRefs = useRef<(HTMLInputElement | null)[]>([])
 
   /* النور بيولّع لوحده بعد لحظة عشان الفورم يبان من غير ما حد يتوه */
@@ -77,6 +84,7 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
       })
       if (err) throw err
 
+      setOtpType('email')
       setStep('code')
       setCooldown(45)
       setNotice(`بعتنا كود من ${CODE_LENGTH} أرقام على ${email.trim()}`)
@@ -125,6 +133,7 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
           return
         }
 
+        setOtpType('signup')
         setStep('code')
         setCooldown(45)
         setNotice(`اتعمل حسابك — بعتنا كود تأكيد على ${email.trim()}`)
@@ -160,11 +169,24 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
     setLoading(true)
     try {
       const supabase = createClient()
-      const { error: err } = await supabase.auth.verifyOtp({
+
+      let { error: err } = await supabase.auth.verifyOtp({
         email: email.trim(),
         token,
-        type: 'email',
+        type: otpType,
       })
+
+      /* لو النوع ما ضبطش، بنجرّب النوع التاني قبل ما نقول للعميل إن الكود غلط */
+      if (err) {
+        const fallback = otpType === 'email' ? 'signup' : 'email'
+        const retry = await supabase.auth.verifyOtp({
+          email: email.trim(),
+          token,
+          type: fallback,
+        })
+        if (!retry.error) err = null
+      }
+
       if (err) throw err
 
       router.replace(next)
