@@ -19,6 +19,8 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
   /* اللمبة بتبدأ مطفية — العميل لازم يسحب الحبل بنفسه */
   const [on, setOn] = useState(false)
   const [everOn, setEverOn] = useState(false)
+  /* زرار احتياطي بيظهر لو النور فضل مطفي فترة */
+  const [showFallback, setShowFallback] = useState(false)
 
   const [method, setMethod] = useState<Method>('otp')
   const [isSignUp, setIsSignUp] = useState(false)
@@ -48,6 +50,12 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
       return !v
     })
   }
+
+  useEffect(() => {
+    if (everOn) return
+    const t = window.setTimeout(() => setShowFallback(true), 7000)
+    return () => window.clearTimeout(t)
+  }, [everOn])
 
   useEffect(() => {
     if (cooldown <= 0) return
@@ -242,7 +250,14 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
             <span
               className={`text-[12px] font-bold ${on ? 'text-brand-300' : 'text-white'}`}
             >
-              {on ? 'اسحب الحبل تاني عشان تطفّي' : 'اسحب الحبل لتحت عشان تنوّر'}
+              {on ? (
+                'اسحب الحبل تاني عشان تطفّي'
+              ) : (
+                <>
+                  <span className="sm:hidden">اسحب الحبل أو دوس عليه</span>
+                  <span className="hidden sm:inline">اسحب الحبل لتحت عشان تنوّر</span>
+                </>
+              )}
             </span>
           </div>
 
@@ -250,6 +265,18 @@ export function LoginExperience({ next = '/checkout' }: { next?: string }) {
             <p className="mt-2 text-[11px] text-brand-200/45">
               امسك الكورة وانزل بيها بإصبعك أو بالماوس
             </p>
+          )}
+
+          {/* ضمان أخير: لو الحبل ما ظبطش لأي سبب، الزرار ده بيظهر
+              بعد شوية عشان محدش يتعطّل عن تسجيل الدخول خالص */}
+          {!on && showFallback && (
+            <button
+              type="button"
+              onClick={toggleLamp}
+              className="mt-3 rounded-full border border-brand-400/40 bg-brand-400/10 px-4 py-2 text-[11.5px] font-bold text-brand-300 transition-colors hover:bg-brand-400/20"
+            >
+              الحبل مش راضي يشتغل؟ اضغط هنا
+            </button>
           )}
         </div>
 
