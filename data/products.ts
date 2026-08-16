@@ -16,8 +16,7 @@ export const categories: Category[] = [
   {
     slug: 'sets',
     name: 'أطقم',
-    /* صورة الطقم الكامل (تيشيرت + بنطلون) أوضح في التعبير عن القسم */
-    image: '/img/oncloud-2.webp',
+    image: '/img/cat-sets.png',
     description: 'ترينجات كاملة تلبسها طقم أو تفصلها',
   },
   {
