@@ -5,6 +5,7 @@ import './globals.css'
 import { CartDrawer } from '@/components/cart-drawer'
 import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
+import { MetaPixel } from '@/components/meta-pixel'
 import { RevealObserver } from '@/components/reveal'
 import { site } from '@/data/site'
 import { CartProvider } from '@/lib/cart'
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main id="main">{children}</main>
           <Footer />
           <CartDrawer />
+          <MetaPixel />
         </CartProvider>
       </body>
     </html>

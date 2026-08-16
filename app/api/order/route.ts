@@ -4,6 +4,7 @@ import { SHIPPING_FLAT_RATE, isValidArea, isValidGovernorate } from '@/data/loca
 import { products } from '@/data/products'
 import { site } from '@/data/site'
 import { isValidEgyptPhone, makeOrderId, normalizeEgyptPhone } from '@/lib/format'
+import { sendPurchaseEvent } from '@/lib/meta/capi'
 import { buildAdminEmail, buildCustomerEmail } from '@/lib/order-email'
 import type { CartItem, CustomerInfo } from '@/lib/types'
 
@@ -21,7 +22,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: 'البيانات المرسلة غير صالحة' }, { status: 400 })
   }
 
-  const { customer, items } = body as { customer?: CustomerInfo; items?: CartItem[] }
+  const { customer, items, metaEventId } = body as {
+    customer?: CustomerInfo
+    items?: CartItem[]
+    metaEventId?: string
+  }
 
   /* ---------- التحقق من بيانات العميل ---------- */
   if (!customer || typeof customer !== 'object') {
@@ -108,6 +113,40 @@ export async function POST(request: Request) {
 
   const orderId = makeOrderId()
   const placedAt = new Date()
+
+  /* ---------- تتبّع الشراء في ميتا ----------
+     بيتبعت من السيرفر عشان يوصل حتى لو العميل عنده مانع إعلانات.
+     نفس metaEventId اللي المتصفح بعت بيه، فميتا بتحسبهم حدث واحد.
+     مش بننتظره ولا بنوقف الأوردر لو فشل. */
+  const cookieHeader = request.headers.get('cookie') ?? ''
+  const readCookie = (name: string) =>
+    cookieHeader
+      .split(';')
+      .map((c) => c.trim())
+      .find((c) => c.startsWith(`${name}=`))
+      ?.split('=')[1]
+
+  void sendPurchaseEvent({
+    eventId: metaEventId || orderId,
+    customer: {
+      fullName,
+      phone,
+      email: String(customer.email ?? '').trim(),
+      governorate,
+      area,
+      address,
+    },
+    items: verifiedItems,
+    value: total,
+    clientIp:
+      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      request.headers.get('x-real-ip') ||
+      undefined,
+    userAgent: request.headers.get('user-agent') ?? undefined,
+    fbp: readCookie('_fbp'),
+    fbc: readCookie('_fbc'),
+    sourceUrl: request.headers.get('referer') ?? `${site.url}/checkout`,
+  })
 
   const cleanCustomer: CustomerInfo = {
     fullName,

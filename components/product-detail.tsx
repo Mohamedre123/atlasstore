@@ -7,6 +7,7 @@ import { getCategoryBySlug } from '@/data/products'
 import { site } from '@/data/site'
 import { useCart } from '@/lib/cart'
 import { discountPercent, formatPrice } from '@/lib/format'
+import { trackAddToCart, trackViewContent } from '@/lib/meta/client'
 import type { Product } from '@/lib/types'
 import {
   AlertIcon,
@@ -38,6 +39,11 @@ export function ProductDetail({ product }: { product: Product }) {
   const discount = discountPercent(product.price, product.compareAtPrice)
   const soldOut = product.inStock === false
   const variants = product.variants ?? []
+
+  /* حدث «مشاهدة منتج» لميتا — مرة واحدة لكل منتج */
+  useEffect(() => {
+    trackViewContent(product)
+  }, [product])
 
   /* الشريط السفلي بيظهر لما زرار الشراء الأساسي يخرج من الشاشة */
   useEffect(() => {
@@ -73,6 +79,8 @@ export function ProductDetail({ product }: { product: Product }) {
         ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return false
     }
+
+    trackAddToCart(product, quantity, selected)
 
     /* السلة بتتفتح في onDone بعد ما الأنيميشن يخلص */
     addItem(product, selected, quantity, false)

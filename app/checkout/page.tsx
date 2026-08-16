@@ -29,6 +29,11 @@ import {
   pluralize,
 } from '@/lib/format'
 import { OrderButton } from '@/components/order-button'
+import {
+  makeEventId,
+  trackInitiateCheckout,
+  trackPurchase,
+} from '@/lib/meta/client'
 import { loadProfile, profileToForm, saveOrder, saveProfile } from '@/lib/profile'
 import type { CustomerInfo } from '@/lib/types'
 
@@ -78,6 +83,14 @@ export default function CheckoutPage() {
       return () => window.clearTimeout(t)
     }
   }, [ready, items.length, submitting, router])
+
+  /* حدث «بدأ إتمام الطلب» لميتا — مرة واحدة أول ما الصفحة تفتح بسلة فيها منتجات */
+  useEffect(() => {
+    if (!ready || items.length === 0) return
+    trackInitiateCheckout(items, subtotal)
+    /* مرة واحدة بس — مش مع كل تغيير في السلة */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready])
 
   /* تعبئة البيانات المحفوظة من آخر أوردر — عشان ما يكتبهاش تاني */
   useEffect(() => {
@@ -151,6 +164,9 @@ export default function CheckoutPage() {
     setSubmitting(true)
     setServerError('')
 
+    /* نفس المعرّف بيتبعت من المتصفح ومن السيرفر — ميتا بتحسبه حدث واحد */
+    const eventId = makeEventId('purchase')
+
     const payload = {
       customer: {
         ...form,
@@ -161,6 +177,7 @@ export default function CheckoutPage() {
       subtotal,
       shipping: shipping ?? 0,
       total,
+      metaEventId: eventId,
     }
 
     try {
@@ -176,6 +193,9 @@ export default function CheckoutPage() {
         if (data.detail) setServerDetail(String(data.detail))
         throw new Error(data.error ?? 'حصلت مشكلة أثناء إرسال الطلب')
       }
+
+      /* حدث الشراء من المتصفح — والسيرفر بعت نفس الحدث بنفس المعرّف */
+      trackPurchase(items, total, eventId)
 
       sessionStorage.setItem(
         'atlas_last_order',
