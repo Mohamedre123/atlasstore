@@ -16,7 +16,8 @@ export const categories: Category[] = [
   {
     slug: 'sets',
     name: 'أطقم',
-    image: '/img/cat-sets.webp',
+    /* صورة الطقم الكامل (تيشيرت + بنطلون) أوضح في التعبير عن القسم */
+    image: '/img/oncloud-2.webp',
     description: 'ترينجات كاملة تلبسها طقم أو تفصلها',
   },
   {
@@ -307,6 +308,17 @@ export function getCategoryBySlug(slug: string): Category | undefined {
 export function getFeaturedProducts(limit = 8): Product[] {
   const featured = products.filter((p) => p.featured)
   return (featured.length ? featured : products).slice(0, limit)
+}
+
+/**
+ * الأكثر مبيعًا — خليط من كل الأقسام:
+ * ٤ تيشرتات + طقم + عباية
+ */
+export function getBestSellers(): Product[] {
+  const pick = (category: string, count: number) =>
+    products.filter((p) => p.category === category).slice(0, count)
+
+  return [...pick('tshirts', 4), ...pick('sets', 1), ...pick('abayas', 1)]
 }
 
 export function getNewArrivals(limit = 6): Product[] {

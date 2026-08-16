@@ -268,30 +268,38 @@ export function ProductDetail({ product }: { product: Product }) {
                 </p>
               )}
 
-              {soldOut ? (
-                <button type="button" disabled className="btn btn-primary w-full py-4 text-[14px]">
-                  <span>غير متوفر حاليًا</span>
-                </button>
-              ) : (
-                <OrderButton
-                  label="أضف إلى السلة"
-                  labelDone="في السلة"
-                  onAction={handleAdd}
-                  onDone={openCart}
-                  resetAfter={2600}
-                  className="w-full"
-                />
-              )}
+              {/* الزرارين بنفس العرض بالظبط — العرض محدود عشان أنيميشن
+                  المدفع يبان واضح زي الكود الأصلي */}
+              <div className="flex w-full max-w-[290px] flex-col gap-2.5">
+                {soldOut ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="btn btn-primary w-full py-3.5 text-[13.5px]"
+                  >
+                    <span>غير متوفر حاليًا</span>
+                  </button>
+                ) : (
+                  <OrderButton
+                    label="أضف إلى السلة"
+                    labelDone="في السلة"
+                    onAction={handleAdd}
+                    onDone={openCart}
+                    resetAfter={2600}
+                    className="w-full"
+                  />
+                )}
 
-              <a
-                href={`https://wa.me/${site.contact.whatsapp}?text=${whatsappText}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-ghost mt-2.5 w-full py-4 text-[14px]"
-              >
-                <WhatsAppIcon className="h-4.5 w-4.5" />
-                <span>اسأل عن المنتج</span>
-              </a>
+                <a
+                  href={`https://wa.me/${site.contact.whatsapp}?text=${whatsappText}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-ghost w-full py-3.5 text-[13.5px]"
+                >
+                  <WhatsAppIcon className="h-4 w-4" />
+                  <span>اسأل عن المنتج</span>
+                </a>
+              </div>
             </div>
 
             {/* --- ضمانات --- */}

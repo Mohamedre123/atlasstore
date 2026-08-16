@@ -26,7 +26,9 @@ export function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="relative mt-24 overflow-hidden bg-brand-950 text-brand-100">
+    /* من غير mt — المسافة كانت بتسيب شريط فاتح بين الصفحة والفوتر
+       وبيبان كخط أبيض في الصفحات الغامقة زي تسجيل الدخول */
+    <footer className="relative overflow-hidden bg-brand-950 text-brand-100">
       {/* علامة مائية */}
       <WhaleWatermark
         className="pointer-events-none absolute -left-16 -top-10 h-[340px] w-auto text-brand-400"

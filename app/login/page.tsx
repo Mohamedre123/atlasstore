@@ -1,15 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { isSupabaseConfigured } from '@/lib/supabase/config'
-import { getCurrentUser } from '@/lib/supabase/server'
 import { LoginExperience } from '@/components/auth/login-experience'
 import { ArrowLeftIcon, CashIcon, ShieldIcon, TruckIcon } from '@/components/icons'
 import { WhaleWatermark } from '@/components/logo'
+import { isSupabaseConfigured } from '@/lib/supabase/config'
+import { getCurrentUser } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
   title: 'تسجيل الدخول',
-  description: 'سجّل دخولك على ATLAS Store عشان تكمّل طلبك وتحفظ بياناتك.',
+  description: 'سجّل دخولك على ATLASs Store عشان تكمّل طلبك وتحفظ بياناتك.',
   robots: { index: false, follow: false },
 }
 
@@ -20,7 +20,6 @@ export default async function LoginPage({
 }) {
   const params = await searchParams
 
-  /* المسجّل دخول مالوش لازمة هنا */
   if (isSupabaseConfigured) {
     const user = await getCurrentUser()
     if (user) redirect(params.next?.startsWith('/') ? params.next : '/account')
@@ -31,35 +30,51 @@ export default async function LoginPage({
   const next = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/checkout'
 
   return (
-    <div className="relative min-h-[calc(100vh-var(--nav-h))] overflow-hidden bg-brand-950">
-      {/* هالة ضوء خلفية */}
+    <div className="relative overflow-hidden bg-brand-950">
+      {/* ============ خلفية المشهد ============ */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(circle at 30% 26%, rgba(53,224,242,0.14), transparent 62%)',
+            'radial-gradient(ellipse 70% 55% at 28% 22%, rgba(53,224,242,0.16), transparent 68%)',
         }}
       />
+      {/* شبكة خطوط شعرة زي باقي الموقع */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 hidden lg:grid lg:grid-cols-12"
+      >
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="border-l border-white/[0.035] last:border-l-0" />
+        ))}
+      </div>
       <WhaleWatermark
-        className="pointer-events-none absolute -bottom-16 -left-14 h-[320px] w-auto text-brand-400"
-        opacity={0.06}
+        className="absolute -bottom-16 -left-16 h-[340px] w-[340px]"
+        opacity={0.05}
       />
 
-      <div className="container-x relative py-10 lg:py-16">
-        <Link
-          href="/"
-          className="group mb-8 inline-flex items-center gap-2 text-[12.5px] font-bold text-brand-200/70 transition-colors hover:text-white"
-        >
-          <ArrowLeftIcon className="h-4 w-4 rotate-180 transition-transform group-hover:-translate-x-1" />
-          رجوع للمتجر
-        </Link>
+      <div className="container-x relative py-8 lg:py-14">
+        {/* --- شريط علوي --- */}
+        <div className="mb-8 flex items-center justify-between gap-4 border-b border-white/10 pb-5">
+          <Link
+            href="/"
+            className="group inline-flex items-center gap-2 text-[12.5px] font-bold text-brand-200/70 transition-colors hover:text-white"
+          >
+            <ArrowLeftIcon className="h-4 w-4 rotate-180 transition-transform group-hover:-translate-x-1" />
+            رجوع للمتجر
+          </Link>
+
+          <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-brand-400/60">
+            Secure Login
+          </span>
+        </div>
 
         <LoginExperience next={next} />
 
         {/* ============ طمأنة العميل — كاروسيل على الفون ============ */}
         <div className="mt-12 border-t border-white/10 pt-8">
-          <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-5 lg:overflow-visible lg:px-0">
+          <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-1 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-5 lg:overflow-visible lg:px-0">
             {[
               {
                 Icon: ShieldIcon,
@@ -79,7 +94,7 @@ export default async function LoginPage({
             ].map((item, i) => (
               <div
                 key={i}
-                className="w-[68vw] shrink-0 snap-start rounded-[14px] border border-white/10 bg-white/[0.04] p-4 sm:w-[46vw] lg:w-auto"
+                className="w-[68vw] shrink-0 snap-start rounded-[14px] border border-white/10 bg-white/[0.04] p-4 transition-colors duration-300 hover:border-brand-400/25 sm:w-[46vw] lg:w-auto"
               >
                 <item.Icon className="mb-3 h-5 w-5 text-brand-400" />
                 <p className="text-[13px] font-extrabold text-white">{item.title}</p>

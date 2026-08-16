@@ -7,16 +7,15 @@ import { site } from '@/data/site'
 import { ArrowLeftIcon } from './icons'
 
 /* ------------------------------------------------------------
-   الهيرو = بانر المتجر الأصلي بنسبته الطبيعية (1800×563).
-   الصورة بتتعرض كاملة على أي شاشة — لا قص ولا تشويه.
-   الديسكتوب: النص فوق المساحة الفاضية على يمين البانر.
-   الموبايل: البانر كامل، والنص تحته مباشرة كوحدة واحدة.
+   الهيرو = بانر المتجر بنسبته الطبيعية (1800×563).
+   نفس الشكل العريض على كل الأجهزة — الفون والكمبيوتر.
+   النص في نص البانر فوق طبقة بلور خفيفة عشان يبان في كل الحالات.
    ------------------------------------------------------------ */
 export function Hero() {
   const { hero } = site
   const imageRef = useRef<HTMLDivElement>(null)
 
-  /* بارالاكس خفيف جدًا — إحساس عمق من غير ما يزحزح الكادر */
+  /* بارالاكس خفيف — إحساس عمق من غير ما يزحزح الكادر */
   useEffect(() => {
     const el = imageRef.current
     if (!el) return
@@ -42,11 +41,9 @@ export function Hero() {
   return (
     <section aria-label="بانر المتجر" className="relative bg-white">
       {/* ============ البانر ============
-          الديسكتوب: نسبة الصورة الأصلية 1800×563 كاملة من غير أي قص.
-          الموبايل: بنقص الأطراف الزرقا الفاضية بس (الموديل في النص وبيفضل
-          ظاهر بالكامل) عشان البانر ما يبقاش شريط رفيع ١١٧ بكسل.
+          نفس النسبة الأصلية على كل الأجهزة عشان الشكل يبقى واحد.
           ============================================================ */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden sm:aspect-[2/1] lg:aspect-[1800/563]">
+      <div className="relative aspect-[1800/563] w-full overflow-hidden">
         <div ref={imageRef} className="absolute inset-0 lg:scale-[1.04]">
           <Image
             src={hero.image}
@@ -58,73 +55,36 @@ export function Hero() {
           />
         </div>
 
-        {/* تعتيم متدرّج من اليمين — يظهر على الشاشات الكبيرة بس */}
+        {/* تعتيم متدرّج من الجنبين عشان النص يفضل مقروء */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 hidden bg-gradient-to-l from-brand-950/80 via-brand-950/35 to-transparent lg:block"
+          className="absolute inset-0 bg-gradient-to-t from-brand-950/55 via-brand-950/10 to-brand-950/25"
         />
 
-        {/* --- النص فوق البانر (ديسكتوب) --- */}
-        <div className="absolute inset-0 hidden items-center lg:flex">
-          <div className="container-x">
-            <div className="max-w-[30rem]">
-              <p
-                className="eyebrow animate-[riseIn_0.8s_cubic-bezier(0.16,1,0.3,1)_both] text-brand-300"
-                style={{ animationDelay: '80ms' }}
-              >
-                {hero.eyebrow}
-              </p>
+        {/* --- النص في نص البانر --- */}
+        <div className="absolute inset-0 flex items-center justify-center px-3">
+          <div className="hero-glass animate-[riseIn_0.9s_cubic-bezier(0.16,1,0.3,1)_both] w-full max-w-[min(94%,640px)] rounded-[8px] px-3 py-2 text-center sm:rounded-[10px] sm:px-8 sm:py-6 lg:px-12 lg:py-8">
+            <p className="eyebrow !text-brand-200 text-[7.5px] sm:text-[10px]">
+              {hero.eyebrow}
+            </p>
 
-              <h1 className="mt-3 overflow-hidden">
-                <span
-                  className="display block animate-[maskUp_0.95s_cubic-bezier(0.16,1,0.3,1)_both] text-[clamp(1.7rem,2.9vw,2.6rem)] !text-white"
-                  style={{ animationDelay: '160ms' }}
-                >
-                  {hero.title}
-                </span>
-              </h1>
+            <h1 className="display mt-0.5 text-[clamp(0.95rem,4.2vw,2.5rem)] !text-white sm:mt-2.5">
+              {hero.title}
+            </h1>
 
-              <p
-                className="mt-4 max-w-[34ch] animate-[riseIn_0.9s_cubic-bezier(0.16,1,0.3,1)_both] text-[14px] leading-[1.9] text-white/85"
-                style={{ animationDelay: '300ms' }}
-              >
-                {hero.subtitle}
-              </p>
+            <p className="mx-auto mt-1 hidden max-w-[42ch] text-[13px] leading-[1.85] text-white/85 sm:mt-3 sm:block">
+              {hero.subtitle}
+            </p>
 
-              <div
-                className="mt-7 animate-[riseIn_0.9s_cubic-bezier(0.16,1,0.3,1)_both]"
-                style={{ animationDelay: '400ms' }}
-              >
-                <HeroButton href={hero.href} label={hero.cta} />
-              </div>
+            <div className="mt-2 flex justify-center sm:mt-5">
+              <HeroButton href={hero.href} label={hero.cta} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* ============ النص تحت البانر (موبايل وتابلت) ============ */}
-      <div className="border-b border-line bg-white lg:hidden">
-        <div className="container-x py-8 text-center sm:py-10">
-          <p className="eyebrow">{hero.eyebrow}</p>
-
-          <h1 className="mt-2.5 overflow-hidden">
-            <span className="display block animate-[maskUp_0.9s_cubic-bezier(0.16,1,0.3,1)_both] text-[clamp(1.45rem,6vw,2.1rem)]">
-              {hero.title}
-            </span>
-          </h1>
-
-          <p className="mx-auto mt-3.5 max-w-[36ch] text-[13.5px] leading-[1.9] text-muted">
-            {hero.subtitle}
-          </p>
-
-          <div className="mt-6 flex justify-center">
-            <HeroButton href={hero.href} label={hero.cta} />
-          </div>
-        </div>
-      </div>
-
       {/* ============ شريط المزايا — كاروسيل على الفون ============ */}
-      <div className="border-b border-line bg-ivory">
+      <div className="border-y border-line bg-ivory">
         <div className="container-x">
           <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 py-5 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-0 lg:overflow-visible lg:px-0">
             {site.perks.map((perk, i) => (
@@ -155,22 +115,20 @@ export function Hero() {
 }
 
 /* ------------------------------------------------------------
-   زرار الهيرو — تعبئة بتزحف من تحت عند الهوفر + سهم بيتحرك
+   زرار الهيرو
    ------------------------------------------------------------ */
 function HeroButton({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="group relative inline-flex items-center gap-2.5 overflow-hidden rounded-[3px] bg-brand-950 px-7 py-3.5 text-[13px] font-bold text-white transition-transform duration-300 active:scale-[0.98]"
+      className="group relative inline-flex items-center gap-1.5 overflow-hidden rounded-[3px] bg-white px-3.5 py-2 text-[10px] font-bold text-brand-950 transition-transform duration-300 active:scale-[0.98] sm:gap-2.5 sm:px-7 sm:py-3.5 sm:text-[13px]"
     >
       <span
         aria-hidden="true"
         className="absolute inset-0 translate-y-full bg-gradient-to-l from-brand-400 to-brand-600 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0"
       />
-      <span className="relative transition-colors duration-300 group-hover:text-brand-950">
-        {label}
-      </span>
-      <ArrowLeftIcon className="relative h-4 w-4 transition-all duration-300 group-hover:-translate-x-1 group-hover:text-brand-950" />
+      <span className="relative">{label}</span>
+      <ArrowLeftIcon className="relative h-3 w-3 transition-transform duration-300 group-hover:-translate-x-1 sm:h-4 sm:w-4" />
     </Link>
   )
 }

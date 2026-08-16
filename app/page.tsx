@@ -1,15 +1,27 @@
 import Link from 'next/link'
+import { CategoryRail } from '@/components/category-rail'
 import { Hero } from '@/components/hero'
 import { ArrowLeftIcon, CashIcon, TruckIcon, WhatsAppIcon } from '@/components/icons'
 import { WhaleWatermark } from '@/components/logo'
-import { ProductImage } from '@/components/product-image'
 import { ProductCarousel, Section, SectionHeading } from '@/components/section'
-import { categories, getCategoryCounts, products } from '@/data/products'
+import {
+  categories,
+  getBestSellers,
+  getCategoryCounts,
+  getProductsByCategory,
+} from '@/data/products'
 import { site } from '@/data/site'
-import { pluralize } from '@/lib/format'
 
 export default function HomePage() {
   const counts = getCategoryCounts()
+  const bestSellers = getBestSellers()
+
+  /* سيكشن لكل قسم بزرار «تسوّق الآن» */
+  const categorySections = [
+    { slug: 'tshirts', index: '03', eyebrow: 'T-Shirts', title: 'أفضل التيشرتات' },
+    { slug: 'sets', index: '04', eyebrow: 'Sets', title: 'أطقم كاملة' },
+    { slug: 'abayas', index: '05', eyebrow: 'Abayas', title: 'عبايات رجالية' },
+  ]
 
   return (
     <>
@@ -26,72 +38,21 @@ export default function HomePage() {
           description="كل قسم متجمّع فيه القطع اللي بتكمّل بعضها."
           href="/shop"
         />
-
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
-          {categories.map((category, i) => (
-            <Link
-              key={category.slug}
-              href={`/category/${category.slug}`}
-              data-reveal=""
-              style={{ '--reveal-delay': `${i * 80}ms` } as React.CSSProperties}
-              className={`group relative overflow-hidden bg-brand-950 ${
-                i === 2 ? 'col-span-2 lg:col-span-1' : ''
-              }`}
-            >
-              <div
-                className={`relative ${
-                  i === 2 ? 'aspect-[2/1] lg:aspect-[4/5]' : 'aspect-[4/5]'
-                }`}
-              >
-                <div className="absolute inset-0 transition-transform duration-[1100ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]">
-                  <ProductImage
-                    src={category.image}
-                    alt={category.name}
-                    seed={category.slug}
-                    sizes="(max-width: 1024px) 50vw, 33vw"
-                  />
-                </div>
-
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-950/90 via-brand-950/25 to-transparent" />
-
-                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4 lg:p-5">
-                  <div>
-                    <p className="font-mono mb-1 text-[9px] uppercase tracking-[0.18em] text-brand-300">
-                      {String(i + 1).padStart(2, '0')} —{' '}
-                      {pluralize(counts[category.slug], 'منتج واحد', 'منتجان', 'منتجات')}
-                    </p>
-                    <h3 className="font-display text-[16px] font-extrabold text-white lg:text-[19px]">
-                      {category.name}
-                    </h3>
-                    {category.description && (
-                      <p className="mt-1 hidden max-w-[30ch] text-[11.5px] leading-relaxed text-white/65 lg:block">
-                        {category.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-white/30 text-white transition-all duration-300 group-hover:border-brand-400 group-hover:bg-brand-400 group-hover:text-brand-950">
-                    <ArrowLeftIcon className="h-3.5 w-3.5" />
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <CategoryRail categories={categories} counts={counts} />
       </Section>
 
       {/* ============================================================
-          02 — المجموعة
+          02 — الأكثر مبيعًا
           ============================================================ */}
       <Section className="!pt-0">
         <SectionHeading
           index="02"
-          eyebrow="The Collection"
-          title="المجموعة"
-          description="كل القطع المتاحة دلوقتي — بخامات وأسعار واضحة."
+          eyebrow="Best Sellers"
+          title="الأكثر مبيعًا"
+          description="القطع اللي بتخلص من المخزن أول بأول."
           href="/shop"
         />
-        <ProductCarousel products={products} priorityCount={2} />
+        <ProductCarousel products={bestSellers} priorityCount={2} />
       </Section>
 
       {/* ============================================================
@@ -99,7 +60,7 @@ export default function HomePage() {
           ============================================================ */}
       <section className="relative overflow-hidden bg-brand-950">
         <WhaleWatermark
-          className="pointer-events-none absolute -bottom-12 -left-8 h-[300px] w-auto text-brand-400"
+          className="absolute -bottom-10 -left-10 h-[280px] w-[280px]"
           opacity={0.07}
         />
 
@@ -140,14 +101,60 @@ export default function HomePage() {
       </section>
 
       {/* ============================================================
-          03 — إزاي بتشتغل
+          03 · 04 · 05 — سيكشن لكل قسم
           ============================================================ */}
-      <Section>
+      {categorySections.map((section, sectionIndex) => {
+        const items = getProductsByCategory(section.slug)
+        if (items.length === 0) return null
+
+        const category = categories.find((c) => c.slug === section.slug)
+
+        return (
+          <Section key={section.slug} className={sectionIndex > 0 ? '!pt-0' : ''}>
+            <SectionHeading
+              index={section.index}
+              eyebrow={section.eyebrow}
+              title={section.title}
+              description={category?.description}
+            />
+
+            <ProductCarousel products={items} columns={items.length <= 3 ? 3 : 4} />
+
+            <div className="mt-8 flex justify-center">
+              <Link
+                href={`/category/${section.slug}`}
+                className="btn btn-outline group px-8"
+              >
+                <span>تسوّق {category?.name}</span>
+                <ArrowLeftIcon className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* ------------------------------------------------------------
+                مكان البانر الترويجي.
+                حط صورتك في public/img/promo.webp وشيل التعليق عن الكود
+                اللي تحت. المقاس المطلوب: 1800×563 بكسل (نفس بانر الهيرو).
+                ------------------------------------------------------------ */}
+            {/* {section.slug === 'tshirts' && (
+              <Link href="/shop" className="mt-12 block overflow-hidden rounded-[4px]">
+                <div className="relative aspect-[1800/563] w-full">
+                  <Image src="/img/promo.webp" alt="عرض خاص" fill sizes="100vw" className="object-cover" />
+                </div>
+              </Link>
+            )} */}
+          </Section>
+        )
+      })}
+
+      {/* ============================================================
+          06 — إزاي بتشتغل
+          ============================================================ */}
+      <Section className="!pt-0">
         <SectionHeading
-          index="03"
+          index="06"
           eyebrow="How It Works"
           title="الطلب في ٣ خطوات"
-          description="من غير تسجيل ولا بطاقة ائتمان — بتدفع لما يوصلك."
+          description="من غير تسجيل معقّد ولا بطاقة ائتمان — بتدفع لما يوصلك."
         />
 
         <div className="grid gap-px overflow-hidden border border-line bg-line md:grid-cols-3">
@@ -162,7 +169,7 @@ export default function HomePage() {
               Icon: CashIcon,
               step: '02',
               title: 'اكتب بياناتك',
-              text: 'المحافظة والمركز والقرية والعنوان بالتفصيل. مفيش حساب ولا باسورد.',
+              text: 'المحافظة والمركز والقرية والعنوان بالتفصيل — ومرة واحدة بس.',
             },
             {
               Icon: WhatsAppIcon,
@@ -199,8 +206,8 @@ export default function HomePage() {
           className="relative overflow-hidden border border-line bg-white px-5 py-11 text-center lg:px-14 lg:py-14"
         >
           <WhaleWatermark
-            className="pointer-events-none absolute -left-6 -top-6 h-[180px] w-auto text-brand-900"
-            opacity={0.04}
+            className="absolute -left-6 -top-6 h-[170px] w-[170px]"
+            opacity={0.05}
           />
           <p className="eyebrow mb-4">Need Help?</p>
           <h2 className="display mx-auto max-w-[22ch] text-[clamp(1.2rem,3.2vw,1.75rem)]">

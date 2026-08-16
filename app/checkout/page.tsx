@@ -557,13 +557,15 @@ export default function CheckoutPage() {
                     </p>
                   )}
 
-                  <OrderButton
-                    label="تأكيد الطلب"
-                    labelDone="تم الطلب"
-                    onAction={submitOrder}
-                    onDone={finishOrder}
-                    className="w-full"
-                  />
+                  <div className="mx-auto w-full max-w-[290px]">
+                    <OrderButton
+                      label="تأكيد الطلب"
+                      labelDone="تم الطلب"
+                      onAction={submitOrder}
+                      onDone={finishOrder}
+                      className="w-full"
+                    />
+                  </div>
 
                   <p className="nums mt-2.5 text-center text-[12.5px] font-bold text-brand-950">
                     المطلوب عند الاستلام: {formatPrice(total)}

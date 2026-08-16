@@ -3,7 +3,7 @@
    ============================================================ */
 
 export const site = {
-  name: 'ATLAS Store',
+  name: 'ATLASs Store',
   nameAr: 'أطلس ستور',
   tagline: 'ملابس رجالي',
   description:
