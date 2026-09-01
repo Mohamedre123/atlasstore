@@ -40,6 +40,13 @@ export function ProductDetail({ product }: { product: Product }) {
   const soldOut = product.inStock === false
   const variants = product.variants ?? []
 
+  /* بنبلّغ الصفحة إن فيه شريط لاصق تحت، عشان زرار الواتساب
+     العائم يرتفع فوقه على الفون بدل ما يغطّيه */
+  useEffect(() => {
+    document.body.classList.toggle('has-sticky-bar', showStickyBar)
+    return () => document.body.classList.remove('has-sticky-bar')
+  }, [showStickyBar])
+
   /* حدث «مشاهدة منتج» لميتا — مرة واحدة لكل منتج */
   useEffect(() => {
     trackViewContent(product)

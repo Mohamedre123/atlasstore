@@ -7,6 +7,7 @@ import { Footer } from '@/components/footer'
 import { Header } from '@/components/header'
 import { MetaPixel } from '@/components/meta-pixel'
 import { RevealObserver } from '@/components/reveal'
+import { WhatsAppFloat } from '@/components/whatsapp-float'
 import { site } from '@/data/site'
 import { CartProvider } from '@/lib/cart'
 
@@ -81,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main id="main">{children}</main>
           <Footer />
           <CartDrawer />
+          <WhatsAppFloat />
           <MetaPixel />
         </CartProvider>
       </body>
