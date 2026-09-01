@@ -1274,3 +1274,8 @@ body.has-sticky-bar .wa-float {
     animation: none;
   }
 }
+
+/* صور المنتج الرئيسية — تلاشي ناعم بين الصور بدل قفزة */
+.pd__slide {
+  transition: opacity 0.35s var(--ease-out-expo);
+}

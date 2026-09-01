@@ -141,13 +141,25 @@ export function ProductDetail({ product }: { product: Product }) {
 
               {/* الصورة الرئيسية */}
               <div className="relative aspect-[3/4] flex-1 overflow-hidden bg-white">
-                <ProductImage
-                  src={product.images[activeImage]}
-                  alt={product.name}
-                  seed={product.id}
-                  sizes="(max-width: 1024px) 100vw, 46vw"
-                  priority
-                />
+                {/* كل الصور متراكبة فوق بعض ومحمّلة من الأول.
+                    قبل كده كانت صورة واحدة بيتغيّر مصدرها، فكل ضغطة
+                    كانت بتستنى الصورة الجديدة تتحمّل — ده سبب التأخير. */}
+                {product.images.map((img, i) => (
+                  <div
+                    key={i}
+                    className="pd__slide absolute inset-0"
+                    style={{ opacity: i === activeImage ? 1 : 0 }}
+                    aria-hidden={i !== activeImage}
+                  >
+                    <ProductImage
+                      src={img}
+                      alt={i === activeImage ? product.name : ''}
+                      seed={product.id + i}
+                      sizes="(max-width: 1024px) 100vw, 46vw"
+                      priority={i === 0}
+                    />
+                  </div>
+                ))}
 
                 <div className="pointer-events-none absolute inset-x-4 top-4 flex flex-col items-start gap-1.5">
                   {discount !== null && !soldOut && (

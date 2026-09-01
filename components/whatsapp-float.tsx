@@ -16,29 +16,16 @@ import { CloseIcon, WhatsAppIcon } from './icons'
    والماك — من غير أي إعدادات إضافية.
    ============================================================ */
 
-const HIDE_KEY = 'atlas_wa_hidden_until'
-
 export function WhatsAppFloat() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [dismissed, setDismissed] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
   /* بيظهر بعد لحظة عشان ما يزاحمش تحميل الصفحة */
   useEffect(() => {
     const t = window.setTimeout(() => setMounted(true), 1400)
     return () => window.clearTimeout(t)
-  }, [])
-
-  /* لو العميل قفلها، ما نزنّش عليه تاني في نفس اليوم */
-  useEffect(() => {
-    try {
-      const until = Number(localStorage.getItem(HIDE_KEY) || 0)
-      if (until > Date.now()) setDismissed(true)
-    } catch {
-      /* التخزين ممكن يكون مقفول في وضع التصفح الخفي */
-    }
   }, [])
 
   /* تقفل بزر Escape */
@@ -71,8 +58,6 @@ export function WhatsAppFloat() {
   /* تقفل مع التنقل بين الصفحات */
   useEffect(() => setOpen(false), [pathname])
 
-  if (dismissed) return null
-
   /* الرسالة الجاهزة — بتتغيّر حسب الصفحة اللي هو فيها */
   const buildMessage = (extra?: string) => {
     const isProduct = pathname.startsWith('/product/')
@@ -102,17 +87,6 @@ export function WhatsAppFloat() {
     'الأوردر بيوصل في قد إيه؟',
     'عايز أسأل عن منتج معيّن',
   ]
-
-  const dismiss = () => {
-    setOpen(false)
-    setDismissed(true)
-    try {
-      /* نخفيها ٢٤ ساعة بس، مش للأبد */
-      localStorage.setItem(HIDE_KEY, String(Date.now() + 24 * 60 * 60 * 1000))
-    } catch {
-      /* مش مشكلة */
-    }
-  }
 
   return (
     <div
@@ -185,8 +159,8 @@ export function WhatsAppFloat() {
               تواصل معنا
             </a>
 
-            <button type="button" onClick={dismiss} className="wa-dismiss">
-              مش دلوقتي
+            <button type="button" onClick={() => setOpen(false)} className="wa-dismiss">
+              إغلاق
             </button>
           </div>
         </div>
