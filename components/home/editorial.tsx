@@ -63,7 +63,7 @@ export function Editorial() {
             >
               {editorial.title}
               <br />
-              <span className="grad-text">اللي بيوصلك بس اللي عدّى.</span>
+              <span className="grad-text">اللي بيوصلك عدّى.</span>
             </h2>
           </div>
 
@@ -76,32 +76,43 @@ export function Editorial() {
               {editorial.text}
             </p>
 
+            {/* الأرقام في لوح زجاجي — فوق صورة، فمن غير خلفية
+                بتبقى صعبة القراءة. dir=ltr عشان «١٠٠٪» ما تتقلبش
+                وتبان «٪١٠٠». */}
             <div
               data-reveal=""
               style={revealDelay(240)}
-              className="mt-8 grid grid-cols-3 gap-4 border-t border-white/10 pt-7"
+              className="mt-8 grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-white/12 bg-white/10"
             >
               {stats.map((stat, i) => (
-                <div key={i}>
-                  <p className="display grad-text text-[clamp(1.4rem,4.6vw,2rem)] font-bold">
+                <div
+                  key={i}
+                  className="bg-abyss/70 px-3 py-5 text-center backdrop-blur-md"
+                >
+                  <p
+                    dir="ltr"
+                    className="display text-[clamp(1.75rem,5.6vw,2.5rem)] font-bold leading-none text-brand-300 drop-shadow-[0_2px_16px_rgba(18,201,238,0.45)]"
+                  >
                     {stat.value}
                   </p>
-                  <p className="mt-1.5 text-[11px] leading-snug text-mist">
+                  <p className="mt-2.5 text-[11px] leading-snug text-foam/70">
                     {stat.label}
                   </p>
                 </div>
               ))}
             </div>
 
-            <Link
-              href="/shop"
+            {/* الزرار في النص تحت الأرقام */}
+            <div
               data-reveal=""
               style={revealDelay(320)}
-              className="btn btn-ghost mt-8"
+              className="mt-8 flex justify-center"
             >
-              <span>شوف المجموعة</span>
-              <ArrowLeftIcon className="btn-arrow h-4 w-4" />
-            </Link>
+              <Link href="/shop" className="btn btn-ghost">
+                <span>شوف المجموعة</span>
+                <ArrowLeftIcon className="btn-arrow h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>

@@ -89,10 +89,10 @@ export function Header() {
         }`}
       >
         <div
+          /* شفاف تمامًا وانت فوق عشان خلفية الموقع المتحركة تبان،
+             وزجاج ضبابي أول ما تنزل عشان الروابط تفضل مقروءة */
           className={`border-b transition-[background-color,border-color,backdrop-filter] duration-500 ${
-            scrolled
-              ? 'glass border-white/8'
-              : 'border-transparent bg-abyss'
+            scrolled ? 'glass border-white/8' : 'border-transparent bg-transparent'
           }`}
         >
           <div className="shell">
@@ -277,7 +277,7 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
   }, [onClose])
 
   return (
-    <div className="a-fade fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-abyss lg:hidden">
+    <div className="a-fade fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-abyss/95 backdrop-blur-2xl lg:hidden">
       <div
         aria-hidden="true"
         className="aurora aurora-a -right-24 -top-24 h-[300px] w-[300px]"

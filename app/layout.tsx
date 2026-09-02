@@ -5,6 +5,7 @@ import './globals.css'
 import { CartDrawer } from '@/components/cart/cart-drawer'
 import { Footer } from '@/components/layout/footer'
 import { Header } from '@/components/layout/header'
+import { SiteBackground } from '@/components/layout/site-background'
 import { Ticker } from '@/components/layout/ticker'
 import { MetaPixel } from '@/components/analytics/meta-pixel'
 import { WhatsAppFloat } from '@/components/layout/whatsapp-float'
@@ -115,6 +116,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
+
+        <SiteBackground />
 
         <CartProvider>
           <RevealObserver />

@@ -30,7 +30,7 @@ export function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="relative mt-auto overflow-hidden border-t border-white/8 bg-deep">
+    <footer className="relative mt-auto overflow-hidden border-t border-white/8 bg-deep/75 backdrop-blur-xl">
       <div
         aria-hidden="true"
         className="aurora aurora-c -bottom-40 -left-32 h-[420px] w-[420px] opacity-40"

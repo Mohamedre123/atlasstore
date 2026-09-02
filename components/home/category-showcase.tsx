@@ -19,7 +19,9 @@ export function CategoryShowcase({
   counts: Record<string, number>
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+    /* فون: صف واحد بالسحب — الأقسام جنب بعض مش فوق بعض
+       تابلت: عمودين · كمبيوتر: ٤ أعمدة وأول كارت بياخد عمودين */
+    <div className="rail no-bar bleed pb-2 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-4 lg:gap-5">
       {categories.map((category, i) => {
         const wide = i === 0
 
@@ -29,7 +31,9 @@ export function CategoryShowcase({
             href={`/category/${category.slug}`}
             data-reveal=""
             style={revealDelay(i * 90)}
-            className={`group relative ${wide ? 'lg:col-span-2 lg:row-span-1' : ''}`}
+            className={`group relative w-[72vw] shrink-0 sm:w-auto sm:shrink ${
+              wide ? 'lg:col-span-2 lg:row-span-1' : ''
+            }`}
           >
             <div className="pcard rim h-full">
               <div
@@ -44,8 +48,8 @@ export function CategoryShowcase({
                     fill
                     sizes={
                       wide
-                        ? '(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 46vw'
-                        : '(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 23vw'
+                        ? '(max-width: 640px) 72vw, (max-width: 1024px) 46vw, 46vw'
+                        : '(max-width: 640px) 72vw, (max-width: 1024px) 46vw, 23vw'
                     }
                     className="pshot object-contain p-6"
                   />

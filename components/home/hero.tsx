@@ -17,16 +17,29 @@ import type { Product } from '@/lib/types'
 /* ============================================================
    الواجهة الرئيسية
    ------------------------------------------------------------
-   مشهد بحري غامق: شفق متحرك في الخلفية، عنوان كبير بيتكشف
-   سطر ورا سطر، وتلات قطع من المجموعة معلّقة على ألواح فاتحة
-   بتتحرك مع الماوس ومع التمرير.
+   ترتيبها بيتغيّر حسب الجهاز:
 
-   البانرات القديمة مش مستخدمة هنا بقصد — الواجهة اتبنت من صور
-   المنتجات نفسها، فأي منتج جديد بيغيّر الواجهة تلقائيًا من غير
-   ما تعمل بانر بمقاسين كل مرة.
+   • الكمبيوتر → عمودين: الكلام يمين، وتلات قطع معلّقة شمال
+     بتتحرك مع الماوس.
+   • الفون → الكلام فوق، وتحته صف قطع بالسحب (كاروسيل) بدل
+     الكروت المتراكبة — أوضح وأرتب على شاشة ضيقة.
+
+   والمزايا شريط كامل تحت الاتنين، مش جوه عمود الكلام.
    ============================================================ */
 
 const perkIcons = [CashIcon, TruckIcon, RefreshIcon, SparkIcon]
+
+/* مكان كل كارت على الكمبيوتر — على الفون بيتجاهلها ويبقى صف عادي */
+const SLOTS = [
+  { at: 'lg:right-0 lg:top-0 lg:w-[46%]', depth: 26, delay: '0ms', float: '0s' },
+  { at: 'lg:left-0 lg:top-[19%] lg:w-[40%]', depth: -34, delay: '140ms', float: '1.4s' },
+  {
+    at: 'lg:bottom-0 lg:right-[13%] lg:w-[42%]',
+    depth: 18,
+    delay: '280ms',
+    float: '2.6s',
+  },
+] as const
 
 export function Hero({ showcase }: { showcase: Product[] }) {
   const stage = useRef<HTMLDivElement>(null)
@@ -68,17 +81,15 @@ export function Hero({ showcase }: { showcase: Product[] }) {
       className="relative overflow-hidden"
       style={{ '--mx': 0, '--my': 0 } as React.CSSProperties}
     >
-      {/* ---------- الخلفية ---------- */}
+      {/* ---------- شفق خاص بالواجهة فوق خلفية الموقع ---------- */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <span className="aurora aurora-a -right-24 -top-32 h-[460px] w-[460px]" />
-        <span className="aurora aurora-b -left-32 top-24 h-[520px] w-[520px]" />
-        <span className="aurora aurora-c bottom-[-180px] right-1/3 h-[420px] w-[420px]" />
-        <span className="gridlines" />
+        <span className="aurora aurora-a -right-24 -top-32 h-[420px] w-[420px] !opacity-40" />
+        <span className="aurora aurora-b -left-32 top-24 h-[480px] w-[480px] !opacity-35" />
       </div>
 
-      <div className="shell relative pb-14 pt-12 lg:pb-24 lg:pt-20">
-        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
-          {/* ============ النص ============ */}
+      <div className="shell relative pt-10 lg:pt-16">
+        <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
+          {/* ============ الكلام ============ */}
           <div className="relative z-10 text-center lg:text-right">
             <span
               data-reveal=""
@@ -91,22 +102,19 @@ export function Hero({ showcase }: { showcase: Product[] }) {
               <span className="tag !tracking-[0.2em]">{hero.eyebrow}</span>
             </span>
 
-            <h1 className="display mt-6 text-[clamp(2.3rem,8.4vw,4.6rem)] leading-[1.12]">
+            {/* عنوان واحد بيتوزّع على السطور لوحده (text-balance) بدل
+                ما نقسّمه بإيدينا لكلمة فوق وكلمتين تحت */}
+            <h1 className="display mt-6 text-balance text-[clamp(2rem,6.8vw,3.5rem)] leading-[1.45] lg:leading-[1.3]">
               <span data-reveal="mask" className="block">
-                <span>{hero.titleTop}</span>
-              </span>
-              <span
-                data-reveal="mask"
-                style={{ '--rd': '160ms' } as React.CSSProperties}
-                className="block pb-2"
-              >
-                <span className="grad-text">{hero.titleAccent}</span>
+                <span>
+                  {hero.titleTop} <span className="grad-text">{hero.titleAccent}</span>
+                </span>
               </span>
             </h1>
 
             <p
               data-reveal=""
-              style={{ '--rd': '320ms' } as React.CSSProperties}
+              style={{ '--rd': '260ms' } as React.CSSProperties}
               className="mx-auto mt-5 max-w-[46ch] text-[14px] leading-[2.05] text-mist lg:mx-0"
             >
               {hero.subtitle}
@@ -114,7 +122,7 @@ export function Hero({ showcase }: { showcase: Product[] }) {
 
             <div
               data-reveal=""
-              style={{ '--rd': '420ms' } as React.CSSProperties}
+              style={{ '--rd': '360ms' } as React.CSSProperties}
               className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
             >
               <Link href={hero.href} className="btn btn-primary btn-lg">
@@ -125,44 +133,53 @@ export function Hero({ showcase }: { showcase: Product[] }) {
                 <span>{hero.ctaAlt}</span>
               </Link>
             </div>
-
-            {/* شريط المزايا */}
-            <div
-              data-reveal=""
-              style={{ '--rd': '520ms' } as React.CSSProperties}
-              className="mt-10 grid grid-cols-2 gap-x-5 gap-y-4 border-t border-white/8 pt-7 sm:grid-cols-4 lg:gap-x-4"
-            >
-              {site.perks.map((perk, i) => {
-                const Icon = perkIcons[i] ?? SparkIcon
-                return (
-                  <div key={i} className="text-center lg:text-right">
-                    <Icon className="mx-auto h-[18px] w-[18px] text-brand-400 lg:mx-0" />
-                    <p className="mt-2 text-[12px] font-bold leading-snug">
-                      {perk.title}
-                    </p>
-                    <p className="mt-1 hidden text-[10.5px] leading-relaxed text-mist sm:block">
-                      {perk.text}
-                    </p>
-                  </div>
-                )
-              })}
-            </div>
           </div>
 
-          {/* ============ القطع المعلّقة ============ */}
+          {/* ============ القطع ============
+              فون: صف بالسحب · كمبيوتر: كروت معلّقة متراكبة */}
           <div className="relative z-10">
-            <div className="relative mx-auto aspect-[4/4.4] w-full max-w-[520px] sm:aspect-[4/3.6] lg:aspect-[4/4.3]">
+            <div className="rail no-bar bleed pb-2 lg:mx-auto lg:block lg:aspect-[4/4.2] lg:w-full lg:max-w-[520px] lg:overflow-visible lg:pb-0">
               {cards.map((product, i) => (
                 <FloatCard key={product.id} product={product} slot={i} />
               ))}
 
-              {/* هالة تحت الكروت */}
+              {/* هالة تحت الكروت — كمبيوتر بس */}
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-8 bottom-2 h-16 rounded-[50%] bg-brand-500/22 blur-3xl"
+                className="pointer-events-none absolute inset-x-8 bottom-2 hidden h-16 rounded-[50%] bg-brand-500/20 blur-3xl lg:block"
               />
             </div>
+
+            <p className="mt-3 flex items-center justify-center gap-1.5 text-[10.5px] text-mist lg:hidden">
+              <ArrowLeftIcon className="h-3 w-3" />
+              اسحب لتشوف باقي القطع
+            </p>
           </div>
+        </div>
+
+        {/* ============ شريط المزايا ============ */}
+        <div
+          data-reveal=""
+          style={{ '--rd': '160ms' } as React.CSSProperties}
+          className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/8 bg-white/6 sm:grid-cols-4 lg:mt-16"
+        >
+          {site.perks.map((perk, i) => {
+            const Icon = perkIcons[i] ?? SparkIcon
+            return (
+              <div
+                key={i}
+                className="flex items-start gap-3 bg-abyss/40 px-4 py-5 backdrop-blur-sm"
+              >
+                <Icon className="mt-0.5 h-[18px] w-[18px] shrink-0 text-brand-400" />
+                <div className="min-w-0">
+                  <p className="text-[12.5px] font-bold leading-snug">{perk.title}</p>
+                  <p className="mt-1 text-[10.5px] leading-relaxed text-mist">
+                    {perk.text}
+                  </p>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>
@@ -170,29 +187,8 @@ export function Hero({ showcase }: { showcase: Product[] }) {
 }
 
 /* ------------------------------------------------------------
-   كارت عائم في مشهد الواجهة
+   كارت قطعة في الواجهة
    ------------------------------------------------------------ */
-const SLOTS = [
-  {
-    box: 'right-0 top-0 w-[52%] sm:w-[45%]',
-    depth: 26,
-    delay: '0ms',
-    float: '0s',
-  },
-  {
-    box: 'left-0 top-[20%] w-[45%] sm:w-[39%]',
-    depth: -34,
-    delay: '140ms',
-    float: '1.4s',
-  },
-  {
-    box: 'bottom-0 right-[14%] w-[48%] sm:w-[41%]',
-    depth: 18,
-    delay: '280ms',
-    float: '2.6s',
-  },
-] as const
-
 function FloatCard({ product, slot }: { product: Product; slot: number }) {
   const s = SLOTS[slot] ?? SLOTS[0]
   const discount = discountPercent(product.price, product.compareAtPrice)
@@ -208,18 +204,18 @@ function FloatCard({ product, slot }: { product: Product; slot: number }) {
           transition: 'transform 0.65s cubic-bezier(0.19,1,0.22,1)',
         } as React.CSSProperties
       }
-      className={`group absolute ${s.box}`}
+      /* العرض على الكمبيوتر جاي من s.at — مانحطّش هنا أي عرض
+         لـ lg عشان ما يتعاركش معاه (النتيجة كانت كارت بيتلم
+         على نفسه لأن اللوح جوّاه عرضه نسبة من الأب) */
+      className={`group relative w-[58vw] shrink-0 sm:w-[38vw] lg:absolute lg:shrink ${s.at}`}
     >
       <div className="a-float" style={{ animationDelay: s.float }}>
-        {/* الكروت متراكبة على بعضها، فالسعر والخصم بيتحطوا فوق
-            الصورة نفسها — سطر بيانات تحتها كان هيتغطّى من الكارت
-            اللي بعده على الشاشات الصغيرة */}
         <div className="pcard rim rim-on !p-2 shadow-[0_40px_80px_-40px_rgba(0,0,0,0.9)]">
           <div className="plate aspect-[3/4] w-full">
             <Shot
               src={product.images[0]}
               alt={product.name}
-              sizes="(max-width: 640px) 52vw, 26vw"
+              sizes="(max-width: 640px) 58vw, (max-width: 1024px) 38vw, 26vw"
               priority
             />
 
@@ -229,10 +225,21 @@ function FloatCard({ product, slot }: { product: Product; slot: number }) {
               </span>
             )}
 
-            {/* فوق مش تحت — الكروت بتتراكب من تحت فالسعر كان بيتغطّى */}
-            <span className="chip chip-dark nums absolute left-2 top-2 !text-[11px]">
+            {/* على الكمبيوتر الكروت متراكبة فمفيش مكان لسطر بيانات
+                تحتها — السعر بيقعد فوق الصورة */}
+            <span className="chip chip-dark nums absolute left-2 top-2 hidden !text-[11px] lg:inline-flex">
               {formatPrice(product.price)}
             </span>
+          </div>
+
+          {/* سطر البيانات — فون وتابلت بس */}
+          <div className="px-1.5 pb-0.5 pt-2.5 lg:hidden">
+            <p className="line-clamp-1 text-[11.5px] font-bold text-foam/90">
+              {product.name}
+            </p>
+            <p className="nums mt-1 text-[12.5px] font-extrabold text-brand-300">
+              {formatPrice(product.price)}
+            </p>
           </div>
         </div>
       </div>

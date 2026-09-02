@@ -198,11 +198,16 @@ video {
 /* ============================================================
    تايبوجرافي
    ============================================================ */
+/* العناوين.
+   line-height مفتوح شوية (1.34) عن المعتاد بقصد — الحروف
+   العربية بتاعتها نقط ومدّات فوق وتحت، ولو السطور قربت من
+   بعض بتلزق وتبقى وحشة. */
 .display {
   font-family: var(--font-display);
   font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  line-height: 1.34;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
 }
 
 /* اللايبل اللاتيني الصغير فوق كل عنوان.
@@ -825,7 +830,161 @@ select.field option {
 }
 
 /* ============================================================
-   الشفق — خلفيات متحركة خفيفة
+   خلفية الموقع المتحركة — طبقة واحدة ورا كل الصفحات
+   ============================================================ */
+.site-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 110% 55% at 50% -5%, rgba(11, 95, 196, 0.22), transparent 72%),
+    radial-gradient(ellipse 90% 50% at 50% 105%, rgba(10, 42, 128, 0.28), transparent 72%),
+    var(--color-abyss);
+}
+
+.site-bg__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  will-change: transform;
+}
+
+/* كل كورة ليها مسار ومدة مختلفة عشان الحركة ما تبقاش متزامنة */
+.site-bg__orb--a {
+  top: -14%;
+  right: -12%;
+  height: 46vw;
+  width: 46vw;
+  min-height: 300px;
+  min-width: 300px;
+  background: radial-gradient(circle, rgba(18, 201, 238, 0.3), transparent 68%);
+  animation: bg-wander-a 46s ease-in-out infinite;
+}
+
+.site-bg__orb--b {
+  top: 28%;
+  left: -16%;
+  height: 52vw;
+  width: 52vw;
+  min-height: 320px;
+  min-width: 320px;
+  background: radial-gradient(circle, rgba(11, 95, 196, 0.34), transparent 68%);
+  animation: bg-wander-b 62s ease-in-out infinite;
+}
+
+.site-bg__orb--c {
+  bottom: -18%;
+  right: 18%;
+  height: 44vw;
+  width: 44vw;
+  min-height: 280px;
+  min-width: 280px;
+  background: radial-gradient(circle, rgba(10, 42, 128, 0.42), transparent 70%);
+  animation: bg-wander-c 54s ease-in-out infinite;
+}
+
+.site-bg__orb--d {
+  top: 58%;
+  right: -10%;
+  height: 34vw;
+  width: 34vw;
+  min-height: 220px;
+  min-width: 220px;
+  background: radial-gradient(circle, rgba(63, 240, 247, 0.16), transparent 66%);
+  animation: bg-wander-a 70s ease-in-out infinite reverse;
+}
+
+/* شبكة خطوط بتزحف ببطء — بتدّي إحساس بالعمق من غير ما تلفت النظر */
+.site-bg__grid {
+  position: absolute;
+  inset: -60px;
+  background-image:
+    linear-gradient(to left, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+  background-size: 96px 96px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 65% at 50% 40%, #000, transparent 78%);
+  mask-image: radial-gradient(ellipse 80% 65% at 50% 40%, #000, transparent 78%);
+  animation: bg-crawl 40s linear infinite;
+}
+
+/* طبقة أخيرة بتهدّي الألوان عشان النص يفضل واضح فوقها */
+.site-bg__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(4, 9, 26, 0.35) 0%,
+    rgba(4, 9, 26, 0.55) 50%,
+    rgba(4, 9, 26, 0.35) 100%
+  );
+}
+
+@keyframes bg-wander-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(-6%, 8%, 0) scale(1.14);
+  }
+  66% {
+    transform: translate3d(5%, -5%, 0) scale(0.92);
+  }
+}
+
+@keyframes bg-wander-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  40% {
+    transform: translate3d(9%, -7%, 0) scale(0.9);
+  }
+  70% {
+    transform: translate3d(-4%, 10%, 0) scale(1.18);
+  }
+}
+
+@keyframes bg-wander-c {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-10%, -9%, 0) scale(0.88);
+  }
+}
+
+@keyframes bg-crawl {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -96px 96px;
+  }
+}
+
+/* على الفون بنشيل كورتين ونقلل التمويه — التمويه الكبير أغلى
+   حاجة على كروت الشاشة في الموبايل */
+@media (max-width: 767px) {
+  .site-bg__orb {
+    filter: blur(64px);
+  }
+
+  .site-bg__orb--c,
+  .site-bg__orb--d {
+    display: none;
+  }
+
+  .site-bg__grid {
+    background-size: 72px 72px;
+  }
+}
+
+/* ============================================================
+   الشفق — خلفيات متحركة خفيفة داخل الأقسام
    ============================================================ */
 .aurora {
   position: absolute;
@@ -1461,6 +1620,25 @@ body.has-bar .wa {
   flex: 0 0 auto;
 }
 
+/* الكاروسيل اللي بيخرج لحافة الشاشة (.bleed): من غير
+   scroll-padding الالتصاق بيحاذي أول كارت على حافة الحاوية
+   ويبلع الحشو الجانبي، فالكارت بيلزق في طرف الشاشة. */
+.rail.bleed {
+  scroll-padding-inline-start: 18px;
+}
+
+@media (min-width: 640px) {
+  .rail.bleed {
+    scroll-padding-inline-start: 32px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .rail.bleed {
+    scroll-padding-inline-start: 0;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -1504,7 +1682,9 @@ body.has-bar .wa {
   }
 
   .aurora,
-  .marquee {
+  .marquee,
+  .site-bg__orb,
+  .site-bg__grid {
     animation: none !important;
   }
 }

@@ -8,7 +8,7 @@ import { site } from '@/data/site'
    ============================================================ */
 export function Ticker() {
   return (
-    <div className="relative overflow-hidden border-b border-white/8 bg-deep py-2.5">
+    <div className="glass relative overflow-hidden border-b py-2.5">
       <div className="marquee">
         {[0, 1].map((pass) => (
           <div key={pass} className="flex items-center" aria-hidden={pass === 1}>
@@ -27,11 +27,11 @@ export function Ticker() {
       {/* تلاشي على الطرفين عشان النص ما يتقطعش فجأة */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-deep to-transparent"
+        className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-abyss to-transparent"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-deep to-transparent"
+        className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-abyss to-transparent"
       />
     </div>
   )
