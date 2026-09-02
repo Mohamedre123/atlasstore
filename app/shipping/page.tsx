@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { InfoPage } from '@/components/info-page'
+import { InfoPage } from '@/components/layout/info-page'
 import { DELIVERY_WINDOW, SHIPPING_METHOD_NAME, governorates } from '@/data/locations'
 
 export const metadata: Metadata = {
@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 export default function ShippingPage() {
   return (
     <InfoPage
-      index="/ shipping"
       eyebrow="Shipping & Delivery"
       title="الشحن والتوصيل"
       description={`${SHIPPING_METHOD_NAME} — بنوصّل لكل محافظات مصر، والدفع عند الاستلام.`}

@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
-import { PageHeader } from '@/components/page-header'
-import { ShopBrowser } from '@/components/shop-browser'
+import { PageHeader } from '@/components/layout/page-header'
+import { ShopBrowser } from '@/components/shop/shop-browser'
+import { products } from '@/data/products'
+import { site } from '@/data/site'
 
 export const metadata: Metadata = {
   title: 'كل المنتجات',
-  description: 'تصفّح كل منتجات ATLAS Store — ملابس رجالي بخامات مختارة وأسعار واضحة.',
+  description: `تصفّح مجموعة ${site.nameFull} كاملة — ملابس رجالي بخامات مختارة وأسعار واضحة، والدفع عند الاستلام.`,
+  alternates: { canonical: '/shop' },
 }
 
 export default async function ShopPage({
@@ -13,20 +16,32 @@ export default async function ShopPage({
   searchParams: Promise<{ category?: string; sale?: string }>
 }) {
   const params = await searchParams
+  const saleOnly = params.sale === '1'
 
   return (
     <>
       <PageHeader
-        index="/ shop"
         eyebrow="All Products"
-        title="كل المنتجات"
-        description="المجموعة كاملة. فلتر حسب القسم أو رتّب بالسعر عشان توصل للي بتدوّر عليه بسرعة."
+        title={saleOnly ? 'العروض' : 'كل المنتجات'}
+        description={
+          saleOnly
+            ? 'القطع اللي عليها خصم دلوقتي — نفس الخامة ونفس القصّة بسعر أقل.'
+            : 'المجموعة كاملة. فلتر حسب القسم أو السعر ورتّب زي ما يريحك عشان توصل بسرعة للي بتدوّر عليه.'
+        }
+        aside={
+          <div className="card px-5 py-4 text-center">
+            <p className="nums display text-[26px] font-bold grad-text">
+              {products.length}
+            </p>
+            <p className="mt-1 text-[11px] text-mist">قطعة في المجموعة</p>
+          </div>
+        }
       />
 
-      <div className="container-x py-10 lg:py-14">
+      <div className="shell py-10 lg:py-14">
         <ShopBrowser
           initialCategory={params.category ?? ''}
-          initialSaleOnly={params.sale === '1'}
+          initialSaleOnly={saleOnly}
         />
       </div>
     </>

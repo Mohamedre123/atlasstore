@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { InfoPage } from '@/components/info-page'
+import { InfoPage } from '@/components/layout/info-page'
 
 export const metadata: Metadata = {
   title: 'دليل المقاسات',
@@ -9,7 +9,6 @@ export const metadata: Metadata = {
 export default function SizeGuidePage() {
   return (
     <InfoPage
-      index="/ sizes"
       eyebrow="Size Guide"
       title="دليل المقاسات"
       description="قيس قطعة عندك بتظبط عليك وقارنها بالجداول — أدق من إنك تقيس نفسك."

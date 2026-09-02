@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { InfoPage } from '@/components/info-page'
+import { InfoPage } from '@/components/layout/info-page'
 
 export const metadata: Metadata = {
   title: 'الاستبدال والاسترجاع',
@@ -9,7 +9,6 @@ export const metadata: Metadata = {
 export default function ReturnsPage() {
   return (
     <InfoPage
-      index="/ returns"
       eyebrow="Returns & Exchange"
       title="الاستبدال والاسترجاع"
       description="المقاس مش مظبوط أو القطعة مش زي ما توقعت؟ عندك ١٤ يوم."

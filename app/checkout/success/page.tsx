@@ -2,8 +2,15 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { CashIcon, CheckIcon, TruckIcon, WhatsAppIcon } from '@/components/icons'
-import { WhaleWatermark } from '@/components/logo'
+import { Watermark } from '@/components/brand/logo'
+import {
+  ArrowLeftIcon,
+  BoxIcon,
+  CashIcon,
+  CheckIcon,
+  TruckIcon,
+  WhatsAppIcon,
+} from '@/components/ui/icons'
 import { DELIVERY_WINDOW, SHIPPING_METHOD_NAME } from '@/data/locations'
 import { site } from '@/data/site'
 import { formatPrice } from '@/lib/format'
@@ -27,7 +34,7 @@ export default function OrderSuccessPage() {
       const raw = sessionStorage.getItem('atlas_last_order')
       if (raw) setOrder(JSON.parse(raw))
     } catch {
-      /* لو البيانات باظت نعرض الرسالة العامة */
+      /* لو البيانات باظت بنعرض الرسالة العامة */
     }
     setLoaded(true)
   }, [])
@@ -35,174 +42,194 @@ export default function OrderSuccessPage() {
   if (!loaded) return <div className="min-h-[60vh]" />
 
   return (
-    <div className="container-x py-14 lg:py-20">
-      <div className="mx-auto max-w-[720px]">
-        {/* ============ التأكيد ============ */}
-        <div className="relative overflow-hidden border border-line bg-white px-6 py-12 text-center lg:px-14 lg:py-16">
-          <WhaleWatermark
-            className="pointer-events-none absolute -left-10 -top-10 h-[260px] w-auto text-brand-900"
-            opacity={0.04}
-          />
+    <div className="relative overflow-hidden">
+      <span
+        aria-hidden="true"
+        className="aurora aurora-a -right-24 -top-32 h-[420px] w-[420px]"
+      />
+      <span
+        aria-hidden="true"
+        className="aurora aurora-c -bottom-32 -left-24 h-[380px] w-[380px]"
+      />
 
-          <div className="animate-pop relative mx-auto mb-7 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-brand-950">
-            <CheckIcon className="h-9 w-9 text-brand-400" strokeWidth={2} />
+      <div className="shell relative py-14 lg:py-20">
+        <div className="mx-auto max-w-[760px]">
+          {/* ============ التأكيد ============ */}
+          <div className="rim rim-on relative overflow-hidden rounded-[28px] bg-deep px-6 py-14 text-center lg:px-14">
+            <Watermark
+              className="pointer-events-none absolute -left-10 -top-10 h-[240px] w-auto"
+              opacity={0.06}
+            />
+
+            <div className="relative">
+              <div className="a-pop mx-auto mb-7 flex h-[84px] w-[84px] items-center justify-center rounded-full bg-[image:var(--grad-soft)] shadow-[var(--glow-lg)]">
+                <CheckIcon className="h-10 w-10 text-ink" strokeWidth={2.2} />
+              </div>
+
+              <p className="tag">Order Received</p>
+
+              <h1 className="display mt-4 text-[clamp(1.7rem,5.4vw,2.7rem)]">
+                تم استلام طلبك
+              </h1>
+
+              <p className="mx-auto mt-4 max-w-[44ch] text-[14px] leading-[2] text-mist">
+                {order
+                  ? `شكرًا يا ${order.customer.fullName.split(' ')[0]} — استلمنا طلبك وسجّلناه، وهنبعتلك تحديث بحالته أول بأول.`
+                  : 'استلمنا طلبك وسجّلناه، وهنبعتلك تحديث بحالته أول بأول.'}
+              </p>
+
+              {order && (
+                <div className="mt-8 inline-flex flex-col items-center rounded-2xl border border-white/10 bg-white/4 px-9 py-5">
+                  <span className="tag mb-2">Order Number</span>
+                  <span className="font-[family-name:var(--font-label)] grad-text text-[27px] font-bold tracking-[0.12em]">
+                    {order.orderId}
+                  </span>
+                  <span className="mt-2 text-[11px] text-mist">
+                    احتفظ بالرقم ده للمتابعة
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
-          <p className="eyebrow relative">Order Confirmed</p>
-          <h1 className="display relative mt-3 text-[clamp(1.8rem,5vw,2.8rem)]">
-            تم استلام طلبك
-          </h1>
+          {/* ============ الخطوات الجاية ============ */}
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {[
+              {
+                Icon: BoxIcon,
+                step: '01',
+                title: 'استلمنا طلبك',
+                text: 'أوردرك اتسجّل عندنا وبنراجعه، وهيوصلك تحديث بحالته.',
+              },
+              {
+                Icon: TruckIcon,
+                step: '02',
+                title: SHIPPING_METHOD_NAME,
+                text: `مندوبنا بيوصّلك بنفسه خلال ${DELIVERY_WINDOW}.`,
+              },
+              {
+                Icon: CashIcon,
+                step: '03',
+                title: 'الاستلام والدفع',
+                text: order
+                  ? `افحص الأوردر وادفع ${formatPrice(order.total)} للمندوب.`
+                  : 'افحص الأوردر الأول وبعدين ادفع للمندوب.',
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                data-reveal=""
+                style={{ '--rd': `${i * 110}ms` } as React.CSSProperties}
+                className="card p-5"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <item.Icon className="h-6 w-6 text-brand-400" />
+                  <span className="font-[family-name:var(--font-label)] text-[26px] font-bold leading-none text-white/8">
+                    {item.step}
+                  </span>
+                </div>
+                <h3 className="text-[13.5px] font-extrabold">{item.title}</h3>
+                <p className="mt-2 text-[12px] leading-[1.9] text-mist">{item.text}</p>
+              </div>
+            ))}
+          </div>
 
-          <p className="relative mx-auto mt-4 max-w-[42ch] text-[14.5px] leading-[1.95] text-muted">
-            {order
-              ? `شكرًا يا ${order.customer.fullName.split(' ')[0]} — استلمنا طلبك وسجّلناه، وهنبعتلك تحديث بحالته أول بأول.`
-              : 'استلمنا طلبك وسجّلناه، وهنبعتلك تحديث بحالته أول بأول.'}
-          </p>
-
+          {/* ============ ملخص الطلب ============ */}
           {order && (
-            <div className="relative mt-8 inline-flex flex-col items-center border border-line bg-ivory px-8 py-5">
-              <span className="eyebrow mb-2">Order Number</span>
-              <span className="font-mono text-[26px] font-bold tracking-[0.1em] text-ink">
-                {order.orderId}
-              </span>
-              <span className="mt-2 text-[11.5px] text-muted">
-                احتفظ بالرقم ده للمتابعة
-              </span>
+            <div className="card mt-6 overflow-hidden">
+              <div className="border-b border-white/8 px-6 py-5">
+                <p className="tag">Summary</p>
+                <h2 className="display mt-1.5 text-[17px] font-bold">ملخص الطلب</h2>
+              </div>
+
+              <ul className="divide-y divide-white/8 px-6">
+                {order.items.map((item) => (
+                  <li
+                    key={item.key}
+                    className="flex items-start justify-between gap-4 py-4"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-bold">{item.name}</p>
+                      {Object.keys(item.selectedVariants).length > 0 && (
+                        <p className="mt-1 text-[11.5px] text-mist">
+                          {Object.entries(item.selectedVariants)
+                            .map(([k, v]) => `${k}: ${v}`)
+                            .join(' · ')}
+                        </p>
+                      )}
+                      <p className="nums mt-1 text-[11.5px] text-mist">
+                        الكمية: {item.quantity}
+                      </p>
+                    </div>
+                    <span className="nums shrink-0 text-[13.5px] font-extrabold">
+                      {formatPrice(item.price * item.quantity)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="space-y-3 border-t border-white/8 px-6 py-5">
+                <div className="flex justify-between text-[13px]">
+                  <span className="text-mist">الإجمالي الفرعي</span>
+                  <span className="nums font-bold">{formatPrice(order.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-[13px]">
+                  <span className="text-mist">
+                    {SHIPPING_METHOD_NAME} — {order.customer.governorate}
+                  </span>
+                  <span className="nums font-bold">{formatPrice(order.shipping)}</span>
+                </div>
+                <div className="flex items-baseline justify-between border-t border-white/8 pt-4">
+                  <span className="text-[14px] font-extrabold">
+                    المطلوب عند الاستلام
+                  </span>
+                  <span className="nums display grad-text text-[23px] font-bold">
+                    {formatPrice(order.total)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="border-t border-white/8 bg-abyss/40 px-6 py-5">
+                <p className="tag mb-3">Delivery Address</p>
+                <p className="text-[13px] leading-[1.95]">
+                  {order.customer.fullName}
+                  <br />
+                  {order.customer.address}
+                  <br />
+                  {order.customer.village ? `${order.customer.village} — ` : ''}
+                  {order.customer.area} — {order.customer.governorate}
+                  <br />
+                  <span dir="ltr" className="nums inline-block text-mist">
+                    {order.customer.phone}
+                  </span>
+                </p>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* ============ الخطوات الجاية ============ */}
-        <div className="mt-8 grid gap-px border border-line bg-line sm:grid-cols-3">
-          {[
-            {
-              Icon: CheckIcon,
-              step: '01',
-              title: 'استلمنا طلبك',
-              text: 'أوردرك اتسجّل عندنا وبنراجعه، وهيوصلك تحديث بحالته.',
-            },
-            {
-              Icon: TruckIcon,
-              step: '02',
-              title: SHIPPING_METHOD_NAME,
-              text: `مندوبنا بيوصّلك بنفسه خلال ${DELIVERY_WINDOW}.`,
-            },
-            {
-              Icon: CashIcon,
-              step: '03',
-              title: 'الاستلام والدفع',
-              text: order
-                ? `افحص الأوردر وادفع ${formatPrice(order.total)} للمندوب.`
-                : 'افحص الأوردر الأول وبعدين ادفع للمندوب.',
-            },
-          ].map((item, i) => (
-            <div
-              key={i}
-              data-reveal=""
-              style={{ '--reveal-delay': `${i * 110}ms` } as React.CSSProperties}
-              className="bg-white p-6"
+          {/* ============ أزرار ============ */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/shop" className="btn btn-primary">
+              <span>أكمل التسوّق</span>
+              <ArrowLeftIcon className="btn-arrow h-4 w-4" />
+            </Link>
+            <a
+              href={`https://wa.me/${site.contact.whatsapp}${
+                order
+                  ? `?text=${encodeURIComponent(`استفسار عن الأوردر ${order.orderId}`)}`
+                  : ''
+              }`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-ghost"
             >
-              <div className="mb-4 flex items-center justify-between">
-                <item.Icon className="h-6 w-6 text-brand-700" />
-                <span className="font-display text-[30px] font-extrabold leading-none text-line-strong">
-                  {item.step}
-                </span>
-              </div>
-              <h3 className="text-[14px] font-extrabold text-ink">{item.title}</h3>
-              <p className="mt-2 text-[12.5px] leading-[1.9] text-muted">{item.text}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* ============ ملخص الطلب ============ */}
-        {order && (
-          <div className="mt-8 border border-line bg-white">
-            <div className="border-b border-line px-6 py-5">
-              <p className="eyebrow">Summary</p>
-              <h2 className="font-display mt-1.5 text-lg font-extrabold text-ink">
-                ملخص الطلب
-              </h2>
-            </div>
-
-            <ul className="divide-y divide-line px-6">
-              {order.items.map((item) => (
-                <li key={item.key} className="flex items-start justify-between gap-4 py-4">
-                  <div className="min-w-0">
-                    <p className="text-[13.5px] font-bold text-ink">{item.name}</p>
-                    {Object.keys(item.selectedVariants).length > 0 && (
-                      <p className="mt-1 text-[12px] text-muted">
-                        {Object.entries(item.selectedVariants)
-                          .map(([k, v]) => `${k}: ${v}`)
-                          .join(' · ')}
-                      </p>
-                    )}
-                    <p className="nums mt-1 text-[12px] text-muted">
-                      الكمية: {item.quantity}
-                    </p>
-                  </div>
-                  <span className="nums shrink-0 text-[14px] font-extrabold text-ink">
-                    {formatPrice(item.price * item.quantity)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="space-y-3 border-t border-line px-6 py-5">
-              <div className="flex justify-between text-[13.5px]">
-                <span className="text-muted">الإجمالي الفرعي</span>
-                <span className="nums font-bold">{formatPrice(order.subtotal)}</span>
-              </div>
-              <div className="flex justify-between text-[13.5px]">
-                <span className="text-muted">
-                  {SHIPPING_METHOD_NAME} — {order.customer.governorate}
-                </span>
-                <span className="nums font-bold">{formatPrice(order.shipping)}</span>
-              </div>
-              <div className="flex items-baseline justify-between border-t border-line pt-4">
-                <span className="text-[15px] font-extrabold text-ink">
-                  المطلوب عند الاستلام
-                </span>
-                <span className="nums font-display text-2xl font-extrabold text-ink">
-                  {formatPrice(order.total)}
-                </span>
-              </div>
-            </div>
-
-            {/* عنوان التوصيل */}
-            <div className="border-t border-line bg-ivory px-6 py-5">
-              <p className="eyebrow mb-2.5">Delivery Address</p>
-              <p className="text-[13.5px] leading-[1.9] text-ink">
-                {order.customer.fullName}
-                <br />
-                {order.customer.address}
-                <br />
-                {order.customer.village ? `${order.customer.village} — ` : ''}
-                {order.customer.area} — {order.customer.governorate}
-                <br />
-                <span dir="ltr" className="nums inline-block">
-                  {order.customer.phone}
-                </span>
-              </p>
-            </div>
+              <WhatsAppIcon className="h-4 w-4" />
+              <span>استفسار عن الطلب</span>
+            </a>
+            <Link href="/account" className="btn btn-ghost">
+              <span>أوردراتي</span>
+            </Link>
           </div>
-        )}
-
-        {/* ============ أزرار ============ */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link href="/shop" className="btn btn-primary">
-            <span>أكمل التسوّق</span>
-          </Link>
-          <a
-            href={`https://wa.me/${site.contact.whatsapp}${
-              order ? `?text=${encodeURIComponent(`استفسار عن الأوردر ${order.orderId}`)}` : ''
-            }`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-outline"
-          >
-            <WhatsAppIcon className="h-4 w-4" />
-            <span>استفسار عن الطلب</span>
-          </a>
         </div>
       </div>
     </div>

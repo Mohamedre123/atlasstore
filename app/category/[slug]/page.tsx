@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { PageHeader } from '@/components/page-header'
-import { ShopBrowser } from '@/components/shop-browser'
+import { PageHeader } from '@/components/layout/page-header'
+import { ShopBrowser } from '@/components/shop/shop-browser'
 import { categories, getCategoryBySlug, getProductsByCategory } from '@/data/products'
+import { site } from '@/data/site'
 
 export function generateStaticParams() {
   return categories.map((c) => ({ slug: c.slug }))
@@ -19,7 +20,9 @@ export async function generateMetadata({
 
   return {
     title: category.name,
-    description: category.description ?? `تصفّح قسم ${category.name} في ATLAS Store`,
+    description:
+      category.description ?? `تصفّح قسم ${category.name} في ${site.nameFull}`,
+    alternates: { canonical: `/category/${slug}` },
   }
 }
 
@@ -33,30 +36,58 @@ export default async function CategoryPage({
   if (!category) notFound()
 
   const items = getProductsByCategory(slug)
-  const index = categories.findIndex((c) => c.slug === slug) + 1
+
+  /* مسار التنقّل لجوجل */
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: site.url },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'كل المنتجات',
+        item: `${site.url}/shop`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: category.name,
+        item: `${site.url}/category/${slug}`,
+      },
+    ],
+  }
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <PageHeader
-        index={String(index).padStart(2, '0')}
         eyebrow={`${items.length} Products`}
         title={category.name}
         description={category.description}
         breadcrumbs={[{ href: '/shop', label: 'كل المنتجات' }]}
+        aside={
+          <div className="card px-5 py-4 text-center">
+            <p className="nums display grad-text text-[26px] font-bold">
+              {items.length}
+            </p>
+            <p className="mt-1 text-[11px] text-mist">قطعة في القسم</p>
+          </div>
+        }
       />
 
-      <div className="container-x py-10 lg:py-14">
+      <div className="shell py-10 lg:py-14">
         {items.length === 0 ? (
-          <div className="border border-line bg-white py-24 text-center">
-            <p className="font-display text-xl font-extrabold text-ink">
-              القسم ده لسه فاضي
-            </p>
-            <p className="mt-2.5 text-[13.5px] text-muted">
-              هننزل فيه قطع قريب — تابعنا.
-            </p>
+          <div className="card px-6 py-24 text-center">
+            <p className="display text-[19px] font-bold">القسم ده لسه فاضي</p>
+            <p className="mt-3 text-[13px] text-mist">هننزل فيه قطع قريب — تابعنا.</p>
           </div>
         ) : (
-          <ShopBrowser initialCategory={slug} />
+          <ShopBrowser initialCategory={slug} lockCategory />
         )}
       </div>
     </>
