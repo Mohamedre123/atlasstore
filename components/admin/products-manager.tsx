@@ -488,7 +488,7 @@ function ProductRow({
                 label="الترتيب"
                 type="number"
                 defaultValue={String(row.sort)}
-                hint="الأصغر بيظهر الأول"
+                hint="الأصغر بيظهر الأول — في صفحة القسم وفي الصفحة الرئيسية كمان"
               />
 
               <div className="pt-6 sm:col-span-2">

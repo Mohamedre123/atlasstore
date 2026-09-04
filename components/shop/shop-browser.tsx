@@ -6,9 +6,11 @@ import { CloseIcon, FilterIcon, SortIcon } from '@/components/ui/icons'
 import { formatPrice, pluralize } from '@/lib/format'
 import type { Category, Product } from '@/lib/types'
 
-type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'discount' | 'name'
+type SortKey = 'store' | 'featured' | 'price-asc' | 'price-desc' | 'discount' | 'name'
 
 const sorts: { key: SortKey; label: string }[] = [
+  /* الافتراضي = الترتيب اللي صاحب المتجر حاططه في اللوحة */
+  { key: 'store', label: 'ترتيب المتجر' },
   { key: 'featured', label: 'المميّزة أولًا' },
   { key: 'price-asc', label: 'السعر: من الأقل' },
   { key: 'price-desc', label: 'السعر: من الأعلى' },
@@ -59,7 +61,7 @@ export function ShopBrowser({
   const [category, setCategory] = useState(initialCategory)
   const [saleOnly, setSaleOnly] = useState(initialSaleOnly)
   const [band, setBand] = useState('')
-  const [sort, setSort] = useState<SortKey>('featured')
+  const [sort, setSort] = useState<SortKey>('store')
   const [sheet, setSheet] = useState(false)
 
   useEffect(() => {
@@ -111,8 +113,12 @@ export function ShopBrowser({
       case 'name':
         list.sort((a, b) => a.name.localeCompare(b.name, 'ar'))
         break
-      default:
+      case 'featured':
         list.sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)))
+        break
+      default:
+        /* خانة «الترتيب» في اللوحة — الأصغر بيظهر الأول */
+        list.sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
     }
 
     return list

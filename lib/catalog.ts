@@ -269,12 +269,21 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
    عليه لسيكشن تاني مابيتحطش هنا لوحده — شوف lib/home-sections
    ------------------------------------------------------------ */
 
-/** بيلزق قايمتين ويشيل المكرر ويقص على العدد */
+/**
+ * بيلزق قايمتين ويشيل المكرر ويقص على العدد.
+ *
+ * اللي أشّرت عليه بيتحسب الأول عشان ياخد الأماكن المتاحة،
+ * وبعد ما نحدد المنتجات بنرجّعهم لترتيبك انت (خانة «الترتيب»
+ * في اللوحة) — فاللي حاطط عليه رقم أصغر بيظهر الأول في
+ * السيكشن زي ما هو ظاهر في صفحة منتجاتي بالظبط.
+ */
 function take(picked: Product[], filler: Product[], limit: number): Product[] {
   const seen = new Set<string>()
+
   return [...picked, ...filler]
     .filter((p) => !seen.has(p.id) && seen.add(p.id))
     .slice(0, limit)
+    .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
 }
 
 export async function getFeaturedProducts(limit = 8): Promise<Product[]> {
