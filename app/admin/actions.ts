@@ -17,7 +17,7 @@ import {
   isRateLimited,
   isVendoorConfigured,
 } from '@/lib/vendoor/client'
-import { vendoorImages } from '@/lib/vendoor/images'
+import { imageCandidates, repairImage, vendoorImages } from '@/lib/vendoor/images'
 import type { VendoorProduct } from '@/lib/vendoor/types'
 
 /* ============================================================
@@ -120,10 +120,13 @@ export async function listVendoorCategories(): Promise<
   }
 }
 
-function toVendoorRow(p: VendoorProduct, categoryId: number, categoryName: string) {
-  /* تنضيف الروابط وتصليح المسار الميت — شوف lib/vendoor/images */
-  const images = vendoorImages(p.main_photo, p.images)
-
+function toVendoorRow(
+  p: VendoorProduct,
+  categoryId: number,
+  categoryName: string,
+  /* الروابط اللي اتأكدنا إنها بترد 200 — شوف resolveImages */
+  images: string[]
+) {
   return {
     id: p.id,
     category_id: categoryId,
@@ -261,8 +264,10 @@ export async function syncVendoorPage(
 
     if (products.length === 0) return { ok: true, data: { saved: 0, more: false } }
 
-    const filled = await fillMissingImages(auth.supabase, products)
-    const rows = filled.map((p) => toVendoorRow(p, categoryId, categoryName))
+    const images = await resolveImages(auth.supabase, products)
+    const rows = products.map((p) =>
+      toVendoorRow(p, categoryId, categoryName, images.get(p.id) ?? [])
+    )
     const { error } = await auth.supabase.from('vendoor_products').upsert(rows)
 
     if (error) return fail(`فشل الحفظ: ${error.message}`)
@@ -278,54 +283,75 @@ export async function syncVendoorPage(
   }
 }
 
-/**
- * قايمة القسم أحيانًا بترجّع المنتج من غير صور شغّالة، ونقطة
- * المنتج الواحد فيها الصور كاملة. بس فيندور حاطة حد أقصى
- * للطلبات، فبنسأل عن المنتجات اللي:
- *   • طلعت من غير أي صورة، و
- *   • ماعندناش ليها صور متخزّنة من مزامنة قبل كده
- * وبنسأل واحد ورا التاني مش كلهم مرة واحدة، عشان ما نضربش
- * الحد من أول صفحة. أي فشل هنا بيتعدّى — المزامنة ماتوقفش.
- */
-async function fillMissingImages(
+/* ============================================================
+   الوصول للصورة الشغّالة
+   ------------------------------------------------------------
+   فيندور بترجّع رابط الصورة على مسار ميت، والصورة الحقيقية على
+   مسار تاني فيه رقم مجلد. الفرق بين رقم المنتج ورقم المجلد
+   ثابت في كل اللي جرّبناه، بس ده تسلسل جدولين مش قاعدة
+   موثّقة — فبدل ما نبني على التخمين، بنسأل السيرفر بتاعهم
+   بطلب HEAD وناخد أول رابط بيرد 200.
+
+   ده على سيرفر الملفات مش على الـ API، فمالوش علاقة بحد
+   الطلبات. وبنسأل مرة واحدة بس: أول ما نلاقي الرابط بنحفظه،
+   والمزامنات الجاية بتستخدم المحفوظ على طول.
+   ============================================================ */
+
+const ALIVE_PATH = '/uploads/products_images/'
+
+/** الرابط بيرد 200؟ */
+async function imageWorks(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { method: 'HEAD', cache: 'no-store' })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+async function resolveImages(
   supabase: SupabaseClient,
   products: VendoorProduct[]
-): Promise<VendoorProduct[]> {
-  const blank = products.filter(
-    (p) => vendoorImages(p.main_photo, p.images).length === 0
-  )
+): Promise<Map<number, string[]>> {
+  const out = new Map<number, string[]>()
 
-  if (blank.length === 0) return products
-
-  /* اللي عندنا ليه صور خلاص مش محتاج نسأل عنه تاني */
+  /* اللي لقينا رابطه قبل كده مش هنسأل عنه تاني */
   const { data: known } = await supabase
     .from('vendoor_products')
     .select('id, images')
-    .in('id', blank.map((p) => p.id))
+    .in(
+      'id',
+      products.map((p) => p.id)
+    )
 
-  const stored = new Map(
-    (known ?? [])
-      .filter((r) => Array.isArray(r.images) && r.images.length > 0)
-      .map((r) => [r.id as number, r.images as string[]])
-  )
-
-  const out = [...products]
-
-  for (const p of blank) {
-    const saved = stored.get(p.id)
-    if (saved) {
-      out[out.indexOf(p)] = { ...p, images: saved }
-      continue
-    }
-
-    try {
-      const full = await fetchVendoorProduct(p.id)
-      out[out.indexOf(p)] = { ...p, ...full }
-    } catch (err) {
-      /* الحد الأقصى — نسيب الباقي للمرة الجاية بدل ما نوقف */
-      if (isRateLimited(err)) break
+  for (const row of known ?? []) {
+    const images = row.images as string[] | null
+    if (images?.length && images[0].includes(ALIVE_PATH)) {
+      out.set(row.id as number, images)
     }
   }
+
+  await Promise.all(
+    products.map(async (p) => {
+      if (out.has(p.id)) return
+
+      const raw = vendoorImages(p.main_photo, p.images)
+      if (raw.length === 0) return
+
+      const found: string[] = []
+
+      for (const url of raw) {
+        for (const candidate of imageCandidates(p.id, url)) {
+          if (await imageWorks(candidate)) {
+            found.push(candidate)
+            break
+          }
+        }
+      }
+
+      out.set(p.id, found)
+    })
+  )
 
   return out
 }
@@ -395,7 +421,9 @@ export async function importVendoorProduct(form: FormData): Promise<ActionResult
     compare_at_price: num(form.get('compare_at_price')),
     /* بنعدّي على المنضّف تاني — الصفوف اللي اتسحبت قبل
        التصليح لسه فيها الروابط المكسورة */
-    images: vendoorImages(null, (vp.images ?? []) as string[]),
+    images: vendoorImages(null, (vp.images ?? []) as string[]).map((src) =>
+      repairImage(src, vendoorId)
+    ),
     variants,
     tags: [],
     badge: str(form.get('badge')) || null,

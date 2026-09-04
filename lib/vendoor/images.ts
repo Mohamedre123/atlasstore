@@ -3,17 +3,31 @@ import { VENDOOR_BASE_URL } from './config'
 /* ============================================================
    روابط صور فيندور
    ------------------------------------------------------------
-   الصور بتيجي منهم بأشكال مختلفة: نص عادي، أو كائن المفتاح
-   اللي جواه بيختلف من نقطة لنقطة (image / path / url...)،
-   وأحيانًا مسار ناقص من غير دومين.
-
-   وأهم حاجة: أي رابط على
+   الـ API بيرجّع رابط الصورة على المسار ده:
      /storage/products_image/<الملف>
-   ميت — بيرجّع 404 عندهم هم نفسهم (موقعهم نفسه صوره مكسورة
-   في الأماكن دي). نفس الملف بالظبط بيشتغل على
-     /uploads/products_images/<الملف>
-   فبنحوّل الروابط دي بدل ما نسيب صورة مكسورة في الكتالوج.
+   والمسار ده **ميت** — بيرد 404 عندهم هم نفسهم، وموقعهم نفسه
+   صوره مكسورة في الأماكن اللي بيستخدمه فيها.
+
+   الصورة الحقيقية قاعدة هنا:
+     /uploads/products_images/<رقم المجلد>/<نفس الملف>
+
+   ورقم المجلد ده مش رقم المنتج — بينهم فرق ثابت. اتأكدنا منه
+   على سبع منتجات (5930→1101 · 5324→495 · 5312→483 · 5273→444 ·
+   5272→443 · 5221→392 · 4911→82) وكلهم نفس الفرق.
+
+   ⚠️ بس ده تسلسل رقمين في جدولين، مش قاعدة موثّقة — ممكن
+   يتغيّر مع منتجات جديدة. عشان كده الفرق ده بيتستخدم كـ
+   «أول تخمين» بس، والمزامنة بتتأكد من الرابط بطلب HEAD قبل ما
+   تحفظه (شوف resolveImages في app/admin/actions).
+
+   حقل images بيرجع فاضي دايمًا، فكل منتج عنده صورة واحدة بس.
    ============================================================ */
+
+/** الفرق بين رقم المنتج ورقم مجلد صوره */
+const FOLDER_OFFSET = 4829
+
+const DEAD = '/storage/products_image/'
+const ALIVE = '/uploads/products_images/'
 
 /** المفاتيح اللي ممكن يكون الرابط جواها لو الصورة جت كائن */
 const KEYS = [
@@ -28,9 +42,6 @@ const KEYS = [
   'file',
   'name',
 ] as const
-
-const DEAD = '/storage/products_image/'
-const ALIVE = '/uploads/products_images/'
 
 /** بيطلّع الرابط من أي شكل بترجع بيه الصورة */
 function rawUrl(entry: unknown): string | null {
@@ -55,31 +66,58 @@ function rawUrl(entry: unknown): string | null {
   return null
 }
 
-/** رابط كامل شغّال، أو null لو مفيش صورة */
+/** رابط كامل زي ما جه، من غير أي تصليح للمسار */
 export function vendoorImage(entry: unknown): string | null {
   const raw = rawUrl(entry)
   if (!raw) return null
 
-  /* المسار الميت → المسار الشغّال، بنفس اسم الملف */
-  const fixed = raw.includes(DEAD) ? raw.replace(DEAD, ALIVE) : raw
+  if (/^https?:\/\//i.test(raw)) return raw
+  if (raw.startsWith('//')) return `https:${raw}`
+  if (raw.startsWith('/')) return `${VENDOOR_BASE_URL}${raw}`
 
-  if (/^https?:\/\//i.test(fixed)) return fixed
-  if (fixed.startsWith('//')) return `https:${fixed}`
+  return `${VENDOOR_BASE_URL}${ALIVE}${raw}`
+}
 
-  /* مسار ناقص الدومين */
-  if (fixed.startsWith('/')) return `${VENDOOR_BASE_URL}${fixed}`
+/** اسم ملف الصورة من أي رابط */
+function fileName(url: string): string {
+  return url.split('?')[0].split('/').filter(Boolean).pop() ?? url
+}
 
-  /* اسم ملف لوحده من غير أي مسار */
-  return `${VENDOOR_BASE_URL}${ALIVE}${fixed}`
+/**
+ * كل الروابط اللي ممكن تكون الصح لصورة منتج، بالترتيب —
+ * الأرجح الأول عشان أول طلب يكون هو الصح في الغالب.
+ */
+export function imageCandidates(vendoorId: number, url: string): string[] {
+  const file = fileName(url)
+  const folder = vendoorId - FOLDER_OFFSET
+
+  const list = [
+    folder > 0 ? `${VENDOOR_BASE_URL}${ALIVE}${folder}/${file}` : '',
+    /* المنتجات القديمة صورها في جذر المجلد */
+    `${VENDOOR_BASE_URL}${ALIVE}${file}`,
+    `${VENDOOR_BASE_URL}${ALIVE}/${file}`,
+    url,
+  ].filter(Boolean)
+
+  return [...new Set(list)]
 }
 
 /**
  * تصليح رابط متخزّن عندنا من غير ما نلمس أي رابط تاني.
- * صور متجرنا المحلية (/img/...) بتعدّي زي ما هي — الدالة دي
- * بتغيّر المسار الميت بتاع فيندور بس.
+ * صور متجرنا المحلية (‎/img/...) بتعدّي زي ما هي.
+ *
+ * بنستخدمه وقت العرض للمنتجات اللي اتضافت قبل ما نعرف المسار
+ * الصح — فصورها بتبان من غير ما نعيد المزامنة.
  */
-export function repairImage(src: string): string {
-  return src.includes(DEAD) ? src.replace(DEAD, ALIVE) : src
+export function repairImage(src: string, vendoorId?: number): string {
+  if (!src.includes(DEAD)) return src
+
+  const folder = vendoorId ? vendoorId - FOLDER_OFFSET : 0
+  const file = fileName(src)
+
+  return folder > 0
+    ? `${VENDOOR_BASE_URL}${ALIVE}${folder}/${file}`
+    : `${VENDOOR_BASE_URL}${ALIVE}${file}`
 }
 
 /** كل صور المنتج، من غير تكرار ومن غير الفاضي */

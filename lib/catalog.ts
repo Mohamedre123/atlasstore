@@ -93,7 +93,9 @@ function toProduct(row: ProductRow, categorySlug: string): Product {
     /* المنتجات اللي اتضافت قبل ما نكتشف إن مسار صور فيندور
        القديم ميت، صورها متخزّنة بالرابط المكسور. بنصلّحه هنا
        وقت القراءة بدل ما نستنى مزامنة جديدة */
-    images: arr<string>(row.images).map(repairImage),
+    images: arr<string>(row.images).map((src) =>
+      repairImage(src, row.vendoor_id ?? undefined)
+    ),
     category: categorySlug,
     variants: arr<VariantGroup>(row.variants),
     inStock: row.in_stock,

@@ -3,7 +3,7 @@ import { PageHeader } from '@/components/layout/page-header'
 import { VendoorCatalog } from '@/components/admin/vendoor-catalog'
 import { VendoorSync } from '@/components/admin/vendoor-sync'
 import { createClient } from '@/lib/supabase/server'
-import { vendoorImages } from '@/lib/vendoor/images'
+import { repairImage, vendoorImages } from '@/lib/vendoor/images'
 
 export const metadata: Metadata = {
   title: 'كتالوج فيندور',
@@ -78,7 +78,10 @@ export default async function AdminCatalogPage({
      المكسور — بنصلّحه وقت العرض عشان الكتالوج يبان صح من غير
      ما تعيد المزامنة */
   const products = (data ?? []).map((row) => {
-    const images = vendoorImages(row.main_photo, row.images as unknown[])
+    const images = vendoorImages(row.main_photo, row.images as unknown[]).map((src) =>
+      repairImage(src, row.id as number)
+    )
+
     return { ...row, main_photo: images[0] ?? null, images }
   })
 
