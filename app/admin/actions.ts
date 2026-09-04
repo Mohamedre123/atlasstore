@@ -12,9 +12,11 @@ import { isAdminEmail } from '@/lib/admin'
 import { createClient } from '@/lib/supabase/server'
 import {
   fetchVendoorCategories,
+  fetchVendoorProduct,
   fetchVendoorProductPage,
   isVendoorConfigured,
 } from '@/lib/vendoor/client'
+import { vendoorImages } from '@/lib/vendoor/images'
 import type { VendoorProduct } from '@/lib/vendoor/types'
 
 /* ============================================================
@@ -117,15 +119,9 @@ export async function listVendoorCategories(): Promise<
   }
 }
 
-/** صورة إضافية ممكن تيجي نص أو كائن — بنطلّع الرابط في الحالتين */
-function imageUrl(entry: string | { image?: string }): string | null {
-  if (typeof entry === 'string') return entry
-  return entry?.image ?? null
-}
-
 function toVendoorRow(p: VendoorProduct, categoryId: number, categoryName: string) {
-  const extra = (p.images ?? []).map(imageUrl).filter(Boolean) as string[]
-  const images = [p.main_photo, ...extra].filter(Boolean) as string[]
+  /* تنضيف الروابط وتصليح المسار الميت — شوف lib/vendoor/images */
+  const images = vendoorImages(p.main_photo, p.images)
 
   return {
     id: p.id,
@@ -133,9 +129,8 @@ function toVendoorRow(p: VendoorProduct, categoryId: number, categoryName: strin
     category_name: categoryName,
     name: p.name,
     seller: p.seller,
-    main_photo: p.main_photo,
-    /* من غير تكرار — الصورة الرئيسية بتتكرر في القايمة أحيانًا */
-    images: [...new Set(images)],
+    main_photo: images[0] ?? null,
+    images,
     description: p.description,
     buy_price: p.purchasing_price === null ? null : Number(p.purchasing_price),
     min_price: p.minimum_price === null ? null : Number(p.minimum_price),
@@ -160,7 +155,26 @@ export async function syncVendoorPage(
 
     if (products.length === 0) return { ok: true, data: { saved: 0, more: false } }
 
-    const rows = products.map((p) => toVendoorRow(p, categoryId, categoryName))
+    /**
+     * قايمة القسم أحيانًا بترجّع المنتج من غير صور شغّالة —
+     * نقطة المنتج الواحد فيها الصور كاملة. بنسأل عنها للمنتجات
+     * اللي طلعت من غير صورة بس، يعني عشر طلبات زيادة على الأكتر
+     * في الصفحة، ولو فشلت بنكمّل عادي من غير ما نوقف المزامنة.
+     */
+    const filled = await Promise.all(
+      products.map(async (p) => {
+        if (vendoorImages(p.main_photo, p.images).length > 0) return p
+
+        try {
+          const full = await fetchVendoorProduct(p.id)
+          return { ...p, ...full }
+        } catch {
+          return p
+        }
+      })
+    )
+
+    const rows = filled.map((p) => toVendoorRow(p, categoryId, categoryName))
     const { error } = await auth.supabase.from('vendoor_products').upsert(rows)
 
     if (error) return fail(`فشل الحفظ: ${error.message}`)
@@ -234,7 +248,9 @@ export async function importVendoorProduct(form: FormData): Promise<ActionResult
     description: stripHtml((vp.description as string) ?? ''),
     price,
     compare_at_price: num(form.get('compare_at_price')),
-    images: (vp.images ?? []) as string[],
+    /* بنعدّي على المنضّف تاني — الصفوف اللي اتسحبت قبل
+       التصليح لسه فيها الروابط المكسورة */
+    images: vendoorImages(null, (vp.images ?? []) as string[]),
     variants,
     tags: [],
     badge: str(form.get('badge')) || null,

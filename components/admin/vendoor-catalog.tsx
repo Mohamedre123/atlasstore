@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
@@ -14,6 +13,7 @@ import {
   SearchIcon,
   SpinnerIcon,
 } from '@/components/ui/icons'
+import { Shot } from '@/components/product/shot'
 import { formatPrice } from '@/lib/format'
 
 type VendoorRow = {
@@ -272,16 +272,12 @@ function ProductCard({
       <div className="flex gap-3 p-3">
         {/* --- الصورة --- */}
         <div className="plate relative h-[112px] w-[86px] shrink-0 rounded-xl">
-          {product.main_photo ? (
-            <Image
-              src={product.main_photo}
-              alt=""
-              fill
-              sizes="86px"
-              className="object-cover"
-              unoptimized
-            />
-          ) : null}
+          <Shot
+            src={product.main_photo ?? product.images?.[0] ?? undefined}
+            alt=""
+            sizes="86px"
+            unoptimized
+          />
         </div>
 
         {/* --- البيانات --- */}

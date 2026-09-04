@@ -94,7 +94,9 @@ export type CartItem = {
 export type CustomerInfo = {
   fullName: string
   phone: string
+  /** رقم احتياطي — مطلوب عند إتمام الطلب (فيندور بتطلبه) */
   phoneAlt?: string
+  /** مطلوب عند إتمام الطلب — عليه بيتبعت التأكيد وتحديثات الحالة */
   email?: string
   /** المحافظة */
   governorate: string

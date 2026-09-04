@@ -76,19 +76,24 @@ export type VendoorOrderItem = {
   }
 }
 
+/**
+ * كل الحقول مطلوبة مش اختيارية بقصد — فيندور بتقرا المفاتيح
+ * دي مباشرة، وأي مفتاح ناقص بيوقّع الأوردر بخطأ
+ * «Undefined array key».
+ */
 export type VendoorOrderPayload = {
   name: string
   phone: string
-  another_phone?: string
+  another_phone: string
   /** رقم المحافظة عند فيندور */
   governorate: number
   /** رقم المركز/الحي عند فيندور */
   city: number
   address: string
-  modrator?: string
-  facebook_name?: string
-  facebook_link?: string
-  notes?: string
+  modrator: string
+  facebook_name: string
+  facebook_link: string
+  notes: string
   /** YYYY-MM-DD */
   shipping_date?: string
   shipping_cost: number

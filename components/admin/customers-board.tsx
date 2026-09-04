@@ -16,6 +16,7 @@ import {
   UserIcon,
   WhatsAppIcon,
 } from '@/components/ui/icons'
+import { getStatus } from '@/lib/admin'
 import { formatPrice } from '@/lib/format'
 import {
   REMINDER_KINDS,
@@ -45,6 +46,26 @@ type Row = {
   reminded_at: string | null
   created_at: string
   updated_at: string
+}
+
+/** أوردر متسجّل عندنا — بيتربط بصاحبه في صفحة العملاء */
+type OrderRow = {
+  id: string
+  order_code: string
+  total: number
+  status: string
+  created_at: string
+  vendoor_status: string | null
+  vendoor_order_code: string | null
+  vendoor_error: string | null
+}
+
+const STATUS_TONE: Record<string, string> = {
+  gray: 'bg-white/8 text-mist',
+  cyan: 'bg-brand-500/15 text-brand-300',
+  amber: 'bg-warn/15 text-warn',
+  green: 'bg-ok/15 text-ok',
+  red: 'bg-sale/15 text-sale',
 }
 
 const STAGE_LABEL: Record<string, string> = {
@@ -77,19 +98,33 @@ const dateFmt = new Intl.DateTimeFormat('ar-EG', {
    ============================================================ */
 export function CustomersBoard({
   rows,
+  ordersByRow,
   stats,
 }: {
   rows: Row[]
-  stats: { total: number; abandoned: number; reachable: number; ordered: number }
+  /** أوردرات كل عميل بمفتاح صف النشاط بتاعه */
+  ordersByRow: Record<string, OrderRow[]>
+  stats: {
+    total: number
+    abandoned: number
+    reachable: number
+    ordered: number
+    orders: number
+  }
 }) {
   const [filter, setFilter] = useState<'abandoned' | 'all' | 'ordered'>('abandoned')
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null)
 
+  /* العميل يتحسب «أتمّ الطلب» لو عنده أوردر متسجّل حتى لو صف
+     النشاط ما اتعلّمش (حصل مثلًا إنه قفل الصفحة بعد التأكيد) */
+  const didOrder = (r: Row) => r.ordered || (ordersByRow[r.id]?.length ?? 0) > 0
+
   const visible = useMemo(() => {
     if (filter === 'all') return rows
-    if (filter === 'ordered') return rows.filter((r) => r.ordered)
-    return rows.filter((r) => !r.ordered && Number(r.cart_count) > 0)
-  }, [rows, filter])
+    if (filter === 'ordered') return rows.filter(didOrder)
+    return rows.filter((r) => !didOrder(r) && Number(r.cart_count) > 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, filter, ordersByRow])
 
   const flash = (text: string, ok: boolean) => {
     setToast({ text, ok })
@@ -103,7 +138,11 @@ export function CustomersBoard({
         <Stat label="كل الزوّار" value={String(stats.total)} />
         <Stat label="سلات متروكة" value={String(stats.abandoned)} alert />
         <Stat label="ينفع نبعتلهم إيميل" value={String(stats.reachable)} />
-        <Stat label="أتمّوا الطلب" value={String(stats.ordered)} />
+        <Stat
+          label="أتمّوا الطلب"
+          value={String(stats.ordered)}
+          note={`${stats.orders} أوردر`}
+        />
       </div>
 
       {/* ============ الفلاتر ============ */}
@@ -150,7 +189,12 @@ export function CustomersBoard({
       ) : (
         <div className="space-y-3">
           {visible.map((row) => (
-            <CustomerCard key={row.id} row={row} onResult={flash} />
+            <CustomerCard
+              key={row.id}
+              row={row}
+              orders={ordersByRow[row.id] ?? []}
+              onResult={flash}
+            />
           ))}
         </div>
       )}
@@ -162,9 +206,11 @@ export function CustomersBoard({
 
 function CustomerCard({
   row,
+  orders,
   onResult,
 }: {
   row: Row
+  orders: OrderRow[]
   onResult: (text: string, ok: boolean) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -172,6 +218,11 @@ function CustomerCard({
     { kind: string; label: string | null; created_at: string }[] | null
   >(null)
   const [pending, start] = useTransition()
+
+  /* عنده أوردر متسجّل؟ الأوردرات هي المصدر الأصح — صف النشاط
+     بيتحدّث لكن بيفضل واحد مهما طلب العميل كام مرة */
+  const ordered = row.ordered || orders.length > 0
+  const spent = orders.reduce((sum, o) => sum + Number(o.total), 0)
 
   /* الزرار الرئيسي بيتحدد من اللي ناقص العميل */
   const suggested = suggestReminder({
@@ -228,20 +279,28 @@ function CustomerCard({
 
             <span
               className={`rounded-full px-2.5 py-1 text-[10.5px] font-bold ${
-                row.ordered
+                ordered
                   ? 'bg-ok/15 text-ok'
                   : row.stage === 'filling'
                     ? 'bg-warn/15 text-warn'
                     : 'bg-brand-500/15 text-brand-300'
               }`}
             >
-              {STAGE_LABEL[row.stage] ?? row.stage}
+              {ordered ? STAGE_LABEL.ordered : (STAGE_LABEL[row.stage] ?? row.stage)}
             </span>
 
-            {row.ordered && row.order_code && (
-              <span className="font-[family-name:var(--font-label)] text-[11px] text-mist">
-                {row.order_code}
+            {orders.length > 0 ? (
+              <span className="nums rounded-full bg-white/8 px-2.5 py-1 text-[10.5px] font-bold text-foam/85">
+                {orders.length === 1 ? 'أوردر واحد' : `${orders.length} أوردرات`} ·{' '}
+                {formatPrice(spent)}
               </span>
+            ) : (
+              row.ordered &&
+              row.order_code && (
+                <span className="font-[family-name:var(--font-label)] text-[11px] text-mist">
+                  {row.order_code}
+                </span>
+              )
             )}
           </div>
 
@@ -375,7 +434,7 @@ function CustomerCard({
         </div>
       )}
 
-      {/* --- التذكير --- */}
+      {/* --- التذكير — بيظهر طول ما فيه سلة لسه متسابة --- */}
       {!row.ordered && (
         <div className="border-t border-white/8 bg-abyss/40 px-4 py-4 lg:px-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -442,13 +501,89 @@ function CustomerCard({
         </div>
       )}
 
-      {row.ordered && (
-        <div className="flex items-center gap-2 border-t border-white/8 bg-ok/6 px-4 py-3 text-[12px] font-bold text-ok lg:px-5">
-          <BoxIcon className="h-4 w-4" />
-          أتمّ الطلب {row.order_code ? `— ${row.order_code}` : ''}
+      {/* --- طلباته --- */}
+      {orders.length > 0 ? (
+        <div className="border-t border-white/8 bg-ok/[0.04] px-4 py-4 lg:px-5">
+          <p className="mb-3 flex items-center gap-2 text-[11.5px] font-bold text-ok">
+            <BoxIcon className="h-4 w-4" />
+            طلباته ({orders.length})
+          </p>
+
+          <ul className="space-y-2">
+            {orders.map((order) => {
+              const status = getStatus(order.status)
+
+              return (
+                <li
+                  key={order.id}
+                  className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-xl border border-white/8 bg-abyss/40 px-3.5 py-3"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-[family-name:var(--font-label)] text-[11.5px] font-bold">
+                        {order.order_code}
+                      </span>
+
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-[10.5px] font-bold ${
+                          STATUS_TONE[status.tone] ?? STATUS_TONE.gray
+                        }`}
+                      >
+                        {status.label}
+                      </span>
+
+                      <VendoorTag order={order} />
+                    </div>
+
+                    <p className="nums mt-1.5 text-[11px] text-mist">
+                      {dateFmt.format(new Date(order.created_at))}
+                    </p>
+                  </div>
+
+                  <span className="nums text-[13px] font-extrabold">
+                    {formatPrice(Number(order.total))}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
         </div>
+      ) : (
+        row.ordered && (
+          <div className="flex items-center gap-2 border-t border-white/8 bg-ok/6 px-4 py-3 text-[12px] font-bold text-ok lg:px-5">
+            <BoxIcon className="h-4 w-4" />
+            أتمّ الطلب {row.order_code ? `— ${row.order_code}` : ''}
+          </div>
+        )
       )}
     </div>
+  )
+}
+
+/* ------------------------------------------------------------
+   حالة الأوردر عند فيندور — أهم حاجة تبان بسرعة: وصلهم ولا
+   محتاج تبعته بإيدك.
+   ------------------------------------------------------------ */
+function VendoorTag({ order }: { order: OrderRow }) {
+  if (order.vendoor_status === 'sent') {
+    return (
+      <span className="flex items-center gap-1 rounded-full bg-ok/12 px-2.5 py-1 text-[10.5px] font-bold text-ok">
+        <CheckIcon className="h-3 w-3" />
+        فيندور{order.vendoor_order_code ? ` ${order.vendoor_order_code}` : ''}
+      </span>
+    )
+  }
+
+  if (!order.vendoor_status || order.vendoor_status === 'skipped') return null
+
+  return (
+    <span
+      title={order.vendoor_error ?? undefined}
+      className="flex items-center gap-1 rounded-full bg-sale/12 px-2.5 py-1 text-[10.5px] font-bold text-sale"
+    >
+      <AlertIcon className="h-3 w-3" />
+      ما اتبعتش لفيندور
+    </span>
   )
 }
 
@@ -457,10 +592,13 @@ function CustomerCard({
 function Stat({
   label,
   value,
+  note,
   alert = false,
 }: {
   label: string
   value: string
+  /** سطر صغير تحت الرقم */
+  note?: string
   alert?: boolean
 }) {
   const hot = alert && value !== '0'
@@ -475,6 +613,7 @@ function Stat({
       <p className={`nums display mt-1.5 text-[21px] font-bold ${hot ? 'grad-text' : ''}`}>
         {value}
       </p>
+      {note && <p className="nums mt-0.5 text-[10.5px] text-mist">{note}</p>}
     </div>
   )
 }

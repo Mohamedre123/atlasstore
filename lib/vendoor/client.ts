@@ -222,9 +222,13 @@ export async function fetchVendoorLocations(): Promise<VendoorGovernorate[]> {
   return json.data ?? []
 }
 
-/** إرسال أوردر لفيندور — بيرجّع بيانات الأوردر عندهم */
+/**
+ * إرسال أوردر لفيندور — بيرجّع بيانات الأوردر عندهم.
+ * بنسمح بمفاتيح زيادة عن النوع عشان send-order تقدر تضيف أي
+ * مفتاح فيندور تطلبه في رسالة خطأ من غير ما نعدّل النوع.
+ */
 export async function createVendoorOrder(
-  payload: VendoorOrderPayload
+  payload: VendoorOrderPayload | Record<string, unknown>
 ): Promise<Record<string, unknown>> {
   const r = await call<VendoorResponse<Record<string, unknown>>>('/api/create/order', {
     method: 'POST',

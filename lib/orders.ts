@@ -1,5 +1,5 @@
 import { getProducts } from './catalog'
-import { isValidEgyptPhone, normalizeEgyptPhone } from './format'
+import { isValidEgyptPhone, isValidEmail, normalizeEgyptPhone } from './format'
 import { findGovernorate } from './locations'
 import type { CartItem, CustomerInfo } from './types'
 
@@ -38,12 +38,27 @@ export async function buildOrder(input: {
   /* ---------- بيانات العميل ---------- */
   const fullName = String(raw.fullName ?? '').trim()
   const phone = normalizeEgyptPhone(String(raw.phone ?? ''))
+  const phoneAlt = normalizeEgyptPhone(String(raw.phoneAlt ?? ''))
+  const email = String(raw.email ?? '').trim()
   const governorate = String(raw.governorate ?? '').trim()
   const area = String(raw.area ?? '').trim()
   const address = String(raw.address ?? '').trim()
 
   if (fullName.length < 3) return { ok: false, error: 'الاسم غير صحيح' }
   if (!isValidEgyptPhone(phone)) return { ok: false, error: 'رقم الموبايل غير صحيح' }
+
+  /* الرقم الاحتياطي مطلوب — فيندور بتقفل الأوردر من غيره،
+     والمندوب بيحتاجه لو الأساسي مقفول */
+  if (!phoneAlt) return { ok: false, error: 'الرقم الاحتياطي مطلوب' }
+  if (!isValidEgyptPhone(phoneAlt))
+    return { ok: false, error: 'الرقم الاحتياطي غير صحيح' }
+  if (phoneAlt === phone)
+    return { ok: false, error: 'الرقم الاحتياطي لازم يكون غير الأساسي' }
+
+  /* الإيميل مطلوب — عليه بيتبعت تأكيد الأوردر وتحديثات حالته */
+  if (!email) return { ok: false, error: 'البريد الإلكتروني مطلوب' }
+  if (!isValidEmail(email)) return { ok: false, error: 'البريد الإلكتروني غير صحيح' }
+
   if (address.length < 10) return { ok: false, error: 'العنوان ناقص' }
 
   /* المحافظة والمركز بيتأكدوا من قايمة فيندور نفسها — كده
@@ -105,8 +120,8 @@ export async function buildOrder(input: {
   const customer: CustomerInfo = {
     fullName,
     phone,
-    phoneAlt: raw.phoneAlt ? normalizeEgyptPhone(String(raw.phoneAlt)) : '',
-    email: String(raw.email ?? '').trim(),
+    phoneAlt,
+    email,
     governorate,
     area,
     village: String(raw.village ?? '').trim(),

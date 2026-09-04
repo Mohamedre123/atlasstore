@@ -1081,15 +1081,20 @@ select.field option {
   );
 }
 
+/* من غير will-change ثابت بقصد: الصفحة فيها عشرات الكروت،
+   ولو كل صورة عاملة طبقة رسم لوحدها على طول، المتصفح بيزهق
+   وساعات بيسيب صورة من غير ما يرسمها — وماتبانش غير لما حاجة
+   تجبره يعيد الرسم (ريفرش أو تحديد بالماوس). بنطلب الطبقة عند
+   الهوفر بس، يعني وقت الحركة الفعلية. */
 .pshot {
   transition:
     opacity 0.6s var(--ease-atlas),
     transform 1.6s var(--ease-atlas);
-  will-change: opacity, transform;
 }
 
 .group:hover .pshot {
   transform: scale(1.07);
+  will-change: opacity, transform;
 }
 
 /* لمعة بتعدّي على اللوح مرة واحدة عند الهوفر */

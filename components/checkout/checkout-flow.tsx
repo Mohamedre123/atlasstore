@@ -212,9 +212,17 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
     if (!form.phone.trim()) next.phone = 'رقم الموبايل مطلوب'
     else if (!isValidEgyptPhone(form.phone))
       next.phone = 'الرقم مش مظبوط — لازم يبدأ بـ 010 أو 011 أو 012 أو 015'
-    if (form.phoneAlt && !isValidEgyptPhone(form.phoneAlt))
+    /* الرقم الاحتياطي والإيميل مطلوبين: فيندور بترفض الأوردر من
+       غير رقم تاني، والإيميل هو اللي بنبعت عليه تأكيد الأوردر
+       وتحديثات حالته وتذكير السلة المتروكة */
+    if (!form.phoneAlt?.trim()) next.phoneAlt = 'الرقم الاحتياطي مطلوب'
+    else if (!isValidEgyptPhone(form.phoneAlt))
       next.phoneAlt = 'الرقم الاحتياطي مش مظبوط'
-    if (form.email && !isValidEmail(form.email)) next.email = 'الإيميل مش مظبوط'
+    else if (normalizeEgyptPhone(form.phoneAlt) === normalizeEgyptPhone(form.phone))
+      next.phoneAlt = 'لازم يكون رقم تاني غير الأساسي'
+
+    if (!form.email?.trim()) next.email = 'الإيميل مطلوب'
+    else if (!isValidEmail(form.email)) next.email = 'الإيميل مش مظبوط'
     if (!form.governorate) next.governorate = 'اختار المحافظة'
     if (!form.area) next.area = 'اختار المركز أو الحي'
     if (form.address.trim().length < 10)
@@ -505,13 +513,15 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
                   id="phoneAlt"
                   onFocus={() => touch('phoneAlt')}
                   label="رقم احتياطي"
+                  required
                   type="tel"
                   inputMode="tel"
                   dir="ltr"
                   value={form.phoneAlt ?? ''}
                   onChange={(v) => update('phoneAlt', v)}
                   error={errors.phoneAlt}
-                  placeholder="اختياري"
+                  placeholder="01112345678"
+                  hint="لو الأساسي مقفول المندوب هيكلّمك عليه"
                 />
               </div>
 
@@ -519,14 +529,15 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
                 id="email"
                 onFocus={() => touch('email')}
                 label="البريد الإلكتروني"
+                required
                 type="email"
                 dir="ltr"
                 value={form.email ?? ''}
                 onChange={(v) => update('email', v)}
                 error={errors.email}
-                placeholder="اختياري"
+                placeholder="name@example.com"
                 autoComplete="email"
-                hint="لو كتبته هنبعتلك تأكيد الأوردر وتحديثات حالته عليه"
+                hint="هنبعتلك عليه تأكيد الأوردر وكل تحديث في حالته"
               />
             </FormBlock>
 
