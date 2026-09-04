@@ -67,6 +67,10 @@ export function VendoorCatalog({
   const router = useRouter()
   const search = useSearchParams()
 
+  /* البحث والفلترة بيتعملوا على السيرفر — من غير المؤشّر ده
+     الصفحة بتبان واقفة لحد ما الرد يوصل */
+  const [navigating, startNav] = useTransition()
+
   const [term, setTerm] = useState(q)
   const [target, setTarget] = useState('')
   const [added, setAdded] = useState<number[]>([])
@@ -88,7 +92,7 @@ export function VendoorCatalog({
       if (v === undefined || v === '') params.delete(k)
       else params.set(k, String(v))
     }
-    router.push(`/admin/catalog?${params.toString()}`)
+    startNav(() => router.push(`/admin/catalog?${params.toString()}`))
   }
 
   return (
@@ -115,6 +119,7 @@ export function VendoorCatalog({
           <div className="grid grid-cols-2 gap-3 sm:flex">
             <select
               value={cat}
+              disabled={navigating}
               onChange={(e) => goto({ cat: e.target.value, page: 1 })}
               aria-label="قسم فيندور"
               className="field !py-3 !text-[12.5px] font-bold sm:!w-auto"
@@ -127,7 +132,16 @@ export function VendoorCatalog({
               ))}
             </select>
 
-            <button type="submit" className="btn btn-primary btn-sm">
+            <button
+              type="submit"
+              disabled={navigating}
+              className="btn btn-primary btn-sm"
+            >
+              {navigating ? (
+                <SpinnerIcon className="a-spin h-4 w-4" />
+              ) : (
+                <SearchIcon className="h-4 w-4" />
+              )}
               <span>بحث</span>
             </button>
           </div>
@@ -172,7 +186,11 @@ export function VendoorCatalog({
           </p>
         </div>
       ) : (
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div
+          className={`mt-5 grid gap-4 transition-opacity duration-300 sm:grid-cols-2 xl:grid-cols-3 ${
+            navigating ? 'pointer-events-none opacity-40' : ''
+          }`}
+        >
           {products.map((p) => (
             <ProductCard
               key={p.id}
@@ -201,7 +219,7 @@ export function VendoorCatalog({
         <div className="mt-8 flex items-center justify-center gap-3">
           <button
             type="button"
-            disabled={page <= 1}
+            disabled={page <= 1 || navigating}
             onClick={() => goto({ page: page - 1 })}
             className="btn btn-ghost btn-sm"
           >
@@ -215,7 +233,7 @@ export function VendoorCatalog({
 
           <button
             type="button"
-            disabled={page >= pages}
+            disabled={page >= pages || navigating}
             onClick={() => goto({ page: page + 1 })}
             className="btn btn-ghost btn-sm"
           >

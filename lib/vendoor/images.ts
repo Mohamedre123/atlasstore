@@ -110,14 +110,26 @@ export function imageCandidates(vendoorId: number, url: string): string[] {
  * الصح — فصورها بتبان من غير ما نعيد المزامنة.
  */
 export function repairImage(src: string, vendoorId?: number): string {
-  if (!src.includes(DEAD)) return src
-
   const folder = vendoorId ? vendoorId - FOLDER_OFFSET : 0
   const file = fileName(src)
+  const withFolder = `${VENDOOR_BASE_URL}${ALIVE}${folder}/${file}`
 
-  return folder > 0
-    ? `${VENDOOR_BASE_URL}${ALIVE}${folder}/${file}`
-    : `${VENDOOR_BASE_URL}${ALIVE}${file}`
+  /* المسار الميت اللي الـ API بيدّيه */
+  if (src.includes(DEAD)) {
+    return folder > 0 ? withFolder : `${VENDOOR_BASE_URL}${ALIVE}${file}`
+  }
+
+  /**
+   * المسار الصح بس من غير رقم المجلد — اتحفظ كده في مزامنة
+   * قديمة قبل ما نعرف إن فيه مجلد أصلًا، وبيدّي 404 لأي منتج
+   * جديد.
+   */
+  if (folder > 0 && src.includes(ALIVE)) {
+    const rest = src.slice(src.indexOf(ALIVE) + ALIVE.length).replace(/^\/+/, '')
+    if (!/^\d+\//.test(rest)) return withFolder
+  }
+
+  return src
 }
 
 /** كل صور المنتج، من غير تكرار ومن غير الفاضي */

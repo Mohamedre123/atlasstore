@@ -272,6 +272,8 @@ export async function syncVendoorPage(
 
     if (error) return fail(`فشل الحفظ: ${error.message}`)
 
+    await refreshStoreImages(auth.supabase, images)
+
     return { ok: true, data: { saved: rows.length, more } }
   } catch (err) {
     /* عدّينا حد الطلبات — المتصفح بيستنى ويعيد نفس الصفحة */
@@ -309,13 +311,50 @@ async function imageWorks(url: string): Promise<boolean> {
   }
 }
 
+/**
+ * المنتجات اللي ضفناها لمتجرنا صورها متخزّنة عندنا نسخة، فلو
+ * الرابط اتصلّح في الكتالوج بنصلّحه في المتجر كمان.
+ *
+ * بنعدّل بس لو الصورة المتخزّنة لسه صورة فيندور — لو غيّرتها
+ * بصور من عندك مابنلمسهاش.
+ */
+async function refreshStoreImages(
+  supabase: SupabaseClient,
+  images: Map<number, string[]>
+): Promise<void> {
+  const ids = [...images.keys()]
+  if (ids.length === 0) return
+
+  const { data: mine } = await supabase
+    .from('products')
+    .select('id, vendoor_id, images')
+    .in('vendoor_id', ids)
+
+  for (const row of mine ?? []) {
+    const fresh = images.get(row.vendoor_id as number)
+    if (!fresh?.length) continue
+
+    const current = (row.images ?? []) as string[]
+    if (!current[0]?.includes('ven-door.com')) continue
+    if (JSON.stringify(current) === JSON.stringify(fresh)) continue
+
+    await supabase.from('products').update({ images: fresh }).eq('id', row.id)
+  }
+
+  refreshStore()
+}
+
 async function resolveImages(
   supabase: SupabaseClient,
   products: VendoorProduct[]
 ): Promise<Map<number, string[]>> {
   const out = new Map<number, string[]>()
 
-  /* اللي لقينا رابطه قبل كده مش هنسأل عنه تاني */
+  /**
+   * اللي محفوظ عندنا بنتأكد منه بطلب واحد بدل ما نحكم على شكل
+   * الرابط. مزامنة قديمة حفظت روابط شكلها صح وهي 404، ولو
+   * اكتفينا بالشكل كنا هنعدّيها للأبد.
+   */
   const { data: known } = await supabase
     .from('vendoor_products')
     .select('id, images')
@@ -324,12 +363,14 @@ async function resolveImages(
       products.map((p) => p.id)
     )
 
-  for (const row of known ?? []) {
-    const images = row.images as string[] | null
-    if (images?.length && images[0].includes(ALIVE_PATH)) {
-      out.set(row.id as number, images)
-    }
-  }
+  await Promise.all(
+    (known ?? []).map(async (row) => {
+      const images = row.images as string[] | null
+      if (!images?.length) return
+      if (!images[0].includes(ALIVE_PATH)) return
+      if (await imageWorks(images[0])) out.set(row.id as number, images)
+    })
+  )
 
   await Promise.all(
     products.map(async (p) => {
