@@ -285,7 +285,15 @@ function CategoryForm({
   }
 
   return (
-    <form action={submit} className="card p-5">
+    /* onSubmit مش action — رياكت ١٩ بيصفّر الفورم لوحده بعد
+       الـ action، فالتعديل كان بيبان كأنه اتلغى */
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        submit(new FormData(e.currentTarget))
+      }}
+      className="card p-5"
+    >
       <div className="mb-5 flex items-center justify-between gap-3">
         <h2 className="display text-[16px] font-bold">
           {row ? 'تعديل القسم' : 'قسم جديد'}

@@ -237,6 +237,11 @@ function ProductRow({
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
 
+  /* القسم المختار دلوقتي في القايمة — بنتابعه عشان خانة
+     «صف القسم» تشتغل وتتسمّى على طول من غير ما تحفظ الأول */
+  const [catId, setCatId] = useState(row.category_id ?? '')
+  const pickedCategory = categories.find((c) => c.id === catId)?.name
+
   const images = row.images ?? []
   const buy = row.vendoor_buy ? Number(row.vendoor_buy) : null
   const profit = buy !== null ? Number(row.price) - buy : null
@@ -252,7 +257,7 @@ function ProductRow({
       }
       setSaved(true)
       router.refresh()
-      window.setTimeout(() => setSaved(false), 2500)
+      window.setTimeout(() => setSaved(false), 3000)
     })
   }
 
@@ -367,7 +372,19 @@ function ProductRow({
       {/* --- الفورم --- */}
       <div className="acc-body" data-open={open}>
         <div>
-          <form action={submit} className="border-t border-white/8 p-4">
+          {/**
+           * بنستقبل الإرسال بـ onSubmit مش action بقصد:
+           * رياكت ١٩ بيصفّر الفورم لوحده بعد ما الـ action تخلص،
+           * فالخانات كانت بترجع لقيمها القديمة لحظة الحفظ وتبان
+           * كأن التعديل اتلغى — والتعديل يكون متحفظ فعلًا.
+           */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              submit(new FormData(e.currentTarget))
+            }}
+            className="border-t border-white/8 p-4"
+          >
             <input type="hidden" name="id" value={row.id} />
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -412,7 +429,8 @@ function ProductRow({
                 <select
                   id={`cat-${row.id}`}
                   name="category_id"
-                  defaultValue={row.category_id ?? ''}
+                  value={catId}
+                  onChange={(e) => setCatId(e.target.value)}
                   className="field"
                 >
                   <option value="">من غير قسم</option>
@@ -520,7 +538,7 @@ function ProductRow({
                       /* «صف قسمه» بيتسمّى باسم القسم الحقيقي عشان
                          تبقى شايف هيروح فين بالظبط */
                       const isCategory = section.key === 'category'
-                      const off = isCategory && !categoryName
+                      const off = isCategory && !pickedCategory
 
                       return (
                         <label
@@ -543,8 +561,8 @@ function ProductRow({
                           />
                           <span className="min-w-0">
                             <span className="block text-[12.5px] font-bold">
-                              {isCategory && categoryName
-                                ? `صف «${categoryName}»`
+                              {isCategory && pickedCategory
+                                ? `صف «${pickedCategory}»`
                                 : section.label}
                             </span>
                             <span className="mt-0.5 block text-[10.5px] leading-relaxed text-mist">
