@@ -67,14 +67,23 @@ export function OrdersBoard() {
         .order('created_at', { ascending: false })
         .limit(200)
 
-      if (err) throw err
+      /* أخطاء Supabase مش من نوع Error، فـ instanceof كانت
+         بتفشل وبنعرض رسالة عامة من غير أي تفصيل يفيد */
+      if (err) {
+        setError(`ما قدرناش نحمّل الأوردرات: ${err.message ?? JSON.stringify(err)}`)
+        return
+      }
+
       setOrders((data as Order[]) ?? [])
     } catch (err) {
-      setError(
+      const message =
         err instanceof Error
-          ? `ما قدرناش نحمّل الأوردرات: ${err.message}`
-          : 'ما قدرناش نحمّل الأوردرات'
-      )
+          ? err.message
+          : typeof err === 'object' && err && 'message' in err
+            ? String((err as { message: unknown }).message)
+            : JSON.stringify(err)
+
+      setError(`ما قدرناش نحمّل الأوردرات: ${message}`)
     } finally {
       setLoading(false)
     }
