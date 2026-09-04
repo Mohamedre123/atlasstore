@@ -35,6 +35,15 @@ export function ProductCard({
 }) {
   const [active, setActive] = useState(0)
   const [hover, setHover] = useState(false)
+  /**
+   * أول صورة بس هي اللي بتتحمّل مع الصفحة، والباقي بيتحمّل أول
+   * ما الماوس يقف على الكارت.
+   *
+   * قبل كده كنا بنحمّل ٤ صور لكل منتج على طول — يعني ٧٣ صورة
+   * في الصفحة الرئيسية، وده اللي كان بيبطّئ الموقع ويخلّي صور
+   * الواجهة نفسها تتأخر لأنها بتتزاحم على نفس الاتصال.
+   */
+  const [warm, setWarm] = useState(false)
   const timer = useRef<number | null>(null)
 
   const discount = discountPercent(product.price, product.compareAtPrice)
@@ -46,7 +55,8 @@ export function ProductCard({
   const many = gallery.length > 1
 
   useEffect(() => {
-    if (!hover || !many) return
+    /* مابنبدأش التبديل غير لما الصور تكون اتحمّلت فعلًا */
+    if (!hover || !many || !warm) return
     timer.current = window.setInterval(
       () => setActive((i) => (i + 1) % gallery.length),
       SWAP_MS
@@ -54,7 +64,7 @@ export function ProductCard({
     return () => {
       if (timer.current) window.clearInterval(timer.current)
     }
-  }, [hover, many, gallery.length])
+  }, [hover, many, warm, gallery.length])
 
   /* رجوع هادي للصورة الأولى بعد ما الماوس يمشي */
   useEffect(() => {
@@ -68,14 +78,18 @@ export function ProductCard({
       data-reveal=""
       style={revealDelay(Math.min(index, 7) * 65)}
       className="group relative"
-      onMouseEnter={() => setHover(true)}
+      onMouseEnter={() => {
+        setWarm(true)
+        setHover(true)
+      }}
       onMouseLeave={() => setHover(false)}
+      onTouchStart={() => setWarm(true)}
     >
       <Link href={`/product/${product.slug}`} className="block">
         <div className="pcard rim">
           {/* ---------- اللوح والصور ---------- */}
           <div className="plate aspect-[3/4] w-full">
-            {gallery.map((src, i) => (
+            {(warm ? gallery : gallery.slice(0, 1)).map((src, i) => (
               <div
                 key={i}
                 aria-hidden={i !== active}

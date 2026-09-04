@@ -38,13 +38,11 @@ export function Header({ categories }: { categories: Category[] }) {
   const pathname = usePathname()
 
   const [scrolled, setScrolled] = useState(false)
-  const [hidden, setHidden] = useState(false)
   const [menu, setMenu] = useState(false)
   const [search, setSearch] = useState(false)
   const [bump, setBump] = useState(false)
   const [openMega, setOpenMega] = useState<string | null>(null)
 
-  const lastY = useRef(0)
   const prevCount = useRef(count)
 
   const links: NavLink[] = [
@@ -60,17 +58,24 @@ export function Header({ categories }: { categories: Category[] }) {
     { href: '/shop?sale=1', label: 'العروض' },
   ]
 
+  /* الهيدر ثابت دايمًا وبيتحوّل لزجاج أول ما تنزل.
+     كان بيختفي وانت نازل ويرجع أول ما تقف — وده كان بيعمل
+     مستطيل بيرفرف فوق الشاشة على الفون. */
   useEffect(() => {
+    let frame = 0
     const onScroll = () => {
-      const y = window.scrollY
-      setScrolled(y > 10)
-      /* بنخفي الهيدر وانت نازل بس بعد ما تعدّي أول شاشة */
-      setHidden(y > 320 && y > lastY.current + 6)
-      lastY.current = y
+      if (frame) return
+      frame = window.requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 10)
+        frame = 0
+      })
     }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (frame) window.cancelAnimationFrame(frame)
+    }
   }, [])
 
   useEffect(() => {
@@ -97,17 +102,12 @@ export function Header({ categories }: { categories: Category[] }) {
 
   return (
     <>
-      <header
-        className={`sticky top-0 z-50 transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] ${
-          hidden && !search && !openMega ? '-translate-y-full' : 'translate-y-0'
-        }`}
-        onMouseLeave={() => setOpenMega(null)}
-      >
+      <header className="sticky top-0 z-50" onMouseLeave={() => setOpenMega(null)}>
         <div
           /* شفاف تمامًا وانت فوق عشان خلفية الموقع المتحركة تبان،
              وزجاج ضبابي أول ما تنزل عشان الروابط تفضل مقروءة */
-          className={`border-b transition-[background-color,border-color,backdrop-filter] duration-500 ${
-            scrolled || openMega
+          className={`border-b transition-colors duration-300 ${
+            scrolled || openMega || search
               ? 'glass border-white/8'
               : 'border-transparent bg-transparent'
           }`}
@@ -136,28 +136,66 @@ export function Header({ categories }: { categories: Category[] }) {
               <nav className="hidden items-center gap-6 lg:flex">
                 {links.map((link) => {
                   const active = pathname === link.href.split('?')[0]
-                  const hasChildren = Boolean(link.children?.length)
+                  const children = link.children ?? []
+                  const open = openMega === link.href
 
                   return (
                     <div
                       key={link.href}
                       className="relative"
-                      onMouseEnter={() => setOpenMega(hasChildren ? link.href : null)}
+                      onMouseEnter={() =>
+                        setOpenMega(children.length ? link.href : null)
+                      }
+                      onFocus={() => setOpenMega(children.length ? link.href : null)}
                     >
                       <Link
                         href={link.href}
                         data-active={active}
+                        aria-expanded={children.length ? open : undefined}
                         className="nav-link flex items-center gap-1.5"
                       >
                         {link.label}
-                        {hasChildren && (
+                        {children.length > 0 && (
                           <ChevronDownIcon
                             className={`h-3.5 w-3.5 transition-transform duration-300 ${
-                              openMega === link.href ? 'rotate-180' : ''
+                              open ? 'rotate-180' : ''
                             }`}
                           />
                         )}
                       </Link>
+
+                      {/* قايمة الأقسام الفرعية — بتنزل من القسم نفسه.
+                          الجسر الشفاف فوقها بيمنعها تتقفل وانت نازل
+                          بالماوس من الرابط للقايمة. */}
+                      {children.length > 0 && open && (
+                        <div className="absolute right-1/2 top-full z-50 translate-x-1/2 pt-3">
+                          <div className="glass a-panel min-w-[210px] overflow-hidden rounded-2xl border shadow-[0_28px_60px_-24px_rgba(0,0,0,0.85)]">
+                            <Link
+                              href={link.href}
+                              onClick={() => setOpenMega(null)}
+                              className="group flex items-center justify-between gap-4 border-b border-white/8 px-4 py-3 text-[12.5px] font-extrabold text-brand-300 transition-colors hover:bg-brand-500/10"
+                            >
+                              كل {link.label}
+                              <ArrowLeftIcon className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-1" />
+                            </Link>
+
+                            <ul className="py-1.5">
+                              {children.map((child) => (
+                                <li key={child.href}>
+                                  <Link
+                                    href={child.href}
+                                    onClick={() => setOpenMega(null)}
+                                    className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold text-foam/80 transition-colors hover:bg-white/6 hover:text-white"
+                                  >
+                                    <span className="h-1 w-1 shrink-0 rotate-45 bg-brand-500" />
+                                    {child.label}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -200,13 +238,6 @@ export function Header({ categories }: { categories: Category[] }) {
             </div>
           </div>
 
-          {/* --- القايمة المنسدلة — كمبيوتر --- */}
-          {openMega && (
-            <MegaPanel
-              link={links.find((l) => l.href === openMega)}
-              onClose={() => setOpenMega(null)}
-            />
-          )}
 
           {search && <SearchPanel onClose={() => setSearch(false)} />}
         </div>
@@ -214,43 +245,6 @@ export function Header({ categories }: { categories: Category[] }) {
 
       {menu && <MobileMenu links={links} onClose={() => setMenu(false)} />}
     </>
-  )
-}
-
-/* ============================================================
-   القايمة المنسدلة تحت قسم فيه أقسام فرعية
-   ============================================================ */
-function MegaPanel({ link, onClose }: { link?: NavLink; onClose: () => void }) {
-  if (!link?.children?.length) return null
-
-  return (
-    <div className="a-panel hidden border-t border-white/8 lg:block">
-      <div className="shell py-6">
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-          <Link
-            href={link.href}
-            onClick={onClose}
-            className="group flex items-center gap-2 text-[13px] font-extrabold text-brand-300"
-          >
-            كل {link.label}
-            <ArrowLeftIcon className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-1" />
-          </Link>
-
-          <span className="h-4 w-px bg-white/12" />
-
-          {link.children.map((child) => (
-            <Link
-              key={child.href}
-              href={child.href}
-              onClick={onClose}
-              className="text-[13px] font-semibold text-foam/75 transition-colors hover:text-white"
-            >
-              {child.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-    </div>
   )
 }
 

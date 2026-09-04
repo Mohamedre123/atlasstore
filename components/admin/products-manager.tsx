@@ -7,7 +7,10 @@ import { useMemo, useState, useTransition } from 'react'
 import {
   deleteProduct,
   importSeedProducts,
+  linkProductToVendoor,
+  moveProduct,
   saveProduct,
+  searchVendoorProducts,
 } from '@/app/admin/actions'
 import {
   AlertIcon,
@@ -207,6 +210,13 @@ function ProductRow({
     })
   }
 
+  const move = (direction: 'up' | 'down') =>
+    start(async () => {
+      const res = await moveProduct(row.id, direction)
+      if (!res.ok) window.alert(res.error)
+      router.refresh()
+    })
+
   const remove = () => {
     const sure = window.confirm(`هتمسح «${row.name}» من متجرك نهائيًا. متأكد؟`)
     if (!sure) return
@@ -269,6 +279,28 @@ function ProductRow({
         >
           <ArrowUpRightIcon className="h-4 w-4" />
         </Link>
+
+        {/* الترتيب بالأزرار — أضمن من كتابة أرقام */}
+        <div className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-white/10">
+          <button
+            type="button"
+            onClick={() => move('up')}
+            disabled={pending}
+            aria-label={`حرّك ${row.name} لفوق`}
+            className="px-2 py-1 text-mist transition-colors hover:bg-brand-500/12 hover:text-brand-300 disabled:opacity-40"
+          >
+            <ChevronDownIcon className="h-3.5 w-3.5 rotate-180" />
+          </button>
+          <button
+            type="button"
+            onClick={() => move('down')}
+            disabled={pending}
+            aria-label={`حرّك ${row.name} لتحت`}
+            className="border-t border-white/10 px-2 py-1 text-mist transition-colors hover:bg-brand-500/12 hover:text-brand-300 disabled:opacity-40"
+          >
+            <ChevronDownIcon className="h-3.5 w-3.5" />
+          </button>
+        </div>
 
         <button
           type="button"
@@ -438,6 +470,9 @@ function ProductRow({
               </div>
             </div>
 
+            {/* المنتج مش مربوط بفيندور → أوردره مش هيتبعت لهم */}
+            {!row.vendoor_id && <LinkToVendoor productId={row.id} name={row.name} />}
+
             {/* الألوان والمقاسات — للعرض بس */}
             {row.variants && row.variants.length > 0 && (
               <div className="mt-5 rounded-2xl border border-white/8 bg-white/4 p-4">
@@ -509,6 +544,126 @@ function ProductRow({
           </form>
         </div>
       </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------
+   ربط منتج بمنتج عند فيندور
+   ------------------------------------------------------------
+   المنتجات اللي اتنقلت من الملف القديم مالهاش رقم عند فيندور،
+   فأوردراتها بتفضل عندنا ومابتتبعتش لهم. من هنا بتدوّر على
+   المنتج المقابل عندهم وتربطه — وساعتها الألوان والمقاسات
+   بتتاخد منهم كمان.
+   ------------------------------------------------------------ */
+function LinkToVendoor({ productId, name }: { productId: string; name: string }) {
+  const router = useRouter()
+  const [term, setTerm] = useState(name.slice(0, 20))
+  const [hits, setHits] = useState<{ id: number; name: string; photo: string | null }[]>(
+    []
+  )
+  const [searched, setSearched] = useState(false)
+  const [pending, start] = useTransition()
+  const [error, setError] = useState('')
+
+  const search = () =>
+    start(async () => {
+      setError('')
+      const res = await searchVendoorProducts(term)
+      if (!res.ok) {
+        setError(res.error)
+        return
+      }
+      setHits(res.data)
+      setSearched(true)
+    })
+
+  const link = (vendoorId: number) =>
+    start(async () => {
+      const res = await linkProductToVendoor(productId, vendoorId)
+      if (!res.ok) {
+        setError(res.error)
+        return
+      }
+      router.refresh()
+    })
+
+  return (
+    <div className="mt-5 rounded-2xl border border-warn/25 bg-warn/6 p-4">
+      <p className="flex items-start gap-2 text-[12.5px] font-bold text-warn">
+        <AlertIcon className="mt-0.5 h-4 w-4 shrink-0" />
+        المنتج ده مش مربوط بفيندور — أوردراته مش هتتبعت لهم تلقائي
+      </p>
+
+      <p className="mt-2 text-[11.5px] leading-relaxed text-mist">
+        دوّر على المنتج المقابل عندهم واربطه. لازم تعمل «تحديث الكتالوج» الأول.
+      </p>
+
+      <div className="mt-3.5 flex items-center gap-2">
+        <input
+          value={term}
+          onChange={(e) => setTerm(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              search()
+            }
+          }}
+          placeholder="اسم المنتج عند فيندور"
+          aria-label="ابحث في كتالوج فيندور"
+          className="field !py-2.5 !text-[12.5px]"
+        />
+        <button
+          type="button"
+          onClick={search}
+          disabled={pending}
+          className="btn btn-ghost btn-sm shrink-0"
+        >
+          {pending ? <SpinnerIcon className="a-spin h-4 w-4" /> : <span>بحث</span>}
+        </button>
+      </div>
+
+      {error && <p className="mt-2.5 text-[11.5px] text-sale">{error}</p>}
+
+      {searched && hits.length === 0 && !error && (
+        <p className="mt-3 text-[11.5px] text-mist">
+          مفيش نتائج — جرّب كلمة أقصر، أو اعمل تحديث للكتالوج.
+        </p>
+      )}
+
+      {hits.length > 0 && (
+        <ul className="mt-3 space-y-1.5">
+          {hits.map((hit) => (
+            <li key={hit.id}>
+              <button
+                type="button"
+                onClick={() => link(hit.id)}
+                disabled={pending}
+                className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/4 p-2 text-right transition-colors hover:border-brand-500/50 hover:bg-brand-500/8 disabled:opacity-50"
+              >
+                <span className="plate relative h-10 w-8 shrink-0 rounded-md">
+                  {hit.photo && (
+                    <Image
+                      src={hit.photo}
+                      alt=""
+                      fill
+                      sizes="32px"
+                      className="object-cover"
+                      unoptimized
+                    />
+                  )}
+                </span>
+                <span className="line-clamp-1 flex-1 text-[12px] font-semibold">
+                  {hit.name}
+                </span>
+                <span dir="ltr" className="nums shrink-0 text-[10.5px] text-mist">
+                  #{hit.id}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

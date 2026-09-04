@@ -3,10 +3,11 @@
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { deleteCategory, saveCategory } from '@/app/admin/actions'
+import { deleteCategory, moveCategory, saveCategory } from '@/app/admin/actions'
 import {
   AlertIcon,
   CheckIcon,
+  ChevronDownIcon,
   CloseIcon,
   LayersIcon,
   PlusIcon,
@@ -141,6 +142,13 @@ function CategoryRow({
   const router = useRouter()
   const [pending, start] = useTransition()
 
+  const move = (direction: 'up' | 'down') =>
+    start(async () => {
+      const res = await moveCategory(row.id, direction)
+      if (!res.ok) window.alert(res.error)
+      router.refresh()
+    })
+
   const remove = () => {
     const sure = window.confirm(
       `هتمسح قسم «${row.name}»${count ? ` وفيه ${count} منتج` : ''}.\n\nالمنتجات مش هتتمسح بس هتفضل من غير قسم. متأكد؟`
@@ -190,6 +198,28 @@ function CategoryRow({
         <p dir="ltr" className="mt-0.5 truncate text-right text-[10.5px] text-mist">
           /{row.slug} · {count} منتج
         </p>
+      </div>
+
+      {/* الترتيب بالأزرار — أضمن بكتير من كتابة أرقام */}
+      <div className="flex shrink-0 flex-col overflow-hidden rounded-lg border border-white/10">
+        <button
+          type="button"
+          onClick={() => move('up')}
+          disabled={pending}
+          aria-label={`حرّك ${row.name} لفوق`}
+          className="px-2 py-1 text-mist transition-colors hover:bg-brand-500/12 hover:text-brand-300 disabled:opacity-40"
+        >
+          <ChevronDownIcon className="h-3.5 w-3.5 rotate-180" />
+        </button>
+        <button
+          type="button"
+          onClick={() => move('down')}
+          disabled={pending}
+          aria-label={`حرّك ${row.name} لتحت`}
+          className="border-t border-white/10 px-2 py-1 text-mist transition-colors hover:bg-brand-500/12 hover:text-brand-300 disabled:opacity-40"
+        >
+          <ChevronDownIcon className="h-3.5 w-3.5" />
+        </button>
       </div>
 
       <button
@@ -323,14 +353,6 @@ function CategoryForm({
           dir="ltr"
           placeholder="/img/cat-tshirts.webp أو https://..."
           hint="الصورة اللي بتظهر في كارت القسم بالصفحة الرئيسية"
-        />
-
-        <Field
-          name="sort"
-          label="الترتيب"
-          type="number"
-          defaultValue={String(row?.sort ?? 0)}
-          hint="الأصغر بيظهر الأول"
         />
 
         <label className="flex items-center gap-2.5 text-[13px] font-bold">

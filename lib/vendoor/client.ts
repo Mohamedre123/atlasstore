@@ -156,15 +156,27 @@ export async function fetchVendoorCategories(): Promise<VendoorCategory[]> {
   return r.data?.categories ?? []
 }
 
-/** صفحة واحدة من منتجات قسم */
+/**
+ * صفحة واحدة من منتجات قسم.
+ * الأقسام الفاضية عندهم بترجّع خطأ «No products» بدل قايمة
+ * فاضية، فبنعاملها كصفحة فاضية عشان المزامنة ما تقفش عندها.
+ */
 export async function fetchVendoorProductPage(
   categoryId: number,
   page = 1
 ): Promise<{ products: VendoorProduct[]; more: boolean }> {
-  const r = await call<VendoorResponse<{ products: VendoorProduct[]; more?: boolean }>>(
-    `/api/products?category_id=${categoryId}&page=${page}`
-  )
-  return { products: r.data?.products ?? [], more: Boolean(r.data?.more) }
+  try {
+    const r = await call<VendoorResponse<{ products: VendoorProduct[]; more?: boolean }>>(
+      `/api/products?category_id=${categoryId}&page=${page}`
+    )
+    return { products: r.data?.products ?? [], more: Boolean(r.data?.more) }
+  } catch (err) {
+    const msg = err instanceof VendoorError ? err.message.toLowerCase() : ''
+    if (msg.includes('no product') || msg.includes('not found')) {
+      return { products: [], more: false }
+    }
+    throw err
+  }
 }
 
 /**

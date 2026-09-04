@@ -471,3 +471,158 @@ export async function importSeedProducts(): Promise<ActionResult<{ count: number
   refreshStore()
   return { ok: true, data: { count } }
 }
+
+/* ============================================================
+   ٦) الترتيب بأزرار فوق/تحت
+   ------------------------------------------------------------
+   كتابة أرقام في خانة «الترتيب» كانت بتلخبط: لو كل الصفوف
+   عندها نفس الرقم مفيش حاجة بتتحرك. الأزرار دي بتبدّل مكان
+   الصف مع اللي فوقه أو اللي تحته وتحفظ الأرقام من جديد،
+   فالنتيجة مضمونة.
+   ============================================================ */
+
+type Table = 'categories' | 'products'
+
+async function reorder(
+  table: Table,
+  id: string,
+  direction: 'up' | 'down'
+): Promise<ActionResult> {
+  const auth = await adminClient()
+  if (!auth.ok) return fail(auth.error)
+
+  /* بنجيب الصفوف اللي في نفس المجموعة:
+     الأقسام → اللي تحت نفس القسم الأب
+     المنتجات → اللي في نفس القسم */
+  const groupKey = table === 'categories' ? 'parent_id' : 'category_id'
+
+  const { data: current, error: currentError } = await auth.supabase
+    .from(table)
+    .select(`id, sort, ${groupKey}`)
+    .eq('id', id)
+    .maybeSingle()
+
+  if (currentError || !current) return fail('العنصر مش موجود')
+
+  const groupValue = (current as Record<string, unknown>)[groupKey] as string | null
+
+  let query = auth.supabase.from(table).select('id, sort').order('sort').order('name')
+  query = groupValue ? query.eq(groupKey, groupValue) : query.is(groupKey, null)
+
+  const { data: siblings, error: listError } = await query
+  if (listError || !siblings) return fail('ما قدرناش نقرا الترتيب')
+
+  const index = siblings.findIndex((r) => r.id === id)
+  const target = direction === 'up' ? index - 1 : index + 1
+  if (index < 0 || target < 0 || target >= siblings.length) return { ok: true }
+
+  /* بنبدّل المكانين وبعدين نرقّم الكل من الأول — كده الأرقام
+     بتفضل متتابعة ومفيش تكرار */
+  const ordered = [...siblings]
+  ;[ordered[index], ordered[target]] = [ordered[target], ordered[index]]
+
+  for (let i = 0; i < ordered.length; i++) {
+    const { error } = await auth.supabase
+      .from(table)
+      .update({ sort: i })
+      .eq('id', ordered[i].id)
+
+    if (error) return fail(`فشل الترتيب: ${error.message}`)
+  }
+
+  refreshStore()
+  return { ok: true }
+}
+
+export async function moveCategory(
+  id: string,
+  direction: 'up' | 'down'
+): Promise<ActionResult> {
+  return reorder('categories', id, direction)
+}
+
+export async function moveProduct(
+  id: string,
+  direction: 'up' | 'down'
+): Promise<ActionResult> {
+  return reorder('products', id, direction)
+}
+
+/* ============================================================
+   ٧) ربط منتج موجود بمنتج عند فيندور
+   ------------------------------------------------------------
+   المنتجات اللي اتنقلت من data/products.ts مالهاش vendoor_id،
+   فأوردراتها مابتتبعتش لفيندور. من هنا بتربطها.
+   ============================================================ */
+
+export async function searchVendoorProducts(
+  term: string
+): Promise<ActionResult<{ id: number; name: string; photo: string | null }[]>> {
+  const auth = await adminClient()
+  if (!auth.ok) return fail(auth.error)
+
+  const q = term.trim()
+  if (q.length < 2) return { ok: true, data: [] }
+
+  const { data, error } = await auth.supabase
+    .from('vendoor_products')
+    .select('id, name, main_photo')
+    .ilike('name', `%${q}%`)
+    .limit(12)
+
+  if (error) return fail(error.message)
+
+  return {
+    ok: true,
+    data: (data ?? []).map((r) => ({
+      id: r.id as number,
+      name: r.name as string,
+      photo: (r.main_photo as string) ?? null,
+    })),
+  }
+}
+
+export async function linkProductToVendoor(
+  productId: string,
+  vendoorId: number
+): Promise<ActionResult> {
+  const auth = await adminClient()
+  if (!auth.ok) return fail(auth.error)
+
+  const { data: vp, error: vpError } = await auth.supabase
+    .from('vendoor_products')
+    .select('*')
+    .eq('id', vendoorId)
+    .maybeSingle()
+
+  if (vpError || !vp) return fail('المنتج مش موجود في كتالوج فيندور')
+
+  /* الألوان والمقاسات بتتاخد من فيندور وبتستبدل اللي عندنا،
+     عشان الأوردر يتبعت باختيارات هما عارفينها */
+  const raw = (vp.variants ?? {}) as Record<string, string[]>
+  const colors = Object.keys(raw)
+  const sizes = [...new Set(Object.values(raw).flat())]
+
+  const variants: { name: string; options: string[] }[] = []
+  if (colors.length) variants.push({ name: 'اللون', options: colors })
+  if (sizes.length) variants.push({ name: 'المقاس', options: sizes })
+
+  const { error } = await auth.supabase
+    .from('products')
+    .update({
+      vendoor_id: vendoorId,
+      vendoor_variants: raw,
+      vendoor_buy: vp.buy_price,
+      vendoor_min: vp.min_price,
+      vendoor_max: vp.max_price,
+      vendoor_seller: vp.seller,
+      variants,
+      sku: `VD-${vendoorId}`,
+    })
+    .eq('id', productId)
+
+  if (error) return fail(`فشل الربط: ${error.message}`)
+
+  refreshStore()
+  return { ok: true }
+}
