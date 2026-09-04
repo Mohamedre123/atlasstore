@@ -31,12 +31,28 @@ export function Shot({
   const [broken, setBroken] = useState(false)
   const img = useRef<HTMLImageElement>(null)
 
-  /* لو الصورة وقعت قبل ما رياكت يوصّل onError (بيحصل مع الصور
-     اللي بتتحمّل مع أول رسم للصفحة)، بنكتشف ده بنفسنا */
+  /**
+   * بنسمع لخطأ الصورة من العنصر نفسه مش من رياكت.
+   * رياكت بيوصّل onError عن طريق نظام أحداث بيتركّب وقت
+   * الهيدريشن، والصور اللي بتقع قبل كده (أو اللي بتتحمّل كسول
+   * وتقع بعدين) بيضيع خطأها — جرّبناها على الموقع وما اشتغلتش.
+   * المستمع المباشر ده بيمسك الحالتين.
+   */
   useEffect(() => {
     setBroken(false)
+
     const el = img.current
-    if (el?.complete && el.naturalWidth === 0) setBroken(true)
+    if (!el) return
+
+    /* وقعت خلاص قبل ما نوصل هنا */
+    if (el.complete && el.naturalWidth === 0) {
+      setBroken(true)
+      return
+    }
+
+    const fail = () => setBroken(true)
+    el.addEventListener('error', fail)
+    return () => el.removeEventListener('error', fail)
   }, [src])
 
   if (src && !broken) {
@@ -49,7 +65,6 @@ export function Shot({
         sizes={sizes}
         priority={priority}
         unoptimized={unoptimized}
-        onError={() => setBroken(true)}
         className={`object-cover ${className}`}
       />
     )
