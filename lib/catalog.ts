@@ -126,6 +126,22 @@ function toProduct(row: ProductRow, categorySlug: string): Product {
 
 type Catalog = { categories: Category[]; products: Product[]; fromDb: boolean }
 
+const PRODUCT_FIELDS =
+  'id, category_id, slug, name, short_description, description, price, compare_at_price, images, variants, tags, badge, sku, featured, in_stock, sort, vendoor_id, vendoor_variants, vendoor_buy, vendoor_min, vendoor_max, vendoor_seller'
+
+const PRODUCT_FIELDS_WITH_SECTIONS = `${PRODUCT_FIELDS}, home_sections`
+
+function selectProducts(
+  supabase: NonNullable<ReturnType<typeof createPublicClient>>,
+  fields: string
+) {
+  return supabase
+    .from('products')
+    .select(fields)
+    .order('sort', { ascending: true })
+    .order('created_at', { ascending: false })
+}
+
 async function loadCatalog(): Promise<Catalog> {
   const supabase = createPublicClient()
 
@@ -134,20 +150,24 @@ async function loadCatalog(): Promise<Catalog> {
   }
 
   try {
-    const [catRes, prodRes] = await Promise.all([
+    const [catRes, firstTry] = await Promise.all([
       supabase
         .from('categories')
         .select('id, parent_id, slug, name, description, image, sort')
         .order('sort', { ascending: true })
         .order('name', { ascending: true }),
-      supabase
-        .from('products')
-        .select(
-          'id, category_id, slug, name, short_description, description, price, compare_at_price, images, variants, tags, badge, sku, featured, in_stock, sort, vendoor_id, vendoor_variants, vendoor_buy, vendoor_min, vendoor_max, vendoor_seller, home_sections'
-        )
-        .order('sort', { ascending: true })
-        .order('created_at', { ascending: false }),
+      selectProducts(supabase, PRODUCT_FIELDS_WITH_SECTIONS),
     ])
+
+    /**
+     * عمود home_sections لسه ما اتضافش في قاعدة البيانات
+     * (ملف supabase/home-sections.sql). بنعيد الاستعلام من
+     * غيره بدل ما المتجر كله يقع على المنتجات الثابتة.
+     */
+    const prodRes =
+      firstTry.error && /home_sections/i.test(firstTry.error.message)
+        ? await selectProducts(supabase, PRODUCT_FIELDS)
+        : firstTry
 
     /* الجداول لسه ما اتعملتش، أو حصل خطأ — نرجع للملف الثابت */
     if (catRes.error || prodRes.error) {
@@ -165,7 +185,7 @@ async function loadCatalog(): Promise<Catalog> {
     }
 
     const catRows = (catRes.data ?? []) as CategoryRow[]
-    const prodRows = (prodRes.data ?? []) as ProductRow[]
+    const prodRows = (prodRes.data ?? []) as unknown as ProductRow[]
 
     /* لسه ما ضفناش حاجة من اللوحة — نعرض المنتجات الأصلية */
     if (catRows.length === 0 && prodRows.length === 0) {

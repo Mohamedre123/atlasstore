@@ -8,19 +8,32 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
+const FIELDS =
+  'id, category_id, slug, name, short_description, description, price, compare_at_price, images, variants, badge, featured, in_stock, is_active, sort, vendoor_id, vendoor_buy, vendoor_min, vendoor_max, vendoor_seller'
+
+type Client = Awaited<ReturnType<typeof createClient>>
+
+const load = (supabase: Client, fields: string) =>
+  supabase
+    .from('products')
+    .select(fields)
+    .order('sort')
+    .order('created_at', { ascending: false })
+
 export default async function AdminProductsPage() {
   const supabase = await createClient()
 
-  const [{ data, error }, { data: cats }] = await Promise.all([
-    supabase
-      .from('products')
-      .select(
-        'id, category_id, slug, name, short_description, description, price, compare_at_price, images, variants, badge, featured, in_stock, is_active, sort, vendoor_id, vendoor_buy, vendoor_min, vendoor_max, vendoor_seller, home_sections'
-      )
-      .order('sort')
-      .order('created_at', { ascending: false }),
+  const [firstTry, { data: cats }] = await Promise.all([
+    load(supabase, `${FIELDS}, home_sections`),
     supabase.from('categories').select('id, name, parent_id').order('sort').order('name'),
   ])
+
+  /* عمود home_sections لسه ما اتضافش — بنشتغل من غيره لحد ما
+     تشغّل supabase/home-sections.sql */
+  const { data, error } =
+    firstTry.error && /home_sections/i.test(firstTry.error.message)
+      ? await load(supabase, FIELDS)
+      : firstTry
 
   return (
     <>
