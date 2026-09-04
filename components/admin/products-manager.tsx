@@ -22,6 +22,7 @@ import {
   SpinnerIcon,
   TrashIcon,
 } from '@/components/ui/icons'
+import { ImageEditor } from '@/components/admin/image-editor'
 import { formatPrice } from '@/lib/format'
 
 type Row = {
@@ -414,20 +415,7 @@ function ProductRow({
               </div>
 
               <div className="sm:col-span-2">
-                <label htmlFor={`imgs-${row.id}`} className="label">
-                  الصور — رابط في كل سطر
-                </label>
-                <textarea
-                  id={`imgs-${row.id}`}
-                  name="images"
-                  rows={4}
-                  dir="ltr"
-                  defaultValue={images.join('\n')}
-                  className="field resize-y text-[12px]"
-                />
-                <p className="mt-2 text-[11.5px] text-mist">
-                  أول صورة هي الرئيسية. جاية من فيندور، وتقدر تضيف أو ترتّب.
-                </p>
+                <ImageEditor name="images" initial={images} productId={row.id} />
               </div>
 
               <Field
