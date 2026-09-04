@@ -14,6 +14,7 @@ import {
   fetchVendoorCategories,
   fetchVendoorProduct,
   fetchVendoorProductPage,
+  isRateLimited,
   isVendoorConfigured,
 } from '@/lib/vendoor/client'
 import { vendoorImages } from '@/lib/vendoor/images'
@@ -142,11 +143,18 @@ function toVendoorRow(p: VendoorProduct, categoryId: number, categoryName: strin
   }
 }
 
+type SyncPage = {
+  saved: number
+  more: boolean
+  /** فيندور طالبة نستنى كام ثانية قبل ما نعيد نفس الصفحة */
+  waitSec?: number
+}
+
 export async function syncVendoorPage(
   categoryId: number,
   categoryName: string,
   page: number
-): Promise<ActionResult<{ saved: number; more: boolean }>> {
+): Promise<ActionResult<SyncPage>> {
   const auth = await adminClient()
   if (!auth.ok) return fail(auth.error)
 
@@ -155,25 +163,7 @@ export async function syncVendoorPage(
 
     if (products.length === 0) return { ok: true, data: { saved: 0, more: false } }
 
-    /**
-     * قايمة القسم أحيانًا بترجّع المنتج من غير صور شغّالة —
-     * نقطة المنتج الواحد فيها الصور كاملة. بنسأل عنها للمنتجات
-     * اللي طلعت من غير صورة بس، يعني عشر طلبات زيادة على الأكتر
-     * في الصفحة، ولو فشلت بنكمّل عادي من غير ما نوقف المزامنة.
-     */
-    const filled = await Promise.all(
-      products.map(async (p) => {
-        if (vendoorImages(p.main_photo, p.images).length > 0) return p
-
-        try {
-          const full = await fetchVendoorProduct(p.id)
-          return { ...p, ...full }
-        } catch {
-          return p
-        }
-      })
-    )
-
+    const filled = await fillMissingImages(auth.supabase, products)
     const rows = filled.map((p) => toVendoorRow(p, categoryId, categoryName))
     const { error } = await auth.supabase.from('vendoor_products').upsert(rows)
 
@@ -181,8 +171,65 @@ export async function syncVendoorPage(
 
     return { ok: true, data: { saved: rows.length, more } }
   } catch (err) {
+    /* عدّينا حد الطلبات — المتصفح بيستنى ويعيد نفس الصفحة */
+    if (isRateLimited(err)) {
+      return { ok: true, data: { saved: 0, more: true, waitSec: err.retryAfter ?? 20 } }
+    }
+
     return fail(err instanceof Error ? err.message : 'فشل سحب المنتجات')
   }
+}
+
+/**
+ * قايمة القسم أحيانًا بترجّع المنتج من غير صور شغّالة، ونقطة
+ * المنتج الواحد فيها الصور كاملة. بس فيندور حاطة حد أقصى
+ * للطلبات، فبنسأل عن المنتجات اللي:
+ *   • طلعت من غير أي صورة، و
+ *   • ماعندناش ليها صور متخزّنة من مزامنة قبل كده
+ * وبنسأل واحد ورا التاني مش كلهم مرة واحدة، عشان ما نضربش
+ * الحد من أول صفحة. أي فشل هنا بيتعدّى — المزامنة ماتوقفش.
+ */
+async function fillMissingImages(
+  supabase: SupabaseClient,
+  products: VendoorProduct[]
+): Promise<VendoorProduct[]> {
+  const blank = products.filter(
+    (p) => vendoorImages(p.main_photo, p.images).length === 0
+  )
+
+  if (blank.length === 0) return products
+
+  /* اللي عندنا ليه صور خلاص مش محتاج نسأل عنه تاني */
+  const { data: known } = await supabase
+    .from('vendoor_products')
+    .select('id, images')
+    .in('id', blank.map((p) => p.id))
+
+  const stored = new Map(
+    (known ?? [])
+      .filter((r) => Array.isArray(r.images) && r.images.length > 0)
+      .map((r) => [r.id as number, r.images as string[]])
+  )
+
+  const out = [...products]
+
+  for (const p of blank) {
+    const saved = stored.get(p.id)
+    if (saved) {
+      out[out.indexOf(p)] = { ...p, images: saved }
+      continue
+    }
+
+    try {
+      const full = await fetchVendoorProduct(p.id)
+      out[out.indexOf(p)] = { ...p, ...full }
+    } catch (err) {
+      /* الحد الأقصى — نسيب الباقي للمرة الجاية بدل ما نوقف */
+      if (isRateLimited(err)) break
+    }
+  }
+
+  return out
 }
 
 /* ============================================================
@@ -343,6 +390,29 @@ export async function saveProduct(form: FormData): Promise<ActionResult> {
     if (error.code === '23505') return fail('فيه منتج تاني بنفس الرابط')
     return fail(`فشل الحفظ: ${error.message}`)
   }
+
+  refreshStore()
+  return { ok: true }
+}
+
+/**
+ * شيل منتج فيندور من متجرنا برقمه عندهم.
+ * بيتنادى من كتالوج فيندور نفسه، عشان لو ضفت منتج بالغلط
+ * تشيله وتضيفه تاني من نفس المكان من غير ما تلف على صفحة
+ * المنتجات.
+ */
+export async function removeVendoorProduct(
+  vendoorId: number
+): Promise<ActionResult> {
+  const auth = await adminClient()
+  if (!auth.ok) return fail(auth.error)
+
+  const { error } = await auth.supabase
+    .from('products')
+    .delete()
+    .eq('vendoor_id', vendoorId)
+
+  if (error) return fail(`فشل الحذف: ${error.message}`)
 
   refreshStore()
   return { ok: true }

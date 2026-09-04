@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
-import { importVendoorProduct } from '@/app/admin/actions'
+import { importVendoorProduct, removeVendoorProduct } from '@/app/admin/actions'
 import {
   AlertIcon,
   ArrowLeftIcon,
@@ -12,6 +12,7 @@ import {
   PlusIcon,
   SearchIcon,
   SpinnerIcon,
+  TrashIcon,
 } from '@/components/ui/icons'
 import { Shot } from '@/components/product/shot'
 import { formatPrice } from '@/lib/format'
@@ -69,9 +70,14 @@ export function VendoorCatalog({
   const [term, setTerm] = useState(q)
   const [target, setTarget] = useState('')
   const [added, setAdded] = useState<number[]>([])
+  const [removed, setRemoved] = useState<number[]>([])
   const [error, setError] = useState<{ id: number; msg: string } | null>(null)
 
-  const done = new Set([...importedIds, ...added])
+  /* اللي في متجرنا دلوقتي = اللي جاي من السيرفر + اللي ضفناه
+     في الصفحة دي − اللي شيلناه منها */
+  const done = new Set(
+    [...importedIds, ...added].filter((id) => !removed.includes(id))
+  )
 
   /* البحث بيتحدّث في الرابط عشان الصفحة تفضل قابلة للمشاركة */
   useEffect(() => setTerm(q), [q])
@@ -176,6 +182,12 @@ export function VendoorCatalog({
               error={error?.id === p.id ? error.msg : ''}
               onAdded={() => {
                 setAdded((prev) => [...prev, p.id])
+                setRemoved((prev) => prev.filter((id) => id !== p.id))
+                setError(null)
+              }}
+              onRemoved={() => {
+                setRemoved((prev) => [...prev, p.id])
+                setAdded((prev) => prev.filter((id) => id !== p.id))
                 setError(null)
               }}
               onError={(msg) => setError({ id: p.id, msg })}
@@ -225,6 +237,7 @@ function ProductCard({
   done,
   error,
   onAdded,
+  onRemoved,
   onError,
 }: {
   product: VendoorRow
@@ -232,6 +245,7 @@ function ProductCard({
   done: boolean
   error: string
   onAdded: () => void
+  onRemoved: () => void
   onError: (msg: string) => void
 }) {
   const [price, setPrice] = useState('')
@@ -246,6 +260,22 @@ function ProductCard({
   /* الربح لو باع بالسعر المكتوب دلوقتي */
   const typed = Number(price)
   const profit = Number.isFinite(typed) && typed > 0 ? typed - buy : null
+
+  const remove = () => {
+    if (pending) return
+
+    /* نفس تأكيد صفحة المنتجات — الحذف نهائي */
+    const sure = window.confirm(
+      `هتشيل «${product.name}» من متجرك. تقدر تضيفه تاني من هنا في أي وقت.`
+    )
+    if (!sure) return
+
+    start(async () => {
+      const res = await removeVendoorProduct(product.id)
+      if (res.ok) onRemoved()
+      else onError(res.error)
+    })
+  }
 
   const add = () => {
     if (done || pending) return
@@ -326,10 +356,28 @@ function ProductCard({
       {/* --- الإضافة --- */}
       <div className="p-3">
         {done ? (
-          <p className="flex items-center justify-center gap-2 rounded-full border border-ok/25 bg-ok/8 py-2.5 text-[12.5px] font-bold text-ok">
-            <CheckIcon className="h-4 w-4" />
-            مضاف في متجرك
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="flex flex-1 items-center justify-center gap-2 rounded-full border border-ok/25 bg-ok/8 py-2.5 text-[12.5px] font-bold text-ok">
+              <CheckIcon className="h-4 w-4" />
+              مضاف في متجرك
+            </p>
+
+            {/* بيشيله من المتجر ويرجّع خانة السعر تاني هنا */}
+            <button
+              type="button"
+              onClick={remove}
+              disabled={pending}
+              title="شيله من متجرك"
+              aria-label={`شيل ${product.name} من متجرك`}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 text-mist transition-colors hover:border-sale/50 hover:text-sale disabled:opacity-40"
+            >
+              {pending ? (
+                <SpinnerIcon className="a-spin h-4 w-4" />
+              ) : (
+                <TrashIcon className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         ) : (
           <>
             <div className="flex items-center gap-2">

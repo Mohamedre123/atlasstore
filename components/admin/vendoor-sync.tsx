@@ -17,6 +17,8 @@ import { AlertIcon, CheckIcon, RefreshIcon, SpinnerIcon } from '@/components/ui/
 
 type State = 'idle' | 'running' | 'done' | 'error'
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
 export function VendoorSync() {
   const router = useRouter()
   const [state, setState] = useState<State>('idle')
@@ -45,9 +47,35 @@ export function VendoorSync() {
       for (let page = 1; page <= 40; page++) {
         setLabel(`${cat.name} — صفحة ${page}`)
 
-        const res = await syncVendoorPage(cat.id, cat.name, page)
+        /**
+         * فيندور حاطة حد أقصى للطلبات في الدقيقة. لما نعدّيه
+         * بترجّعلنا المدة اللي نستناها، فبنستنى ونعيد نفس
+         * الصفحة بدل ما نوقف المزامنة من نصّها.
+         */
+        let res = await syncVendoorPage(cat.id, cat.name, page)
+
+        for (let wait = 0; res.ok && res.data.waitSec && wait < 8; wait++) {
+          const secs = res.data.waitSec
+
+          for (let left = secs; left > 0; left--) {
+            setLabel(`${cat.name} — فيندور طلبت نستنى ${left} ثانية`)
+            await sleep(1000)
+          }
+
+          setLabel(`${cat.name} — صفحة ${page}`)
+          res = await syncVendoorPage(cat.id, cat.name, page)
+        }
+
         if (!res.ok) {
           setError(`${cat.name}: ${res.error}`)
+          setState('error')
+          return
+        }
+
+        if (res.data.waitSec) {
+          setError(
+            `${cat.name}: فيندور لسه رافضة الطلبات. استنى شوية ودوس «تحديث الكتالوج» تاني — اللي اتحفظ لحد دلوقتي محفوظ.`
+          )
           setState('error')
           return
         }
@@ -56,6 +84,9 @@ export function VendoorSync() {
         setSaved(total)
 
         if (!res.data.more || res.data.saved === 0) break
+
+        /* نفس بسيط بين الصفحات عشان ما نضربش الحد من الأساس */
+        await sleep(250)
       }
     }
 
@@ -104,7 +135,8 @@ export function VendoorSync() {
             {label && <span className="text-brand-300/70">· {label}</span>}
           </p>
           <p className="mt-2 text-[11px] text-mist">
-            سيب الصفحة مفتوحة لحد ما يخلص — بياخد دقيقة تقريبًا.
+            سيب الصفحة مفتوحة لحد ما يخلص. لو فيندور طلبت نبطّأ، بنستنى
+            ونكمّل لوحدنا — واللي اتحفظ مابيضيعش.
           </p>
         </div>
       )}

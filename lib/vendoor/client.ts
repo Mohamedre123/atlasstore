@@ -35,11 +35,18 @@ export class VendoorError extends Error {
   constructor(
     message: string,
     readonly status?: number,
-    readonly detail?: unknown
+    readonly detail?: unknown,
+    /** ثواني فيندور طالبة نستناها قبل ما نعيد — للحد الأقصى للطلبات */
+    readonly retryAfter?: number
   ) {
     super(message)
     this.name = 'VendoorError'
   }
+}
+
+/** فيندور حاطة حد أقصى للطلبات في الدقيقة، وبترد بده لما نعدّيه */
+export function isRateLimited(err: unknown): err is VendoorError {
+  return err instanceof VendoorError && err.status === 429
 }
 
 /* ------------------------------------------------------------
@@ -131,6 +138,20 @@ async function call<T>(
     cachedToken = null
     await login()
     return call<T>(path, init, true)
+  }
+
+  /* عدّينا الحد الأقصى للطلبات — بنرجّع الخطأ ومعاه المدة
+     اللي لازم نستناها، والمزامنة بتستنى وتكمّل من نفس المكان */
+  const message = String(body?.msg ?? body?.message ?? '')
+
+  if (res.status === 429 || /too many attempts/i.test(message)) {
+    const header = Number(res.headers.get('retry-after'))
+    throw new VendoorError(
+      'فيندور بتطلب نبطّأ شوية — الحد الأقصى للطلبات',
+      429,
+      json ?? text.slice(0, 300),
+      Number.isFinite(header) && header > 0 ? header : 20
+    )
   }
 
   if (!res.ok || body?.status === 0) {
