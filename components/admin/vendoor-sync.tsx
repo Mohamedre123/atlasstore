@@ -2,7 +2,11 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { listVendoorCategories, syncVendoorPage } from '@/app/admin/actions'
+import {
+  inspectVendoorImages,
+  listVendoorCategories,
+  syncVendoorPage,
+} from '@/app/admin/actions'
 import { AlertIcon, CheckIcon, RefreshIcon, SpinnerIcon } from '@/components/ui/icons'
 
 /* ============================================================
@@ -25,6 +29,20 @@ export function VendoorSync() {
   const [label, setLabel] = useState('')
   const [saved, setSaved] = useState(0)
   const [error, setError] = useState('')
+
+  /* تقرير فحص الصور — بيوري رد فيندور الخام وأنهي رابط بيرد ٢٠٠ */
+  const [report, setReport] = useState('')
+  const [checking, setChecking] = useState(false)
+
+  const inspect = async () => {
+    if (checking) return
+    setChecking(true)
+    setReport('')
+
+    const res = await inspectVendoorImages()
+    setReport(res.ok ? res.data : `فشل الفحص: ${res.error}`)
+    setChecking(false)
+  }
 
   const run = async () => {
     if (state === 'running') return
@@ -107,6 +125,22 @@ export function VendoorSync() {
           </p>
         </div>
 
+        <div className="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={() => void inspect()}
+          disabled={checking || state === 'running'}
+          title="بيوري رد فيندور الخام وأنهي رابط صورة شغّال"
+          className="btn btn-ghost btn-sm"
+        >
+          {checking ? (
+            <SpinnerIcon className="a-spin h-4 w-4" />
+          ) : (
+            <AlertIcon className="h-4 w-4" />
+          )}
+          <span>فحص الصور</span>
+        </button>
+
         <button
           type="button"
           onClick={() => void run()}
@@ -125,7 +159,30 @@ export function VendoorSync() {
             </>
           )}
         </button>
+        </div>
       </div>
+
+      {report && (
+        <div className="mt-5 rounded-2xl border border-white/10 bg-abyss/60 p-4">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-[11.5px] font-bold text-mist">تقرير فحص الصور</p>
+            <button
+              type="button"
+              onClick={() => setReport('')}
+              className="text-[11.5px] font-bold text-brand-300 hover:underline"
+            >
+              إخفاء
+            </button>
+          </div>
+
+          <pre
+            dir="ltr"
+            className="no-bar max-h-[420px] overflow-auto whitespace-pre-wrap break-all text-right font-[family-name:var(--font-label)] text-[10.5px] leading-[1.9] text-foam/85"
+          >
+            {report}
+          </pre>
+        </div>
+      )}
 
       {state === 'running' && (
         <div className="mt-5 rounded-2xl border border-brand-500/25 bg-brand-500/8 px-4 py-3.5">

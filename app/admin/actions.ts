@@ -150,6 +150,104 @@ type SyncPage = {
   waitSec?: number
 }
 
+/* ============================================================
+   فحص صور فيندور
+   ------------------------------------------------------------
+   بيجيب منتج حقيقي من الـ API وبيوري رده الخام، وبيجرّب كل
+   الروابط المحتملة للصورة ويقول أنهي واحد بيرد ٢٠٠.
+
+   الهدف منه إننا نعرف الرابط الصح بيتبني إزاي بدل التخمين —
+   موقعهم نفسه بيعرض الصور من مسار غير اللي الـ API بترجّعه.
+   ============================================================ */
+
+/** سطر جديد — بنبني بيه تقرير الفحص */
+const NEWLINE = '\n'
+
+export async function inspectVendoorImages(): Promise<ActionResult<string>> {
+  const auth = await adminClient()
+  if (!auth.ok) return fail(auth.error)
+
+  if (!isVendoorConfigured) return fail('بيانات فيندور مش متظبطة')
+
+  const out: string[] = []
+  const line = (...parts: unknown[]) => out.push(parts.join(' '))
+
+  try {
+    const cats = await fetchVendoorCategories()
+    const cat = cats[0]
+    line('# القسم:', cat?.id, cat?.name)
+
+    const { products } = await fetchVendoorProductPage(cat.id, 1)
+    const p = products[0]
+    if (!p) return fail('القسم رجّع صفر منتجات')
+
+    line('')
+    line('# المنتج:', p.id, '—', p.name)
+    line('# مفاتيح رد القايمة:', Object.keys(p).join(', '))
+    line('list.main_photo =', JSON.stringify(p.main_photo))
+    line('list.images     =', JSON.stringify(p.images))
+
+    let detail: Record<string, unknown> | null = null
+    try {
+      detail = (await fetchVendoorProduct(p.id)) as unknown as Record<string, unknown>
+      line('')
+      line('# مفاتيح رد المنتج الواحد:', Object.keys(detail).join(', '))
+      line('detail.main_photo =', JSON.stringify(detail.main_photo))
+      line('detail.images     =', JSON.stringify(detail.images))
+    } catch (err) {
+      line('')
+      line('# نقطة المنتج الواحد فشلت:', err instanceof Error ? err.message : err)
+    }
+
+    /* كل الروابط اللي ممكن تكون الصح */
+    const seen = new Set<string>()
+    const collect = (v: unknown) => {
+      if (typeof v === 'string') {
+        if (/\.(jpe?g|png|webp|gif|avif)/i.test(v)) seen.add(v)
+      } else if (v && typeof v === 'object') {
+        Object.values(v).forEach(collect)
+      }
+    }
+    collect(p.main_photo)
+    collect(p.images)
+    collect(detail?.main_photo)
+    collect(detail?.images)
+
+    const base = 'https://aff.ven-door.com'
+    const check = async (url: string) => {
+      try {
+        const res = await fetch(url, { method: 'HEAD', cache: 'no-store' })
+        return String(res.status)
+      } catch {
+        return 'فشل'
+      }
+    }
+
+    line('')
+    line('# اختبار الروابط')
+
+    for (const raw of seen) {
+      const file = raw.split('/').pop() ?? raw
+      const full = /^https?:/i.test(raw) ? raw : `${base}${raw.startsWith('/') ? '' : '/'}${raw}`
+
+      const candidates = [
+        full,
+        `${base}/uploads/products_images/${file}`,
+        `${base}/uploads/products_images//${file}`,
+        `${base}/uploads/products_images/${p.id - 4829}/${file}`,
+      ]
+
+      for (const url of [...new Set(candidates)]) {
+        line(await check(url), url)
+      }
+    }
+
+    return { ok: true, data: out.join(NEWLINE) }
+  } catch (err) {
+    return fail(err instanceof Error ? err.message : 'فشل الفحص')
+  }
+}
+
 export async function syncVendoorPage(
   categoryId: number,
   categoryName: string,
