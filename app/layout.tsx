@@ -12,6 +12,7 @@ import { WhatsAppFloat } from '@/components/layout/whatsapp-float'
 import { RevealObserver } from '@/components/ui/reveal'
 import { site } from '@/data/site'
 import { CartProvider } from '@/lib/cart'
+import { getCategoryTree } from '@/lib/catalog'
 
 /* ------------------------------------------------------------
    الخطوط
@@ -104,7 +105,14 @@ const orgJsonLd = {
   ),
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  /* الأقسام بشجرتها — الهيدر بيعملها قوايم منسدلة والفوتر بيسردها */
+  const categories = await getCategoryTree()
+
   return (
     <html
       lang="ar"
@@ -131,13 +139,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </a>
 
           <Ticker />
-          <Header />
+          <Header categories={categories} />
 
           <main id="main" className="flex-1">
             {children}
           </main>
 
-          <Footer />
+          <Footer categories={categories} />
           <CartDrawer />
           <WhatsAppFloat />
           <MetaPixel />

@@ -7,28 +7,39 @@ import { Process } from '@/components/home/process'
 import { ProductRail } from '@/components/product/product-card'
 import { ArrowLeftIcon } from '@/components/ui/icons'
 import { Band, SectionHead } from '@/components/ui/section'
+import { site } from '@/data/site'
 import {
-  categories,
   getBestSellers,
   getCategoryCounts,
+  getCategoryTree,
   getFeaturedProducts,
   getProductsByCategory,
   getSaleProducts,
-} from '@/data/products'
-import { site } from '@/data/site'
+} from '@/lib/catalog'
 
-/* أقسام المنتجات اللي بتتعرض كصفوف تحت بعض */
-const rails = [
-  { slug: 'tshirts', index: '04', eyebrow: 'T-Shirts', title: 'تيشرتات' },
-  { slug: 'sets', index: '05', eyebrow: 'Sets', title: 'أطقم كاملة' },
-  { slug: 'abayas', index: '06', eyebrow: 'Abayas', title: 'عبايات رجالية' },
-]
+/* الصفحة بتتبني كل ساعة أو أول ما تعدّل حاجة من اللوحة */
+export const revalidate = 3600
 
-export default function HomePage() {
-  const counts = getCategoryCounts()
-  const showcase = getFeaturedProducts(3)
-  const best = getBestSellers()
-  const onSale = getSaleProducts(4)
+export default async function HomePage() {
+  const [tree, counts, showcase, best, onSale] = await Promise.all([
+    getCategoryTree(),
+    getCategoryCounts(),
+    getFeaturedProducts(3),
+    getBestSellers(8),
+    getSaleProducts(4),
+  ])
+
+  /* صف لكل قسم رئيسي فيه منتجات — بيتولّد من الأقسام نفسها
+     فأي قسم جديد بيظهر هنا لوحده */
+  const rails = await Promise.all(
+    tree.slice(0, 4).map(async (category, i) => ({
+      category,
+      index: String(i + 4).padStart(2, '0'),
+      items: await getProductsByCategory(category.slug),
+    }))
+  )
+
+  const withItems = rails.filter((r) => r.items.length > 0)
 
   return (
     <>
@@ -37,30 +48,34 @@ export default function HomePage() {
       {/* ============================================================
           01 — الأقسام
           ============================================================ */}
-      <Band>
-        <SectionHead
-          index="01"
-          eyebrow="Categories"
-          title="تسوّق حسب القسم"
-          description="كل قسم متجمّع فيه القطع اللي بتكمّل بعضها — تختار أسرع وتلبس أظبط."
-          href="/shop"
-        />
-        <CategoryShowcase categories={categories} counts={counts} />
-      </Band>
+      {tree.length > 0 && (
+        <Band>
+          <SectionHead
+            index="01"
+            eyebrow="Categories"
+            title="تسوّق حسب القسم"
+            description="كل قسم متجمّع فيه القطع اللي بتكمّل بعضها — تختار أسرع وتلبس أظبط."
+            href="/shop"
+          />
+          <CategoryShowcase categories={tree} counts={counts} />
+        </Band>
+      )}
 
       {/* ============================================================
           02 — الأكثر مبيعًا
           ============================================================ */}
-      <Band id="best" className="!pt-0">
-        <SectionHead
-          index="02"
-          eyebrow="Best Sellers"
-          title="الأكثر مبيعًا"
-          description="القطع اللي بتخلص من المخزن أول بأول."
-          href="/shop"
-        />
-        <ProductRail products={best} priorityCount={2} />
-      </Band>
+      {best.length > 0 && (
+        <Band id="best" className={tree.length ? '!pt-0' : ''}>
+          <SectionHead
+            index="02"
+            eyebrow="Best Sellers"
+            title="الأكثر مبيعًا"
+            description="القطع اللي بتخلص من المخزن أول بأول."
+            href="/shop"
+          />
+          <ProductRail products={best} priorityCount={2} />
+        </Band>
+      )}
 
       {/* ============================================================
           03 — الشريط التحريري
@@ -68,31 +83,27 @@ export default function HomePage() {
       <Editorial />
 
       {/* ============================================================
-          04 · 05 · 06 — صف لكل قسم
+          صف لكل قسم
           ============================================================ */}
-      {rails.map((rail) => {
-        const items = getProductsByCategory(rail.slug)
-        if (items.length === 0) return null
-
-        const category = categories.find((c) => c.slug === rail.slug)
-
-        return (
-          <Band key={rail.slug} className="!pt-14 lg:!pt-20">
-            <SectionHead
-              index={rail.index}
-              eyebrow={rail.eyebrow}
-              title={rail.title}
-              description={category?.description}
-              href={`/category/${rail.slug}`}
-              hrefLabel={`تسوّق ${category?.name ?? ''}`}
-            />
-            <ProductRail products={items} columns={items.length <= 3 ? 3 : 4} />
-          </Band>
-        )
-      })}
+      {withItems.map((rail) => (
+        <Band key={rail.category.slug} className="!pt-14 lg:!pt-20">
+          <SectionHead
+            index={rail.index}
+            eyebrow={rail.category.slug}
+            title={rail.category.name}
+            description={rail.category.description}
+            href={`/category/${rail.category.slug}`}
+            hrefLabel={`تسوّق ${rail.category.name}`}
+          />
+          <ProductRail
+            products={rail.items.slice(0, 8)}
+            columns={rail.items.length <= 3 ? 3 : 4}
+          />
+        </Band>
+      ))}
 
       {/* ============================================================
-          07 — العروض
+          العروض
           ============================================================ */}
       {onSale.length > 0 && (
         <Band className="!pt-14 lg:!pt-20">

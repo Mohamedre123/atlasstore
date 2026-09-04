@@ -1,5 +1,5 @@
 import { SHIPPING_FLAT_RATE, isValidArea, isValidGovernorate } from '@/data/locations'
-import { products } from '@/data/products'
+import { getProducts } from './catalog'
 import { isValidEgyptPhone, normalizeEgyptPhone } from './format'
 import type { CartItem, CustomerInfo } from './types'
 
@@ -21,10 +21,11 @@ export type BuiltOrder = {
 
 type Result = { ok: true; order: BuiltOrder } | { ok: false; error: string }
 
-export function buildOrder(input: {
+export async function buildOrder(input: {
   customer?: Partial<CustomerInfo>
   items?: Partial<CartItem>[]
-}): Result {
+}): Promise<Result> {
+  const products = await getProducts()
   const raw = input.customer
 
   if (!raw || typeof raw !== 'object') {

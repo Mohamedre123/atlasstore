@@ -1,15 +1,19 @@
 import type { MetadataRoute } from 'next'
-import { categories, products } from '@/data/products'
 import { site } from '@/data/site'
+import { getCategories, getProducts } from '@/lib/catalog'
 
 /* ============================================================
    خريطة الموقع — جوجل بيقراها من /sitemap.xml
    ------------------------------------------------------------
-   بتتولّد تلقائي من المنتجات والأقسام، فأي منتج جديد بيدخلها
-   لوحده من غير ما تعدّل حاجة.
+   بتتولّد من الأقسام والمنتجات اللي في قاعدة البيانات، فأي
+   منتج تضيفه من اللوحة بيدخلها لوحده.
    ============================================================ */
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 3600
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
+
+  const [categories, products] = await Promise.all([getCategories(), getProducts()])
 
   const staticPages = [
     { path: '', priority: 1 },

@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ProductGrid } from '@/components/product/product-card'
 import { CloseIcon, FilterIcon, SortIcon } from '@/components/ui/icons'
-import { categories, products as allProducts } from '@/data/products'
 import { formatPrice, pluralize } from '@/lib/format'
+import type { Category, Product } from '@/lib/types'
 
 type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'discount' | 'name'
 
@@ -16,18 +16,41 @@ const sorts: { key: SortKey; label: string }[] = [
   { key: 'name', label: 'الاسم أبجديًا' },
 ]
 
-/* شرايح السعر — مبنية على أسعار المجموعة الحالية */
-const bands: { key: string; label: string; min: number; max: number }[] = [
-  { key: 'a', label: 'أقل من ٥٠٠', min: 0, max: 499 },
-  { key: 'b', label: '٥٠٠ — ٦٠٠', min: 500, max: 600 },
-  { key: 'c', label: 'أكتر من ٦٠٠', min: 601, max: Infinity },
-]
+type Band = { key: string; label: string; min: number; max: number }
+
+/**
+ * شرايح السعر بتتحسب من أسعار المجموعة نفسها.
+ * كنا حاططينها ثابتة (٥٠٠ · ٦٠٠) وده كان بيبوظ أول ما تضيف
+ * منتجات بأسعار مختلفة.
+ */
+function buildBands(products: Product[]): Band[] {
+  if (products.length < 4) return []
+
+  const prices = products.map((p) => p.price).sort((a, b) => a - b)
+  const low = prices[0]
+  const high = prices[prices.length - 1]
+  if (high - low < 50) return []
+
+  const third = (n: number) => Math.round((low + ((high - low) * n) / 3) / 10) * 10
+  const a = third(1)
+  const b = third(2)
+
+  return [
+    { key: 'a', label: `أقل من ${a}`, min: 0, max: a - 1 },
+    { key: 'b', label: `${a} — ${b}`, min: a, max: b },
+    { key: 'c', label: `أكتر من ${b}`, min: b + 1, max: Infinity },
+  ]
+}
 
 export function ShopBrowser({
+  products: allProducts,
+  categories,
   initialCategory = '',
   initialSaleOnly = false,
   lockCategory = false,
 }: {
+  products: Product[]
+  categories: Category[]
   initialCategory?: string
   initialSaleOnly?: boolean
   /** في صفحة القسم مش بنسيب العميل يغيّر القسم من الفلاتر */
@@ -44,10 +67,26 @@ export function ShopBrowser({
     return () => document.body.classList.remove('locked')
   }, [sheet])
 
+  const bands = useMemo(() => buildBands(allProducts), [allProducts])
+
+  /* القسم بيشمل أقسامه الفرعية */
+  const inCategory = useMemo(() => {
+    const children = new Map<string, Set<string>>()
+    for (const c of categories) {
+      const set = new Set([c.slug])
+      categories.filter((x) => x.parent === c.slug).forEach((x) => set.add(x.slug))
+      children.set(c.slug, set)
+    }
+    return children
+  }, [categories])
+
   const visible = useMemo(() => {
     let list = [...allProducts]
 
-    if (category) list = list.filter((p) => p.category === category)
+    if (category) {
+      const wanted = inCategory.get(category) ?? new Set([category])
+      list = list.filter((p) => wanted.has(p.category))
+    }
     if (saleOnly) list = list.filter((p) => p.compareAtPrice && p.compareAtPrice > p.price)
 
     if (band) {
@@ -77,7 +116,7 @@ export function ShopBrowser({
     }
 
     return list
-  }, [category, saleOnly, band, sort])
+  }, [allProducts, bands, inCategory, category, saleOnly, band, sort])
 
   const active =
     (lockCategory ? 0 : category ? 1 : 0) + (saleOnly ? 1 : 0) + (band ? 1 : 0)
@@ -105,26 +144,28 @@ export function ShopBrowser({
               active={category === c.slug}
               onClick={() => setCategory(category === c.slug ? '' : c.slug)}
             >
-              {c.name}
+              {c.parent ? `— ${c.name}` : c.name}
             </Chip>
           ))}
         </FilterGroup>
       )}
 
-      <FilterGroup title="السعر">
-        <Chip active={!band} onClick={() => setBand('')}>
-          كل الأسعار
-        </Chip>
-        {bands.map((b) => (
-          <Chip
-            key={b.key}
-            active={band === b.key}
-            onClick={() => setBand(band === b.key ? '' : b.key)}
-          >
-            {b.label}
+      {bands.length > 0 && (
+        <FilterGroup title="السعر">
+          <Chip active={!band} onClick={() => setBand('')}>
+            كل الأسعار
           </Chip>
-        ))}
-      </FilterGroup>
+          {bands.map((b) => (
+            <Chip
+              key={b.key}
+              active={band === b.key}
+              onClick={() => setBand(band === b.key ? '' : b.key)}
+            >
+              {b.label}
+            </Chip>
+          ))}
+        </FilterGroup>
+      )}
 
       <FilterGroup title="عروض">
         <Chip active={saleOnly} onClick={() => setSaleOnly((v) => !v)}>

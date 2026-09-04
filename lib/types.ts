@@ -38,14 +38,39 @@ export type Product = {
   tags?: string[]
   /** كود المنتج عند المورد — بيتبعت في إيميل الأوردر عشان تطلبه */
   sku?: string
+  /** ترتيب العرض — الأصغر بيظهر الأول */
+  sort?: number
+  /** ربط المنتج بمصدره عند فيندور — بيخلّي الأوردر يتبعت لهم تلقائي */
+  vendoor?: ProductVendoorLink
+}
+
+/** بيانات المنتج عند فيندور */
+export type ProductVendoorLink = {
+  /** رقم المنتج عندهم */
+  id: number
+  /** { "اسود": ["L","XL"] } — الألوان والمقاسات المتاحة */
+  variants: Record<string, string[]>
+  /** سعر الشراء من المورد */
+  buy?: number
+  /** أقل وأعلى سعر مسموح نبيع بيه */
+  min?: number
+  max?: number
+  seller?: string
 }
 
 export type Category = {
+  /** معرّف الصف في قاعدة البيانات — مش موجود في أقسام الملف الثابت */
+  id?: string
   slug: string
   name: string
   /** صورة تظهر في كارت القسم بالصفحة الرئيسية */
   image?: string
   description?: string
+  /** slug القسم الأب — لو موجود يبقى ده قسم فرعي */
+  parent?: string | null
+  /** الأقسام الفرعية — بتتبني في طبقة القراءة */
+  children?: Category[]
+  sort?: number
 }
 
 /* ------------------------- السلة ------------------------- */

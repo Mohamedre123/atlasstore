@@ -1,39 +1,39 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Logo } from '@/components/brand/logo'
-import { Shot } from '@/components/product/shot'
 import {
   ArrowLeftIcon,
   BagIcon,
+  ChevronDownIcon,
   CloseIcon,
   MenuIcon,
   SearchIcon,
-  SparkIcon,
   UserIcon,
 } from '@/components/ui/icons'
-import { categories, getCategoryCounts, searchProducts } from '@/data/products'
 import { site } from '@/data/site'
 import { useCart } from '@/lib/cart'
 import { formatPrice } from '@/lib/format'
+import type { Category } from '@/lib/types'
 
-const links = [
-  { href: '/shop', label: 'كل المنتجات' },
-  ...categories.map((c) => ({ href: `/category/${c.slug}`, label: c.name })),
-  { href: '/shop?sale=1', label: 'العروض' },
-]
+type NavLink = {
+  href: string
+  label: string
+  children?: { href: string; label: string }[]
+}
 
 /* ============================================================
    الهيدر
    ------------------------------------------------------------
-   • بيقصّر ويتحوّل لزجاج ضبابي أول ما تنزل
-   • بيختفي وانت نازل ويرجع أول ما تطلع — عشان المحتوى ياخد
-     الشاشة كلها من غير ما تفقد التنقّل
-   • قائمة كاملة على الفون بتتفتح من الشاشة كلها
+   • شفاف وانت فوق، وزجاج ضبابي أول ما تنزل
+   • بيختفي وانت نازل ويرجع أول ما تطلع
+   • القسم اللي تحته أقسام فرعية بيفتح قايمة منسدلة على
+     الكمبيوتر، و accordion في قايمة الفون
    ============================================================ */
-export function Header() {
+export function Header({ categories }: { categories: Category[] }) {
   const { count, openCart } = useCart()
   const pathname = usePathname()
 
@@ -42,9 +42,23 @@ export function Header() {
   const [menu, setMenu] = useState(false)
   const [search, setSearch] = useState(false)
   const [bump, setBump] = useState(false)
+  const [openMega, setOpenMega] = useState<string | null>(null)
 
   const lastY = useRef(0)
   const prevCount = useRef(count)
+
+  const links: NavLink[] = [
+    { href: '/shop', label: 'كل المنتجات' },
+    ...categories.map((c) => ({
+      href: `/category/${c.slug}`,
+      label: c.name,
+      children: (c.children ?? []).map((child) => ({
+        href: `/category/${child.slug}`,
+        label: child.name,
+      })),
+    })),
+    { href: '/shop?sale=1', label: 'العروض' },
+  ]
 
   useEffect(() => {
     const onScroll = () => {
@@ -62,6 +76,7 @@ export function Header() {
   useEffect(() => {
     setMenu(false)
     setSearch(false)
+    setOpenMega(null)
   }, [pathname])
 
   /* نبضة على الشنطة أول ما يتضاف منتج */
@@ -83,16 +98,18 @@ export function Header() {
   return (
     <>
       <header
-        data-scrolled={scrolled}
         className={`sticky top-0 z-50 transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] ${
-          hidden && !search ? '-translate-y-full' : 'translate-y-0'
+          hidden && !search && !openMega ? '-translate-y-full' : 'translate-y-0'
         }`}
+        onMouseLeave={() => setOpenMega(null)}
       >
         <div
           /* شفاف تمامًا وانت فوق عشان خلفية الموقع المتحركة تبان،
              وزجاج ضبابي أول ما تنزل عشان الروابط تفضل مقروءة */
           className={`border-b transition-[background-color,border-color,backdrop-filter] duration-500 ${
-            scrolled ? 'glass border-white/8' : 'border-transparent bg-transparent'
+            scrolled || openMega
+              ? 'glass border-white/8'
+              : 'border-transparent bg-transparent'
           }`}
         >
           <div className="shell">
@@ -116,17 +133,34 @@ export function Header() {
               </div>
 
               {/* --- الوسط: الروابط --- */}
-              <nav className="hidden items-center gap-7 lg:flex">
-                {links.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    data-active={pathname === link.href.split('?')[0]}
-                    className="nav-link"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+              <nav className="hidden items-center gap-6 lg:flex">
+                {links.map((link) => {
+                  const active = pathname === link.href.split('?')[0]
+                  const hasChildren = Boolean(link.children?.length)
+
+                  return (
+                    <div
+                      key={link.href}
+                      className="relative"
+                      onMouseEnter={() => setOpenMega(hasChildren ? link.href : null)}
+                    >
+                      <Link
+                        href={link.href}
+                        data-active={active}
+                        className="nav-link flex items-center gap-1.5"
+                      >
+                        {link.label}
+                        {hasChildren && (
+                          <ChevronDownIcon
+                            className={`h-3.5 w-3.5 transition-transform duration-300 ${
+                              openMega === link.href ? 'rotate-180' : ''
+                            }`}
+                          />
+                        )}
+                      </Link>
+                    </div>
+                  )
+                })}
               </nav>
 
               {/* --- شمال: بحث · حساب · سلة --- */}
@@ -155,9 +189,7 @@ export function Header() {
                   aria-label={`السلة — ${count} قطعة`}
                   className="icon-btn"
                 >
-                  <BagIcon
-                    className={`h-[22px] w-[22px] ${bump ? 'a-pop' : ''}`}
-                  />
+                  <BagIcon className={`h-[22px] w-[22px] ${bump ? 'a-pop' : ''}`} />
                   {count > 0 && (
                     <span className="nums a-pop absolute -left-0.5 -top-0.5 flex h-[19px] min-w-[19px] items-center justify-center rounded-full bg-brand-500 px-1 text-[10.5px] font-extrabold text-ink">
                       {count}
@@ -168,20 +200,69 @@ export function Header() {
             </div>
           </div>
 
+          {/* --- القايمة المنسدلة — كمبيوتر --- */}
+          {openMega && (
+            <MegaPanel
+              link={links.find((l) => l.href === openMega)}
+              onClose={() => setOpenMega(null)}
+            />
+          )}
+
           {search && <SearchPanel onClose={() => setSearch(false)} />}
         </div>
       </header>
 
-      {menu && <MobileMenu onClose={() => setMenu(false)} />}
+      {menu && <MobileMenu links={links} onClose={() => setMenu(false)} />}
     </>
+  )
+}
+
+/* ============================================================
+   القايمة المنسدلة تحت قسم فيه أقسام فرعية
+   ============================================================ */
+function MegaPanel({ link, onClose }: { link?: NavLink; onClose: () => void }) {
+  if (!link?.children?.length) return null
+
+  return (
+    <div className="a-panel hidden border-t border-white/8 lg:block">
+      <div className="shell py-6">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+          <Link
+            href={link.href}
+            onClick={onClose}
+            className="group flex items-center gap-2 text-[13px] font-extrabold text-brand-300"
+          >
+            كل {link.label}
+            <ArrowLeftIcon className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-1" />
+          </Link>
+
+          <span className="h-4 w-px bg-white/12" />
+
+          {link.children.map((child) => (
+            <Link
+              key={child.href}
+              href={child.href}
+              onClick={onClose}
+              className="text-[13px] font-semibold text-foam/75 transition-colors hover:text-white"
+            >
+              {child.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
 /* ============================================================
    لوحة البحث
    ============================================================ */
+type Hit = { slug: string; name: string; price: number; image: string }
+
 function SearchPanel({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState('')
+  const [hits, setHits] = useState<Hit[]>([])
+  const [loading, setLoading] = useState(false)
   const input = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -191,11 +272,41 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const results = useMemo(() => searchProducts(query).slice(0, 5), [query])
+  /* بنستنى شوية بعد آخر حرف قبل ما نسأل السيرفر */
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) {
+      setHits([])
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    const controller = new AbortController()
+    const t = window.setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
+          signal: controller.signal,
+        })
+        const json = (await res.json()) as { results: Hit[] }
+        setHits(json.results ?? [])
+      } catch {
+        /* الطلب اتلغى لأن المستخدم كمّل كتابة */
+      } finally {
+        setLoading(false)
+      }
+    }, 300)
+
+    return () => {
+      window.clearTimeout(t)
+      controller.abort()
+    }
+  }, [query])
+
   const typed = query.trim().length > 0
 
   return (
-    <div className="a-panel border-t border-white/8 bg-deep">
+    <div className="a-panel border-t border-white/8 bg-deep/95 backdrop-blur-xl">
       <div className="shell py-6">
         <div className="relative">
           <SearchIcon className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-mist" />
@@ -204,7 +315,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="دوّر على تيشيرت، بولو، ترينج، عباية..."
+            placeholder="دوّر على تيشيرت، بولو، بنطلون، حذاء..."
             className="field pr-12 text-[15px]"
           />
         </div>
@@ -212,7 +323,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
         {!typed && (
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <span className="text-[11.5px] text-mist">جرّب:</span>
-            {['تيشيرت', 'بولو', 'ترينج', 'عباية', 'أوفر سايز'].map((word) => (
+            {['تيشرت', 'بولو', 'بنطلون', 'حذاء', 'شورت'].map((word) => (
               <button
                 key={word}
                 type="button"
@@ -227,21 +338,31 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
 
         {typed && (
           <div className="mt-5">
-            {results.length === 0 ? (
+            {loading ? (
+              <p className="py-8 text-center text-[13px] text-mist">بندوّر...</p>
+            ) : hits.length === 0 ? (
               <p className="py-8 text-center text-[13.5px] text-mist">
                 مفيش نتائج لـ «{query}» — جرّب كلمة تانية
               </p>
             ) : (
               <ul className="divide-y divide-white/8">
-                {results.map((p) => (
-                  <li key={p.id}>
+                {hits.map((p) => (
+                  <li key={p.slug}>
                     <Link
                       href={`/product/${p.slug}`}
                       onClick={onClose}
                       className="group flex items-center gap-4 py-3"
                     >
                       <div className="plate relative h-[68px] w-[54px] shrink-0">
-                        <Shot src={p.images[0]} alt={p.name} sizes="54px" />
+                        {p.image && (
+                          <Image
+                            src={p.image}
+                            alt=""
+                            fill
+                            sizes="54px"
+                            className="object-cover"
+                          />
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[13.5px] font-bold transition-colors group-hover:text-brand-300">
@@ -267,8 +388,8 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
 /* ============================================================
    قائمة الفون — بتغطي الشاشة كلها
    ============================================================ */
-function MobileMenu({ onClose }: { onClose: () => void }) {
-  const counts = getCategoryCounts()
+function MobileMenu({ links, onClose }: { links: NavLink[]; onClose: () => void }) {
+  const [open, setOpen] = useState<string | null>(null)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -299,49 +420,71 @@ function MobileMenu({ onClose }: { onClose: () => void }) {
         <p className="tag mb-5">Menu</p>
 
         <ul>
-          {links.map((link, i) => (
-            <li
-              key={link.href}
-              className="a-rise"
-              style={{ animationDelay: `${i * 55}ms` }}
-            >
-              <Link
-                href={link.href}
-                onClick={onClose}
-                className="group flex items-center justify-between gap-4 border-b border-white/8 py-4"
-              >
-                <span className="flex items-baseline gap-4">
-                  <span className="font-[family-name:var(--font-label)] text-[11px] text-brand-500/70">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span className="display text-[22px] font-bold">{link.label}</span>
-                </span>
-                <ArrowLeftIcon className="h-5 w-5 text-mist transition-transform duration-400 group-hover:-translate-x-1" />
-              </Link>
-            </li>
-          ))}
-        </ul>
+          {links.map((link, i) => {
+            const hasChildren = Boolean(link.children?.length)
+            const expanded = open === link.href
 
-        {/* أقسام سريعة */}
-        <div
-          className="a-rise mt-8 grid grid-cols-3 gap-3"
-          style={{ animationDelay: '320ms' }}
-        >
-          {categories.map((c) => (
-            <Link
-              key={c.slug}
-              href={`/category/${c.slug}`}
-              onClick={onClose}
-              className="card p-3 text-center"
-            >
-              <SparkIcon className="mx-auto mb-2 h-5 w-5 text-brand-400" />
-              <p className="text-[12.5px] font-bold">{c.name}</p>
-              <p className="nums mt-0.5 text-[10.5px] text-mist">
-                {counts[c.slug] ?? 0} قطعة
-              </p>
-            </Link>
-          ))}
-        </div>
+            return (
+              <li
+                key={link.href}
+                className="a-rise border-b border-white/8"
+                style={{ animationDelay: `${Math.min(i, 8) * 50}ms` }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <Link
+                    href={link.href}
+                    onClick={onClose}
+                    className="group flex flex-1 items-baseline gap-4 py-4"
+                  >
+                    <span className="font-[family-name:var(--font-label)] text-[11px] text-brand-500/70">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="display text-[21px] font-bold">{link.label}</span>
+                  </Link>
+
+                  {hasChildren ? (
+                    <button
+                      type="button"
+                      onClick={() => setOpen(expanded ? null : link.href)}
+                      aria-expanded={expanded}
+                      aria-label={`أقسام ${link.label}`}
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all duration-400 ${
+                        expanded
+                          ? 'rotate-180 border-brand-500/50 bg-brand-500/12 text-brand-300'
+                          : 'border-white/10 text-mist'
+                      }`}
+                    >
+                      <ChevronDownIcon className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <ArrowLeftIcon className="h-5 w-5 shrink-0 text-mist" />
+                  )}
+                </div>
+
+                {hasChildren && (
+                  <div className="acc-body" data-open={expanded}>
+                    <div>
+                      <ul className="pb-4 pr-8">
+                        {link.children!.map((child) => (
+                          <li key={child.href}>
+                            <Link
+                              href={child.href}
+                              onClick={onClose}
+                              className="flex items-center gap-2.5 py-2.5 text-[14px] font-semibold text-foam/75"
+                            >
+                              <span className="h-1 w-1 rotate-45 bg-brand-500" />
+                              {child.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </li>
+            )
+          })}
+        </ul>
 
         <div
           className="a-rise mt-9 space-y-2 border-t border-white/8 pt-6"

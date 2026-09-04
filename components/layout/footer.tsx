@@ -14,8 +14,8 @@ import {
   WhatsAppIcon,
 } from '@/components/ui/icons'
 import { revealDelay } from '@/lib/motion'
-import { categories } from '@/data/products'
 import { site } from '@/data/site'
+import type { Category } from '@/lib/types'
 
 const help = [
   { href: '/shipping', label: 'الشحن والتوصيل' },
@@ -26,7 +26,7 @@ const help = [
 
 const perkIcons = [CashIcon, TruckIcon, RefreshIcon, PinIcon]
 
-export function Footer() {
+export function Footer({ categories }: { categories: Category[] }) {
   const year = new Date().getFullYear()
 
   return (

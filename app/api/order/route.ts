@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     metaEventId?: string
   }
 
-  const built = buildOrder({ customer, items })
+  const built = await buildOrder({ customer, items })
   if (!built.ok) {
     return NextResponse.json({ ok: false, error: built.error }, { status: 400 })
   }

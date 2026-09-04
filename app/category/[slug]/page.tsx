@@ -2,12 +2,14 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PageHeader } from '@/components/layout/page-header'
 import { ShopBrowser } from '@/components/shop/shop-browser'
-import { categories, getCategoryBySlug, getProductsByCategory } from '@/data/products'
 import { site } from '@/data/site'
+import {
+  getCategories,
+  getCategoryBySlug,
+  getProductsByCategory,
+} from '@/lib/catalog'
 
-export function generateStaticParams() {
-  return categories.map((c) => ({ slug: c.slug }))
-}
+export const revalidate = 3600
 
 export async function generateMetadata({
   params,
@@ -15,7 +17,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const category = getCategoryBySlug(slug)
+  const category = await getCategoryBySlug(slug)
   if (!category) return { title: 'القسم غير موجود' }
 
   return {
@@ -32,12 +34,18 @@ export default async function CategoryPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const category = getCategoryBySlug(slug)
+
+  const [category, items, categories] = await Promise.all([
+    getCategoryBySlug(slug),
+    getProductsByCategory(slug),
+    getCategories(),
+  ])
+
   if (!category) notFound()
 
-  const items = getProductsByCategory(slug)
+  /* الأقسام الفرعية — بتبان كأزرار تحت العنوان */
+  const children = categories.filter((c) => c.parent === slug)
 
-  /* مسار التنقّل لجوجل */
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -81,13 +89,33 @@ export default async function CategoryPage({
       />
 
       <div className="shell py-10 lg:py-14">
+        {/* الأقسام الفرعية */}
+        {children.length > 0 && (
+          <div className="rail no-bar bleed mb-8 gap-2 pb-2 lg:flex-wrap lg:overflow-visible">
+            {children.map((child) => (
+              <a
+                key={child.slug}
+                href={`/category/${child.slug}`}
+                className="rounded-full border border-white/12 bg-white/4 px-4 py-2.5 text-[12.5px] font-bold text-foam/85 transition-all duration-400 hover:border-brand-500/50 hover:text-white"
+              >
+                {child.name}
+              </a>
+            ))}
+          </div>
+        )}
+
         {items.length === 0 ? (
           <div className="card px-6 py-24 text-center">
             <p className="display text-[19px] font-bold">القسم ده لسه فاضي</p>
             <p className="mt-3 text-[13px] text-mist">هننزل فيه قطع قريب — تابعنا.</p>
           </div>
         ) : (
-          <ShopBrowser initialCategory={slug} lockCategory />
+          <ShopBrowser
+            products={items}
+            categories={categories}
+            initialCategory={slug}
+            lockCategory
+          />
         )}
       </div>
     </>

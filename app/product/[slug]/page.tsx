@@ -9,13 +9,10 @@ import {
   getCategoryBySlug,
   getProductBySlug,
   getRelatedProducts,
-  products,
-} from '@/data/products'
+} from '@/lib/catalog'
 import { site } from '@/data/site'
 
-export function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }))
-}
+export const revalidate = 3600
 
 export async function generateMetadata({
   params,
@@ -23,7 +20,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
-  const product = getProductBySlug(slug)
+  const product = await getProductBySlug(slug)
   if (!product) return { title: 'المنتج غير موجود' }
 
   const description = product.shortDescription ?? product.description.slice(0, 155)
@@ -47,11 +44,13 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const product = getProductBySlug(slug)
+  const product = await getProductBySlug(slug)
   if (!product) notFound()
 
-  const category = getCategoryBySlug(product.category)
-  const related = getRelatedProducts(product, 4)
+  const [category, related] = await Promise.all([
+    getCategoryBySlug(product.category),
+    getRelatedProducts(product, 4),
+  ])
 
   /* بيانات منظّمة لجوجل — المنتج + مسار التنقّل */
   const productJsonLd = {
@@ -61,7 +60,10 @@ export default async function ProductPage({
     description: product.shortDescription ?? product.description,
     sku: product.sku,
     brand: { '@type': 'Brand', name: site.nameFull },
-    image: product.images.map((img) => `${site.url}${img}`),
+    /* صور فيندور بتيجي بروابط كاملة، وصورنا المحلية بتبدأ بـ / */
+    image: product.images.map((img) =>
+      img.startsWith('http') ? img : `${site.url}${img}`
+    ),
     offers: {
       '@type': 'Offer',
       price: product.price,
@@ -136,7 +138,7 @@ export default async function ProductPage({
         ]}
       />
 
-      <ProductDetail product={product} />
+      <ProductDetail product={product} category={category} />
 
       {related.length > 0 && (
         <section className="shell pb-20 lg:pb-28">

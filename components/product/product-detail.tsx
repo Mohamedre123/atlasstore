@@ -17,17 +17,22 @@ import {
   WhatsAppIcon,
 } from '@/components/ui/icons'
 import { DELIVERY_WINDOW, SHIPPING_FLAT_RATE } from '@/data/locations'
-import { getCategoryBySlug } from '@/data/products'
 import { site } from '@/data/site'
 import { useCart } from '@/lib/cart'
 import { colorOf, isColorGroup } from '@/lib/colors'
 import { discountPercent, formatPrice } from '@/lib/format'
 import { trackAddToCart, trackViewContent } from '@/lib/meta/client'
-import type { Product } from '@/lib/types'
+import type { Category, Product } from '@/lib/types'
 import { AddToCartButton } from './add-to-cart-button'
 import { Gallery } from './gallery'
 
-export function ProductDetail({ product }: { product: Product }) {
+export function ProductDetail({
+  product,
+  category,
+}: {
+  product: Product
+  category?: Category
+}) {
   const { addItem, openCart } = useCart()
 
   const [selected, setSelected] = useState<Record<string, string>>({})
@@ -37,7 +42,6 @@ export function ProductDetail({ product }: { product: Product }) {
 
   const panel = useRef<HTMLDivElement>(null)
 
-  const category = getCategoryBySlug(product.category)
   const discount = discountPercent(product.price, product.compareAtPrice)
   const soldOut = product.inStock === false
   const variants = product.variants ?? []
