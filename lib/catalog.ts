@@ -3,6 +3,7 @@ import {
   categories as seedCategories,
   products as seedProducts,
 } from '@/data/products'
+import { cleanSections, inSection, isAuto } from './home-sections'
 import { createPublicClient } from './supabase/public'
 import { repairImage } from './vendoor/images'
 import type { Category, Product, VariantGroup } from './types'
@@ -52,6 +53,7 @@ type ProductRow = {
   vendoor_min: number | string | null
   vendoor_max: number | string | null
   vendoor_seller: string | null
+  home_sections: unknown
 }
 
 /* ------------------------- مساعدات ------------------------- */
@@ -100,6 +102,7 @@ function toProduct(row: ProductRow, categorySlug: string): Product {
     variants: arr<VariantGroup>(row.variants),
     inStock: row.in_stock,
     featured: row.featured,
+    homeSections: cleanSections(row.home_sections),
     badge: row.badge ?? undefined,
     tags: arr<string>(row.tags),
     sku: row.sku ?? undefined,
@@ -140,7 +143,7 @@ async function loadCatalog(): Promise<Catalog> {
       supabase
         .from('products')
         .select(
-          'id, category_id, slug, name, short_description, description, price, compare_at_price, images, variants, tags, badge, sku, featured, in_stock, sort, vendoor_id, vendoor_variants, vendoor_buy, vendoor_min, vendoor_max, vendoor_seller'
+          'id, category_id, slug, name, short_description, description, price, compare_at_price, images, variants, tags, badge, sku, featured, in_stock, sort, vendoor_id, vendoor_variants, vendoor_buy, vendoor_min, vendoor_max, vendoor_seller, home_sections'
         )
         .order('sort', { ascending: true })
         .order('created_at', { ascending: false }),
@@ -238,35 +241,75 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
   return (await getProducts()).find((p) => p.slug === slug)
 }
 
+/* ------------------------------------------------------------
+   سكاشن الصفحة الرئيسية
+   ------------------------------------------------------------
+   في كل سيكشن بنبدأ باللي أشّرت عليه بإيدك، وبعدين بنكمّل
+   العدد من المنتجات السايبة على التلقائي. المنتج اللي أشّرت
+   عليه لسيكشن تاني مابيتحطش هنا لوحده — شوف lib/home-sections
+   ------------------------------------------------------------ */
+
+/** بيلزق قايمتين ويشيل المكرر ويقص على العدد */
+function take(picked: Product[], filler: Product[], limit: number): Product[] {
+  const seen = new Set<string>()
+  return [...picked, ...filler]
+    .filter((p) => !seen.has(p.id) && seen.add(p.id))
+    .slice(0, limit)
+}
+
 export async function getFeaturedProducts(limit = 8): Promise<Product[]> {
   const all = await getProducts()
-  const featured = all.filter((p) => p.featured)
-  return (featured.length ? featured : all).slice(0, limit)
+
+  const picked = all.filter((p) => inSection(p.homeSections, 'hero'))
+  const auto = all.filter((p) => isAuto(p.homeSections))
+
+  /* الواجهة عمرها ما تفضل فاضية — بنكمّلها بالمميّز وبعدين بأي حاجة */
+  return take(picked, [...auto.filter((p) => p.featured), ...auto], limit)
 }
 
 /** الأكثر مبيعًا — خليط من كل الأقسام الرئيسية */
 export async function getBestSellers(limit = 8): Promise<Product[]> {
   const [all, cats] = await Promise.all([getProducts(), getCategories()])
-  const roots = cats.filter((c) => !c.parent)
 
-  const picks: Product[] = []
-  for (const root of roots) {
+  const picked = all.filter((p) => inSection(p.homeSections, 'best'))
+  const auto = all.filter((p) => isAuto(p.homeSections))
+
+  /* التلقائي = خليط من كل قسم رئيسي عشان الصف ما يبقاش من قسم واحد */
+  const mix: Product[] = []
+  for (const root of cats.filter((c) => !c.parent)) {
     const childSlugs = cats.filter((c) => c.parent === root.slug).map((c) => c.slug)
     const wanted = new Set([root.slug, ...childSlugs])
-    picks.push(...all.filter((p) => wanted.has(p.category)).slice(0, 3))
+    mix.push(...auto.filter((p) => wanted.has(p.category)).slice(0, 3))
   }
 
-  const seen = new Set<string>()
-  const unique = picks.filter((p) => !seen.has(p.id) && seen.add(p.id))
+  return take(picked, mix.length ? mix : auto, limit)
+}
 
-  return (unique.length ? unique : all).slice(0, limit)
+/**
+ * منتجات صف القسم في الصفحة الرئيسية.
+ * غير getProductsByCategory اللي بترجّع القسم كله — دي
+ * بتحترم اللي أشّرت عليه.
+ */
+export async function getCategoryRail(
+  slug: string,
+  limit = 8
+): Promise<Product[]> {
+  const items = await getProductsByCategory(slug)
+
+  const picked = items.filter((p) => inSection(p.homeSections, 'category'))
+  const auto = items.filter((p) => isAuto(p.homeSections))
+
+  return take(picked, auto, limit)
 }
 
 export async function getSaleProducts(limit = 8): Promise<Product[]> {
   const all = await getProducts()
-  return all
-    .filter((p) => p.compareAtPrice && p.compareAtPrice > p.price)
-    .slice(0, limit)
+  const discounted = (p: Product) => Boolean(p.compareAtPrice && p.compareAtPrice > p.price)
+
+  const picked = all.filter((p) => inSection(p.homeSections, 'sale'))
+  const auto = all.filter((p) => isAuto(p.homeSections) && discounted(p))
+
+  return take(picked, auto, limit)
 }
 
 export async function getRelatedProducts(

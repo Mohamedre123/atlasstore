@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/icons'
 import { ImageEditor } from '@/components/admin/image-editor'
 import { formatPrice } from '@/lib/format'
+import { HOME_SECTIONS, type HomeSection } from '@/lib/home-sections'
 
 type Row = {
   id: string
@@ -35,6 +36,7 @@ type Row = {
   price: number | string
   compare_at_price: number | string | null
   images: string[] | null
+  home_sections: HomeSection[] | null
   variants: { name: string; options: string[] }[] | null
   badge: string | null
   featured: boolean
@@ -427,34 +429,75 @@ function ProductRow({
                 hint="الأصغر بيظهر الأول"
               />
 
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-3 pt-6 text-[13px] font-bold">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="is_active"
-                    defaultChecked={row.is_active}
-                    className="h-4 w-4 accent-[#12c9ee]"
-                  />
-                  ظاهر
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="in_stock"
-                    defaultChecked={row.in_stock}
-                    className="h-4 w-4 accent-[#12c9ee]"
-                  />
-                  متوفر
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="featured"
-                    defaultChecked={row.featured}
-                    className="h-4 w-4 accent-[#12c9ee]"
-                  />
-                  مميّز
-                </label>
+              <div className="pt-6 sm:col-span-2">
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-[13px] font-bold">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name="is_active"
+                      defaultChecked={row.is_active}
+                      className="h-4 w-4 accent-[#12c9ee]"
+                    />
+                    ظاهر
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name="in_stock"
+                      defaultChecked={row.in_stock}
+                      className="h-4 w-4 accent-[#12c9ee]"
+                    />
+                    متوفر
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      name="featured"
+                      defaultChecked={row.featured}
+                      className="h-4 w-4 accent-[#12c9ee]"
+                    />
+                    مميّز
+                  </label>
+                </div>
+
+                {/* ---------- أماكنه في الصفحة الرئيسية ---------- */}
+                <div className="mt-5 rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                  <p className="text-[12px] font-extrabold">
+                    يظهر فين في الصفحة الرئيسية؟
+                  </p>
+                  <p className="mt-1.5 text-[11px] leading-[1.9] text-mist">
+                    سيبهم كلهم فاضيين وهيتصرّف لوحده زي الأول — يظهر في صف قسمه،
+                    وفي العروض لو عليه سعر قبل الخصم. أول ما تأشّر على حاجة، بقى
+                    يظهر في اللي أشّرت عليه بس.
+                  </p>
+
+                  <div className="mt-3.5 grid gap-2.5 sm:grid-cols-2">
+                    {HOME_SECTIONS.map((section) => (
+                      <label
+                        key={section.key}
+                        className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-white/8 px-3 py-2.5 transition-colors hover:border-brand-500/40"
+                      >
+                        <input
+                          type="checkbox"
+                          name="home_sections"
+                          value={section.key}
+                          defaultChecked={(row.home_sections ?? []).includes(
+                            section.key
+                          )}
+                          className="mt-0.5 h-4 w-4 shrink-0 accent-[#12c9ee]"
+                        />
+                        <span className="min-w-0">
+                          <span className="block text-[12.5px] font-bold">
+                            {section.label}
+                          </span>
+                          <span className="mt-0.5 block text-[10.5px] leading-relaxed text-mist">
+                            {section.hint}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 

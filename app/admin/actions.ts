@@ -9,6 +9,7 @@ import {
   type ReminderKind,
 } from '@/lib/reminder-email'
 import { isAdminEmail } from '@/lib/admin'
+import { cleanSections } from '@/lib/home-sections'
 import { createClient } from '@/lib/supabase/server'
 import {
   fetchVendoorCategories,
@@ -546,6 +547,8 @@ export async function saveProduct(form: FormData): Promise<ActionResult> {
     in_stock: bool(form.get('in_stock')),
     is_active: bool(form.get('is_active')),
     sort: num(form.get('sort')) ?? 0,
+    /* أماكنه في الصفحة الرئيسية — فاضية معناها سيبه تلقائي */
+    home_sections: cleanSections(form.getAll('home_sections').map(String)),
   }
 
   if (!update.name) return fail('اسم المنتج مطلوب')

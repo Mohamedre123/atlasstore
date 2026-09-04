@@ -15,7 +15,7 @@ export default async function AdminProductsPage() {
     supabase
       .from('products')
       .select(
-        'id, category_id, slug, name, short_description, description, price, compare_at_price, images, variants, badge, featured, in_stock, is_active, sort, vendoor_id, vendoor_buy, vendoor_min, vendoor_max, vendoor_seller'
+        'id, category_id, slug, name, short_description, description, price, compare_at_price, images, variants, badge, featured, in_stock, is_active, sort, vendoor_id, vendoor_buy, vendoor_min, vendoor_max, vendoor_seller, home_sections'
       )
       .order('sort')
       .order('created_at', { ascending: false }),

@@ -11,9 +11,9 @@ import { site } from '@/data/site'
 import {
   getBestSellers,
   getCategoryCounts,
+  getCategoryRail,
   getCategoryTree,
   getFeaturedProducts,
-  getProductsByCategory,
   getSaleProducts,
 } from '@/lib/catalog'
 
@@ -35,7 +35,7 @@ export default async function HomePage() {
     tree.slice(0, 4).map(async (category, i) => ({
       category,
       index: String(i + 4).padStart(2, '0'),
-      items: await getProductsByCategory(category.slug),
+      items: await getCategoryRail(category.slug),
     }))
   )
 
@@ -96,7 +96,7 @@ export default async function HomePage() {
             hrefLabel={`تسوّق ${rail.category.name}`}
           />
           <ProductRail
-            products={rail.items.slice(0, 8)}
+            products={rail.items}
             columns={rail.items.length <= 3 ? 3 : 4}
           />
         </Band>
