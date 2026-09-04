@@ -9,6 +9,7 @@ import {
   useReducer,
   useState,
 } from 'react'
+import { track } from './activity'
 import type { CartItem, Product } from './types'
 
 const STORAGE_KEY = 'atlas_cart_v1'
@@ -140,6 +141,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* الحفظ ممكن يفشل في وضع التصفح الخفي */
     }
+  }, [state.items, ready])
+
+  /* متابعة السلة — عشان تقدر تفكّر العميل بسلة سابها.
+     بيتبعت في الخلفية ومابيوقفش أي حاجة لو فشل. */
+  useEffect(() => {
+    if (!ready || state.items.length === 0) return
+    track({ stage: 'cart', cart: state.items })
   }, [state.items, ready])
 
   /* قفل تمرير الصفحة والسلة مفتوحة */

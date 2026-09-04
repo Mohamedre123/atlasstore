@@ -39,6 +39,7 @@ export function Field({
   label,
   value,
   onChange,
+  onFocus,
   error,
   hint,
   required = false,
@@ -50,6 +51,8 @@ export function Field({
   label: string
   value: string
   onChange: (value: string) => void
+  /** بيتنادى أول ما العميل يلمس الخانة — بنسجّل بيه وقف فين */
+  onFocus?: () => void
   error?: string
   hint?: string
   required?: boolean
@@ -74,6 +77,7 @@ export function Field({
           rows={3}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={onFocus}
           className={`${cls} resize-none`}
           {...rest}
         />
@@ -83,6 +87,7 @@ export function Field({
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={onFocus}
           className={cls}
           {...rest}
         />

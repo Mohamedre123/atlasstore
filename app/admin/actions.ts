@@ -1,6 +1,13 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { Resend } from 'resend'
+import { site } from '@/data/site'
+import {
+  buildReminderEmail,
+  reminderLabel,
+  type ReminderKind,
+} from '@/lib/reminder-email'
 import { isAdminEmail } from '@/lib/admin'
 import { createClient } from '@/lib/supabase/server'
 import {
@@ -625,4 +632,118 @@ export async function linkProductToVendoor(
 
   refreshStore()
   return { ok: true }
+}
+
+/* ============================================================
+   ٨) تذكير العميل بسلته المتروكة
+   ------------------------------------------------------------
+   الرسالة بتتغيّر حسب اللي ناقصه بالظبط: لو ساب العنوان
+   بتتقاله «فاضل العنوان»، ولو مكتبش موبايل بتطلبه منه.
+   ============================================================ */
+
+export async function sendReminder(
+  activityId: string,
+  kind: ReminderKind
+): Promise<ActionResult<{ email: string }>> {
+  const auth = await adminClient()
+  if (!auth.ok) return fail(auth.error)
+
+  const { data: row, error } = await auth.supabase
+    .from('customer_activity')
+    .select('id, name, email, cart, cart_total, reminders, ordered')
+    .eq('id', activityId)
+    .maybeSingle()
+
+  if (error) return fail(`فشل قراءة العميل: ${error.message}`)
+  if (!row) return fail('العميل مش موجود')
+
+  const email = String(row.email ?? '').trim()
+  if (!email) return fail('العميل مكتبش إيميل — كلّمه واتساب')
+  if (row.ordered) return fail('العميل ده أتمّ طلبه بالفعل')
+
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) return fail('مفتاح Resend مش متظبط')
+
+  const cart = (row.cart ?? []) as {
+    name: string
+    quantity: number
+    price: number
+    variants?: Record<string, string>
+  }[]
+
+  const mail = buildReminderEmail({
+    kind,
+    name: row.name as string | null,
+    items: cart,
+    total: Number(row.cart_total ?? 0),
+  })
+
+  try {
+    const resend = new Resend(apiKey)
+    const from =
+      process.env.ORDER_EMAIL_FROM || `${site.nameFull} <onboarding@resend.dev>`
+
+    const { error: sendError } = await resend.emails.send({
+      from,
+      to: email,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text,
+      /* نفس التذكير مايتبعتش مرتين لو دوست الزرار مرتين بسرعة */
+      headers: { 'X-Entity-Ref-ID': `${activityId}-${kind}-${todayKey()}` },
+      tags: [{ name: 'type', value: 'cart-reminder' }],
+    })
+
+    if (sendError) {
+      return fail(sendError.message ?? 'فشل إرسال التذكير')
+    }
+  } catch (err) {
+    return fail(err instanceof Error ? err.message : 'فشل إرسال التذكير')
+  }
+
+  /* بنسجّل التذكير عشان تعرف بعت إيه وامتى */
+  const history = Array.isArray(row.reminders) ? row.reminders : []
+
+  await auth.supabase
+    .from('customer_activity')
+    .update({
+      reminders: [...history, { kind, at: new Date().toISOString() }],
+      reminded_at: new Date().toISOString(),
+    })
+    .eq('id', activityId)
+
+  await auth.supabase.from('customer_events').insert({
+    activity_id: activityId,
+    kind: 'reminder_sent',
+    label: reminderLabel(kind),
+  })
+
+  return { ok: true, data: { email } }
+}
+
+/** مفتاح اليوم — بيمنع تكرار نفس التذكير في نفس اليوم */
+function todayKey(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+/** أحداث عميل واحد — بتتحمّل لما تفتح مساره */
+export async function getCustomerEvents(
+  activityId: string
+): Promise<ActionResult<{ kind: string; label: string | null; created_at: string }[]>> {
+  const auth = await adminClient()
+  if (!auth.ok) return fail(auth.error)
+
+  const { data, error } = await auth.supabase
+    .from('customer_events')
+    .select('kind, label, created_at')
+    .eq('activity_id', activityId)
+    .order('created_at', { ascending: false })
+    .limit(60)
+
+  if (error) return fail(error.message)
+
+  return {
+    ok: true,
+    data: (data ?? []) as { kind: string; label: string | null; created_at: string }[],
+  }
 }

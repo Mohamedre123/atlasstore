@@ -7,6 +7,7 @@ import {
   GridIcon,
   LayersIcon,
   SparkIcon,
+  UserIcon,
 } from '@/components/ui/icons'
 
 /* ============================================================
@@ -21,6 +22,7 @@ const tabs = [
   { href: '/admin/catalog', label: 'كتالوج فيندور', Icon: SparkIcon },
   { href: '/admin/products', label: 'منتجاتي', Icon: GridIcon },
   { href: '/admin/categories', label: 'الأقسام', Icon: LayersIcon },
+  { href: '/admin/customers', label: 'العملاء', Icon: UserIcon },
 ]
 
 export function AdminNav() {

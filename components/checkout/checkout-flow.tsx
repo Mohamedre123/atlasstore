@@ -25,6 +25,7 @@ import {
   pluralize,
 } from '@/lib/format'
 import { makeEventId, trackInitiateCheckout, trackPurchase } from '@/lib/meta/client'
+import { track as trackActivity, trackOrdered } from '@/lib/activity'
 import { loadProfile, profileToForm } from '@/lib/profile'
 import type { CustomerInfo } from '@/lib/types'
 import { ErrorText, Field, FormBlock, LockedOption } from './field'
@@ -119,6 +120,12 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
   useEffect(() => {
     if (!ready || items.length === 0) return
     trackInitiateCheckout(items, subtotal)
+    trackActivity({
+      stage: 'checkout',
+      cart: items,
+      kind: 'checkout_open',
+      label: 'فتح صفحة إتمام الطلب',
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready])
 
@@ -142,15 +149,60 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
     }
   }, [])
 
+  /* أسماء الخانات بالعربي — بتظهر في مسار العميل عندك */
+  const FIELD_LABELS: Partial<Record<keyof CustomerInfo, string>> = {
+    fullName: 'الاسم',
+    phone: 'رقم الموبايل',
+    phoneAlt: 'الرقم الاحتياطي',
+    email: 'الإيميل',
+    governorate: 'المحافظة',
+    area: 'المركز',
+    village: 'القرية',
+    address: 'العنوان',
+    landmark: 'علامة مميزة',
+    notes: 'ملاحظات',
+  }
+
   const update = (field: keyof CustomerInfo, value: string) => {
     setForm((prev) => {
       const next = { ...prev, [field]: value }
       /* تغيير المحافظة بيصفّر المركز عشان ما يفضلش مركز من محافظة تانية */
       if (field === 'governorate') next.area = ''
+
+      /* بنبلّغ إيه اللي اتكتب وإيه اللي لسه فاضي — من ده بتعرف
+         العميل وقف فين لو ساب الصفحة */
+      trackActivity({
+        stage: 'filling',
+        cart: items,
+        lastField: FIELD_LABELS[field] ?? field,
+        name: next.fullName,
+        email: next.email,
+        phone: next.phone,
+        governorate: next.governorate,
+        area: next.area,
+        address: next.address,
+        filled: Object.fromEntries(
+          Object.entries(FIELD_LABELS).map(([key, label]) => [
+            label as string,
+            Boolean(String(next[key as keyof CustomerInfo] ?? '').trim()),
+          ])
+        ),
+      })
+
       return next
     })
     setErrors((prev) => ({ ...prev, [field]: undefined }))
     setServerError('')
+  }
+
+  /** لمس خانة من غير ما يكتب فيها — بيتسجّل كمان */
+  const touch = (field: keyof CustomerInfo) => {
+    if (String(form[field] ?? '').trim()) return
+    trackActivity({
+      kind: 'field_focus',
+      label: FIELD_LABELS[field] ?? field,
+      stage: 'filling',
+    })
   }
 
   const validate = (): boolean => {
@@ -220,6 +272,7 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
       }
 
       trackPurchase(items, data.total ?? total, eventId)
+      trackOrdered(data.orderId)
 
       sessionStorage.setItem(
         'atlas_last_order',
@@ -421,6 +474,7 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
             <FormBlock index="01" title="بيانات التواصل">
               <Field
                 id="fullName"
+                onFocus={() => touch('fullName')}
                 label="الاسم بالكامل"
                 required
                 value={form.fullName}
@@ -433,6 +487,7 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
                   id="phone"
+                  onFocus={() => touch('phone')}
                   label="رقم الموبايل"
                   required
                   type="tel"
@@ -448,6 +503,7 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
 
                 <Field
                   id="phoneAlt"
+                  onFocus={() => touch('phoneAlt')}
                   label="رقم احتياطي"
                   type="tel"
                   inputMode="tel"
@@ -461,6 +517,7 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
 
               <Field
                 id="email"
+                onFocus={() => touch('email')}
                 label="البريد الإلكتروني"
                 type="email"
                 dir="ltr"
@@ -487,6 +544,7 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
                     id="governorate"
                     value={form.governorate}
                     onChange={(e) => update('governorate', e.target.value)}
+                    onFocus={() => touch('governorate')}
                     className={`field ${errors.governorate ? 'field-error' : ''}`}
                   >
                     <option value="">اختار المحافظة</option>
@@ -508,6 +566,7 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
                     value={form.area}
                     disabled={!form.governorate || areasLoading}
                     onChange={(e) => update('area', e.target.value)}
+                    onFocus={() => touch('area')}
                     className={`field ${errors.area ? 'field-error' : ''}`}
                   >
                     <option value="">
@@ -529,6 +588,7 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
 
               <Field
                 id="village"
+                onFocus={() => touch('village')}
                 label="القرية / المنطقة"
                 value={form.village ?? ''}
                 onChange={(v) => update('village', v)}
@@ -537,6 +597,7 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
 
               <Field
                 id="address"
+                onFocus={() => touch('address')}
                 label="العنوان بالتفصيل"
                 required
                 multiline
@@ -549,6 +610,7 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
 
               <Field
                 id="landmark"
+                onFocus={() => touch('landmark')}
                 label="علامة مميزة"
                 value={form.landmark ?? ''}
                 onChange={(v) => update('landmark', v)}
@@ -557,6 +619,7 @@ export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
 
               <Field
                 id="notes"
+                onFocus={() => touch('notes')}
                 label="ملاحظات على الطلب"
                 multiline
                 value={form.notes ?? ''}
