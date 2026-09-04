@@ -171,6 +171,14 @@ export function buildStatusEmail(input: Input): { subject: string; html: string 
         </td></tr>`
         }
 
+        <!-- تتبّع الطلب -->
+        <tr><td style="padding:6px 24px 26px;text-align:center">
+          <a href="${site.url}/track" style="display:inline-block;background:linear-gradient(135deg,#0b5fc4,#12c9ee);color:#03101f;text-decoration:none;padding:13px 30px;border-radius:999px;font-size:14px;font-weight:800">تتبّع طلبك</a>
+          <div style="font-size:11px;color:#64748b;margin-top:10px;line-height:1.8">
+            اكتب رقم الطلب <b>${esc(orderCode)}</b> وآخر ٤ أرقام من موبايلك
+          </div>
+        </td></tr>
+
         <!-- الفوتر -->
         <tr><td style="background:#0a2a80;padding:22px;text-align:center">
           <div style="font-size:12.5px;color:#d0f7fe;line-height:1.9">

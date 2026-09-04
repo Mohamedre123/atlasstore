@@ -22,6 +22,7 @@ const help = [
   { href: '/returns', label: 'الاستبدال والاسترجاع' },
   { href: '/size-guide', label: 'دليل المقاسات' },
   { href: '/faq', label: 'أسئلة متكررة' },
+  { href: '/track', label: 'تتبّع طلبك' },
 ]
 
 const perkIcons = [CashIcon, TruckIcon, RefreshIcon, PinIcon]

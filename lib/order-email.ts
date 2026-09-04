@@ -248,6 +248,13 @@ export function buildCustomerEmail(input: EmailInput): { subject: string; html: 
       </table>
 
       <div style="margin-top:22px;padding-top:18px;border-top:1px solid #e3eaf2">
+        <div style="text-align:center;margin-bottom:22px">
+          <a href="${site.url}/track" style="display:inline-block;background:linear-gradient(135deg,#0b5fc4,#12c9ee);color:#03101f;text-decoration:none;padding:13px 30px;border-radius:999px;font-size:14px;font-weight:800">تتبّع طلبك</a>
+          <div style="font-size:11px;color:#64748b;margin-top:10px;line-height:1.8">
+            اكتب رقم الطلب <b>${esc(orderId)}</b> وآخر ٤ أرقام من موبايلك
+          </div>
+        </div>
+
         <div style="font-size:12px;color:#64748b;margin-bottom:6px">عنوان التوصيل</div>
         <div style="font-size:13px;color:#071021;line-height:1.8">${esc(customer.address)}<br>${customer.village ? esc(customer.village) + ' — ' : ''}${esc(customer.area)} — ${esc(customer.governorate)}</div>
         <div style="font-size:12px;color:#64748b;margin-top:10px">مدة التوصيل المتوقعة: ${DELIVERY_WINDOW}</div>

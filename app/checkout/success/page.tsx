@@ -209,9 +209,13 @@ export default function OrderSuccessPage() {
 
           {/* ============ أزرار ============ */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/shop" className="btn btn-primary">
-              <span>أكمل التسوّق</span>
+            <Link href="/track" className="btn btn-primary">
+              <BoxIcon className="h-4 w-4" />
+              <span>تتبّع الطلب</span>
               <ArrowLeftIcon className="btn-arrow h-4 w-4" />
+            </Link>
+            <Link href="/shop" className="btn btn-ghost">
+              <span>أكمل التسوّق</span>
             </Link>
             <a
               href={`https://wa.me/${site.contact.whatsapp}${
@@ -226,9 +230,7 @@ export default function OrderSuccessPage() {
               <WhatsAppIcon className="h-4 w-4" />
               <span>استفسار عن الطلب</span>
             </a>
-            <Link href="/account" className="btn btn-ghost">
-              <span>أوردراتي</span>
-            </Link>
+
           </div>
         </div>
       </div>
