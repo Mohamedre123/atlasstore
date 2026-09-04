@@ -386,3 +386,88 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
   refreshStore()
   return { ok: true }
 }
+
+/* ============================================================
+   ٥) نقل المنتجات القديمة لقاعدة البيانات
+   ------------------------------------------------------------
+   أول ما تضيف أول منتج من اللوحة، المتجر بيبطّل يقرا من
+   data/products.ts وبيعتمد على قاعدة البيانات. الأمر ده بينقل
+   الستة القدام دول عشان ما يضيعوش.
+
+   ملحوظة: المنتجات دي مش مربوطة بفيندور، فأوردراتها مش هتتبعت
+   لهم تلقائي. لو عايزها مربوطة، ضيفها تاني من الكتالوج.
+   ============================================================ */
+export async function importSeedProducts(): Promise<ActionResult<{ count: number }>> {
+  const auth = await adminClient()
+  if (!auth.ok) return fail(auth.error)
+
+  const { categories: seedCats, products: seedProducts } = await import(
+    '@/data/products'
+  )
+
+  /* الأقسام الأول عشان المنتجات تلاقي مكانها */
+  const catIds = new Map<string, string>()
+
+  for (const c of seedCats) {
+    const { data: existing } = await auth.supabase
+      .from('categories')
+      .select('id')
+      .eq('slug', c.slug)
+      .maybeSingle()
+
+    if (existing) {
+      catIds.set(c.slug, existing.id as string)
+      continue
+    }
+
+    const { data, error } = await auth.supabase
+      .from('categories')
+      .insert({
+        slug: c.slug,
+        name: c.name,
+        description: c.description ?? null,
+        image: c.image ?? null,
+      })
+      .select('id')
+      .single()
+
+    if (error) return fail(`فشل نقل قسم «${c.name}»: ${error.message}`)
+    if (data) catIds.set(c.slug, data.id as string)
+  }
+
+  /* وبعدين المنتجات */
+  let count = 0
+
+  for (const p of seedProducts) {
+    const { data: existing } = await auth.supabase
+      .from('products')
+      .select('id')
+      .eq('slug', p.slug)
+      .maybeSingle()
+
+    if (existing) continue
+
+    const { error } = await auth.supabase.from('products').insert({
+      category_id: catIds.get(p.category) ?? null,
+      slug: p.slug,
+      name: p.name,
+      short_description: p.shortDescription ?? null,
+      description: p.description,
+      price: p.price,
+      compare_at_price: p.compareAtPrice ?? null,
+      images: p.images,
+      variants: p.variants ?? [],
+      tags: p.tags ?? [],
+      badge: p.badge ?? null,
+      sku: p.sku ?? null,
+      featured: p.featured ?? false,
+      in_stock: p.inStock ?? true,
+    })
+
+    if (error) return fail(`فشل نقل «${p.name}»: ${error.message}`)
+    count++
+  }
+
+  refreshStore()
+  return { ok: true, data: { count } }
+}

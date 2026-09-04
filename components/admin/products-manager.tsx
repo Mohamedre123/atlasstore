@@ -4,7 +4,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState, useTransition } from 'react'
-import { deleteProduct, saveProduct } from '@/app/admin/actions'
+import {
+  deleteProduct,
+  importSeedProducts,
+  saveProduct,
+} from '@/app/admin/actions'
 import {
   AlertIcon,
   ArrowUpRightIcon,
@@ -70,18 +74,7 @@ export function ProductsManager({
   }, [products, term])
 
   if (products.length === 0) {
-    return (
-      <div className="card px-6 py-20 text-center">
-        <GridIcon className="mx-auto mb-4 h-9 w-9 text-mist/50" />
-        <p className="display text-[17px] font-bold">لسه مضفتش منتجات</p>
-        <p className="mx-auto mt-3 max-w-[40ch] text-[13px] leading-relaxed text-mist">
-          روح لكتالوج فيندور، اكتب سعرك جنب المنتج ودوس +.
-        </p>
-        <Link href="/admin/catalog" className="btn btn-primary mt-7">
-          <span>افتح الكتالوج</span>
-        </Link>
-      </div>
-    )
+    return <EmptyState />
   }
 
   return (
@@ -112,6 +105,65 @@ export function ProductsManager({
       {visible.length === 0 && (
         <p className="py-12 text-center text-[13px] text-mist">مفيش نتائج لـ «{term}»</p>
       )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------
+   لسه مفيش منتجات
+   ------------------------------------------------------------
+   بنعرض كمان زرار ينقل المنتجات الستة القديمة لقاعدة البيانات،
+   عشان ما تختفيش من المتجر أول ما تضيف أول منتج من الكتالوج.
+   ------------------------------------------------------------ */
+function EmptyState() {
+  const router = useRouter()
+  const [pending, start] = useTransition()
+  const [msg, setMsg] = useState('')
+
+  const move = () =>
+    start(async () => {
+      const res = await importSeedProducts()
+      setMsg(res.ok ? `اتنقل ${res.data.count} منتج ✓` : res.error)
+      if (res.ok) router.refresh()
+    })
+
+  return (
+    <div className="card px-6 py-16 text-center">
+      <GridIcon className="mx-auto mb-4 h-9 w-9 text-mist/50" />
+      <p className="display text-[17px] font-bold">لسه مضفتش منتجات</p>
+      <p className="mx-auto mt-3 max-w-[44ch] text-[13px] leading-[1.95] text-mist">
+        روح لكتالوج فيندور، اكتب سعرك جنب المنتج ودوس +. المنتجات اللي هتضيفها من
+        هناك أوردراتها بتروح لفيندور تلقائي.
+      </p>
+
+      <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+        <Link href="/admin/catalog" className="btn btn-primary">
+          <span>افتح الكتالوج</span>
+        </Link>
+
+        <button
+          type="button"
+          onClick={move}
+          disabled={pending}
+          className="btn btn-ghost"
+        >
+          {pending ? (
+            <>
+              <SpinnerIcon className="a-spin h-4 w-4" />
+              <span>بننقل...</span>
+            </>
+          ) : (
+            <span>انقل المنتجات القديمة</span>
+          )}
+        </button>
+      </div>
+
+      {msg && <p className="mt-4 text-[12.5px] font-bold text-brand-300">{msg}</p>}
+
+      <p className="mx-auto mt-5 max-w-[46ch] text-[11.5px] leading-relaxed text-mist/70">
+        المنتجات القديمة مش مربوطة بفيندور، فأوردراتها هتحتاج تبعتها بإيدك. لو
+        عايزها مربوطة ضيفها من الكتالوج بدل ما تنقلها.
+      </p>
     </div>
   )
 }
