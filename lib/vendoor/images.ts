@@ -73,6 +73,15 @@ export function vendoorImage(entry: unknown): string | null {
   return `${VENDOOR_BASE_URL}${ALIVE}${fixed}`
 }
 
+/**
+ * تصليح رابط متخزّن عندنا من غير ما نلمس أي رابط تاني.
+ * صور متجرنا المحلية (/img/...) بتعدّي زي ما هي — الدالة دي
+ * بتغيّر المسار الميت بتاع فيندور بس.
+ */
+export function repairImage(src: string): string {
+  return src.includes(DEAD) ? src.replace(DEAD, ALIVE) : src
+}
+
 /** كل صور المنتج، من غير تكرار ومن غير الفاضي */
 export function vendoorImages(
   main: unknown,

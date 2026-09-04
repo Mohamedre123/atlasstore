@@ -4,6 +4,7 @@ import {
   products as seedProducts,
 } from '@/data/products'
 import { createPublicClient } from './supabase/public'
+import { repairImage } from './vendoor/images'
 import type { Category, Product, VariantGroup } from './types'
 
 /* ============================================================
@@ -89,7 +90,10 @@ function toProduct(row: ProductRow, categorySlug: string): Product {
     description: row.description ?? '',
     price: Number(row.price),
     compareAtPrice: num(row.compare_at_price),
-    images: arr<string>(row.images),
+    /* المنتجات اللي اتضافت قبل ما نكتشف إن مسار صور فيندور
+       القديم ميت، صورها متخزّنة بالرابط المكسور. بنصلّحه هنا
+       وقت القراءة بدل ما نستنى مزامنة جديدة */
+    images: arr<string>(row.images).map(repairImage),
     category: categorySlug,
     variants: arr<VariantGroup>(row.variants),
     inStock: row.in_stock,
