@@ -30,6 +30,9 @@ type Order = {
   status: OrderStatus
   created_at: string
   status_updated_at: string | null
+  vendoor_order_code: string | null
+  vendoor_status: string | null
+  vendoor_error: string | null
 }
 
 /* الحالات اللي بتظهر كأزرار قدام كل أوردر */
@@ -59,7 +62,7 @@ export function OrdersBoard() {
       const { data, error: err } = await supabase
         .from('orders')
         .select(
-          'id, order_code, customer, items, subtotal, shipping, total, status, created_at, status_updated_at'
+          'id, order_code, customer, items, subtotal, shipping, total, status, created_at, status_updated_at, vendoor_order_code, vendoor_status, vendoor_error'
         )
         .order('created_at', { ascending: false })
         .limit(200)
@@ -318,6 +321,9 @@ function OrderCard({
             </span>
           </div>
           <p className="nums mt-1.5 text-[11.5px] text-mist">{date}</p>
+
+          {/* حالة الإرسال لفيندور */}
+          <VendoorBadge order={order} />
         </div>
 
         <div className="text-left">
@@ -482,6 +488,48 @@ function OrderCard({
         </div>
       </div>
     </div>
+  )
+}
+
+/* ------------------------------------------------------------
+   حالة الأوردر عند فيندور
+   ------------------------------------------------------------
+   sent    → اتبعت ومعاه رقمهم
+   skipped → مفيش ربط (منتج مش من فيندور أو الإعدادات ناقصة)
+   failed  → فيندور رفضت — لازم تبعته بإيدك
+   ------------------------------------------------------------ */
+function VendoorBadge({ order }: { order: Order }) {
+  if (!order.vendoor_status) return null
+
+  if (order.vendoor_status === 'sent') {
+    return (
+      <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-ok/12 px-2.5 py-1 text-[10.5px] font-bold text-ok">
+        <CheckIcon className="h-3 w-3" />
+        اتبعت لفيندور
+        {order.vendoor_order_code && (
+          <span dir="ltr" className="nums opacity-80">
+            #{order.vendoor_order_code}
+          </span>
+        )}
+      </p>
+    )
+  }
+
+  const failed = order.vendoor_status === 'failed'
+
+  return (
+    <p
+      title={order.vendoor_error ?? undefined}
+      className={`mt-2 inline-flex max-w-full items-start gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-bold ${
+        failed ? 'bg-sale/12 text-sale' : 'bg-warn/12 text-warn'
+      }`}
+    >
+      <AlertIcon className="mt-px h-3 w-3 shrink-0" />
+      <span className="line-clamp-1">
+        {failed ? 'ما اتبعتش لفيندور' : 'مش مربوط بفيندور'}
+        {order.vendoor_error ? ` — ${order.vendoor_error}` : ''}
+      </span>
+    </p>
   )
 }
 

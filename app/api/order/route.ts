@@ -4,12 +4,15 @@ import { site } from '@/data/site'
 import { makeOrderId } from '@/lib/format'
 import { sendPurchaseEvent } from '@/lib/meta/capi'
 import { buildAdminEmail, buildCustomerEmail } from '@/lib/order-email'
-import { buildOrder, rateLimited } from '@/lib/orders'
+import { buildOrder, rateLimited, type BuiltOrder } from '@/lib/orders'
 import { createClient } from '@/lib/supabase/server'
 import { isSupabaseConfigured } from '@/lib/supabase/config'
+import { sendOrderToVendoor } from '@/lib/vendoor/send-order'
 import type { CartItem, CustomerInfo } from '@/lib/types'
 
 export const runtime = 'nodejs'
+/* إرسال الأوردر لفيندور بيضيف طلب خارجي — بنسيب مهلة أوسع */
+export const maxDuration = 30
 
 /* ============================================================
    استقبال الأوردر
@@ -17,10 +20,11 @@ export const runtime = 'nodejs'
    الترتيب:
    1) حدّ الطلبات المتكررة
    2) التحقق من البيانات وحساب الأسعار من السيرفر
-   3) حفظ الأوردر وبيانات العميل في قاعدة البيانات (من السيرفر
+   3) إرسال الأوردر لفيندور بسعرنا — عمولتنا هي الفرق
+   4) حفظ الأوردر وبيانات العميل في قاعدة البيانات (من السيرفر
       مش من المتصفح — عشان الحفظ ما يضيعش لو العميل قفل الصفحة)
-   4) إرسال حدث الشراء لميتا
-   5) إيميل لصاحب المتجر + إيميل تأكيد للعميل
+   5) إرسال حدث الشراء لميتا
+   6) إيميل لصاحب المتجر + إيميل تأكيد للعميل
    ============================================================ */
 export async function POST(request: Request) {
   /* ---------- 1) حدّ الطلبات ---------- */
@@ -62,10 +66,19 @@ export async function POST(request: Request) {
   const orderId = makeOrderId()
   const placedAt = new Date()
 
-  /* ---------- 3) الحفظ في قاعدة البيانات ---------- */
-  const account = await saveToDatabase(orderId, order)
+  /* ---------- 3) إرسال الأوردر لفيندور ----------
+     بيتعمل الأول عشان نحفظ رقمه مع الأوردر عندنا. لو فشل،
+     الأوردر بيكمّل عادي وبنسجّل السبب عشان يبان في اللوحة. */
+  const vendoor = await sendOrderToVendoor(order)
 
-  /* ---------- 4) ميتا ----------
+  if (!vendoor.ok && !vendoor.skipped) {
+    console.error('فشل إرسال الأوردر لفيندور:', vendoor.error)
+  }
+
+  /* ---------- 4) الحفظ في قاعدة البيانات ---------- */
+  const account = await saveToDatabase(orderId, order, vendoor)
+
+  /* ---------- 5) ميتا ----------
      بيتبعت من السيرفر عشان يوصل حتى لو العميل عنده مانع إعلانات.
      نفس metaEventId اللي المتصفح بعت بيه، فميتا بتحسبهم حدث واحد.
      مش بننتظره ولا بنوقف الأوردر لو فشل. */
@@ -91,7 +104,7 @@ export async function POST(request: Request) {
     sourceUrl: request.headers.get('referer') ?? `${site.url}/checkout`,
   })
 
-  /* ---------- 5) الإيميلات ---------- */
+  /* ---------- 6) الإيميلات ---------- */
   const emailInput = { orderId, ...order, placedAt }
 
   const apiKey = process.env.RESEND_API_KEY
@@ -190,13 +203,8 @@ export async function POST(request: Request) {
    ------------------------------------------------------------ */
 async function saveToDatabase(
   orderId: string,
-  order: {
-    customer: CustomerInfo
-    items: CartItem[]
-    subtotal: number
-    shipping: number
-    total: number
-  }
+  order: BuiltOrder,
+  vendoor: Awaited<ReturnType<typeof sendOrderToVendoor>>
 ): Promise<{ id: string; email?: string } | null> {
   if (!isSupabaseConfigured) return null
 
@@ -218,6 +226,10 @@ async function saveToDatabase(
       subtotal: order.subtotal,
       shipping: order.shipping,
       total: order.total,
+      vendoor_order_code: vendoor.ok ? vendoor.code : null,
+      vendoor_status: vendoor.ok ? 'sent' : vendoor.skipped ? 'skipped' : 'failed',
+      vendoor_error: vendoor.ok ? null : vendoor.error,
+      vendoor_sent_at: vendoor.ok ? new Date().toISOString() : null,
     })
 
     if (orderError) {

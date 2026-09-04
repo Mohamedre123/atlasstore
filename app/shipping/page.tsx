@@ -1,13 +1,19 @@
 import type { Metadata } from 'next'
 import { InfoPage } from '@/components/layout/info-page'
-import { DELIVERY_WINDOW, SHIPPING_METHOD_NAME, governorates } from '@/data/locations'
+import { DELIVERY_WINDOW, SHIPPING_METHOD_NAME } from '@/data/locations'
+import { getGovernorates } from '@/lib/locations'
 
 export const metadata: Metadata = {
   title: 'الشحن والتوصيل',
   description: `${SHIPPING_METHOD_NAME} — توصيل لكل محافظات مصر، والدفع عند الاستلام.`,
 }
 
-export default function ShippingPage() {
+export const revalidate = 3600
+
+export default async function ShippingPage() {
+  /* المحافظات والمراكز من فيندور — نفس اللي بيظهر في إتمام الطلب */
+  const governorates = await getGovernorates()
+
   return (
     <InfoPage
       eyebrow="Shipping & Delivery"
@@ -52,7 +58,7 @@ export default function ShippingPage() {
           paragraphs: [
             'بنوصّل لكل محافظات مصر الـ٢٧ بنفس السعر. اختار محافظتك ومركزك في صفحة إتمام الطلب:',
           ],
-          bullets: governorates.map((g) => `${g.name} — ${g.areas.length} مركز/حي`),
+          bullets: governorates.map((g) => `${g.name} — ${g.cities.length} مركز/حي`),
         },
         {
           heading: 'إزاي بيتم التأكيد',

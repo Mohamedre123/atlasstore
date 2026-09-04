@@ -14,13 +14,7 @@ import {
   TruckIcon,
   WhatsAppIcon,
 } from '@/components/ui/icons'
-import {
-  DELIVERY_WINDOW,
-  SHIPPING_FLAT_RATE,
-  SHIPPING_METHOD_NAME,
-  getAreas,
-  governorates,
-} from '@/data/locations'
+import { DELIVERY_WINDOW, SHIPPING_METHOD_NAME } from '@/data/locations'
 import { site } from '@/data/site'
 import { useCart } from '@/lib/cart'
 import {
@@ -58,7 +52,9 @@ function stripEmpty(obj: Partial<CustomerInfo>): Partial<CustomerInfo> {
   ) as Partial<CustomerInfo>
 }
 
-export function CheckoutFlow() {
+type GovOption = { id: number; name: string; shipping: number }
+
+export function CheckoutFlow({ governorates }: { governorates: GovOption[] }) {
   const router = useRouter()
   const { items, subtotal, count, ready, clearCart } = useCart()
 
@@ -69,11 +65,47 @@ export function CheckoutFlow() {
   const [sending, setSending] = useState(false)
   const [prefilled, setPrefilled] = useState(false)
 
-  const areas = useMemo(() => getAreas(form.governorate), [form.governorate])
+  /* المراكز بتتحمّل لما يختار محافظة — عند فيندور ٢٧٢٧ مركز
+     ومش منطقي نبعتهم كلهم للمتصفح مع الصفحة */
+  const [areas, setAreas] = useState<string[]>([])
+  const [areasLoading, setAreasLoading] = useState(false)
+
+  const gov = useMemo(
+    () => governorates.find((g) => g.name === form.governorate),
+    [governorates, form.governorate]
+  )
 
   /* الشحن = null قبل اختيار المحافظة عشان الخانة تفضل فاضية */
-  const shipping = form.governorate ? SHIPPING_FLAT_RATE : null
+  const shipping = gov ? gov.shipping : null
   const total = subtotal + (shipping ?? 0)
+
+  useEffect(() => {
+    if (!form.governorate) {
+      setAreas([])
+      return
+    }
+
+    let alive = true
+    setAreasLoading(true)
+
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/locations?gov=${encodeURIComponent(form.governorate)}`
+        )
+        const json = (await res.json()) as { cities: string[] }
+        if (alive) setAreas(json.cities ?? [])
+      } catch {
+        if (alive) setAreas([])
+      } finally {
+        if (alive) setAreasLoading(false)
+      }
+    })()
+
+    return () => {
+      alive = false
+    }
+  }, [form.governorate])
 
   /* سلة فاضية → رجوع للمتجر */
   useEffect(() => {
@@ -459,7 +491,7 @@ export function CheckoutFlow() {
                   >
                     <option value="">اختار المحافظة</option>
                     {governorates.map((g) => (
-                      <option key={g.name} value={g.name}>
+                      <option key={g.id} value={g.name}>
                         {g.name}
                       </option>
                     ))}
@@ -474,12 +506,16 @@ export function CheckoutFlow() {
                   <select
                     id="area"
                     value={form.area}
-                    disabled={!form.governorate}
+                    disabled={!form.governorate || areasLoading}
                     onChange={(e) => update('area', e.target.value)}
                     className={`field ${errors.area ? 'field-error' : ''}`}
                   >
                     <option value="">
-                      {form.governorate ? 'اختار المركز' : 'اختار المحافظة الأول'}
+                      {!form.governorate
+                        ? 'اختار المحافظة الأول'
+                        : areasLoading
+                          ? 'بنحمّل المراكز...'
+                          : 'اختار المركز'}
                     </option>
                     {areas.map((a) => (
                       <option key={a} value={a}>
@@ -533,7 +569,7 @@ export function CheckoutFlow() {
               <LockedOption
                 icon={<TruckIcon className="h-4 w-4" />}
                 title={SHIPPING_METHOD_NAME}
-                price={formatPrice(SHIPPING_FLAT_RATE)}
+                price={shipping === null ? undefined : formatPrice(shipping)}
                 text={`مندوبنا بيوصّلك بنفسه لكل محافظات مصر خلال ${DELIVERY_WINDOW}.`}
               />
 

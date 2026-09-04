@@ -1,13 +1,13 @@
-import { SHIPPING_FLAT_RATE, isValidArea, isValidGovernorate } from '@/data/locations'
 import { getProducts } from './catalog'
 import { isValidEgyptPhone, normalizeEgyptPhone } from './format'
+import { findGovernorate } from './locations'
 import type { CartItem, CustomerInfo } from './types'
 
 /* ============================================================
    بناء الأوردر والتحقق منه — على السيرفر
    ------------------------------------------------------------
    كل حاجة بتتحسب هنا من بيانات السيرفر نفسها: الأسعار من
-   data/products، والشحن من data/locations. المتصفح بيبعت
+   قاعدة البيانات، والمحافظات والشحن من فيندور. المتصفح بيبعت
    الاختيارات بس، فمحدش يقدر يغيّر سعر ولا يضيف منتج مش موجود.
    ============================================================ */
 
@@ -17,6 +17,9 @@ export type BuiltOrder = {
   subtotal: number
   shipping: number
   total: number
+  /** أرقام فيندور — بيتبعتوا لهم مع الأوردر */
+  governorateId: number
+  cityId: number
 }
 
 type Result = { ok: true; order: BuiltOrder } | { ok: false; error: string }
@@ -41,11 +44,15 @@ export async function buildOrder(input: {
 
   if (fullName.length < 3) return { ok: false, error: 'الاسم غير صحيح' }
   if (!isValidEgyptPhone(phone)) return { ok: false, error: 'رقم الموبايل غير صحيح' }
-  if (!isValidGovernorate(governorate))
-    return { ok: false, error: 'المحافظة غير صحيحة' }
-  if (!isValidArea(governorate, area))
-    return { ok: false, error: 'المركز المختار مش تابع للمحافظة دي' }
   if (address.length < 10) return { ok: false, error: 'العنوان ناقص' }
+
+  /* المحافظة والمركز بيتأكدوا من قايمة فيندور نفسها — كده
+     الأرقام اللي بنبعتها لهم مضمون إنها صح */
+  const gov = await findGovernorate(governorate)
+  if (!gov) return { ok: false, error: 'المحافظة غير صحيحة' }
+
+  const city = gov.cities.find((c) => c.name === area)
+  if (!city) return { ok: false, error: 'المركز المختار مش تابع للمحافظة دي' }
 
   /* ---------- المنتجات ---------- */
   const list = input.items
@@ -93,7 +100,7 @@ export async function buildOrder(input: {
   }
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0)
-  const shipping = SHIPPING_FLAT_RATE
+  const shipping = gov.shipping
 
   const customer: CustomerInfo = {
     fullName,
@@ -110,7 +117,15 @@ export async function buildOrder(input: {
 
   return {
     ok: true,
-    order: { customer, items, subtotal, shipping, total: subtotal + shipping },
+    order: {
+      customer,
+      items,
+      subtotal,
+      shipping,
+      total: subtotal + shipping,
+      governorateId: gov.id,
+      cityId: city.id,
+    },
   }
 }
 
