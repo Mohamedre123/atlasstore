@@ -176,6 +176,49 @@ function EmptyState() {
 
 /* ------------------------------------------------------------ */
 
+/* ------------------------------------------------------------
+   بيظهر فين في الصفحة الرئيسية — شارة صغيرة في صف المنتج
+   عشان تعرف من غير ما تفتح الصفحة الرئيسية وتدوّر
+   ------------------------------------------------------------ */
+function ShowsIn({
+  sections,
+  categoryName,
+}: {
+  sections: HomeSection[] | null
+  categoryName?: string
+}) {
+  const chosen = sections ?? []
+
+  if (chosen.length === 0) {
+    return (
+      <span
+        title="بيظهر في صف قسمه، وفي العروض لو عليه سعر قبل الخصم"
+        className="rounded-full bg-white/6 px-2 py-0.5 text-[10px] font-bold text-mist"
+      >
+        تلقائي
+      </span>
+    )
+  }
+
+  const label = (key: HomeSection) =>
+    key === 'category' && categoryName
+      ? categoryName
+      : (HOME_SECTIONS.find((s) => s.key === key)?.label ?? key)
+
+  return (
+    <>
+      {chosen.map((key) => (
+        <span
+          key={key}
+          className="rounded-full bg-brand-500/15 px-2 py-0.5 text-[10px] font-bold text-brand-300"
+        >
+          {label(key)}
+        </span>
+      ))}
+    </>
+  )
+}
+
 function ProductRow({
   row,
   categories,
@@ -261,6 +304,7 @@ function ProductRow({
               </span>
             )}
             {categoryName && <span>· {categoryName}</span>}
+            <ShowsIn sections={row.home_sections} categoryName={categoryName} />
             {!row.is_active && (
               <span className="rounded-full bg-white/8 px-2 py-0.5 text-[9.5px]">
                 مخفي
@@ -472,30 +516,44 @@ function ProductRow({
                   </p>
 
                   <div className="mt-3.5 grid gap-2.5 sm:grid-cols-2">
-                    {HOME_SECTIONS.map((section) => (
-                      <label
-                        key={section.key}
-                        className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-white/8 px-3 py-2.5 transition-colors hover:border-brand-500/40"
-                      >
-                        <input
-                          type="checkbox"
-                          name="home_sections"
-                          value={section.key}
-                          defaultChecked={(row.home_sections ?? []).includes(
-                            section.key
-                          )}
-                          className="mt-0.5 h-4 w-4 shrink-0 accent-[#12c9ee]"
-                        />
-                        <span className="min-w-0">
-                          <span className="block text-[12.5px] font-bold">
-                            {section.label}
+                    {HOME_SECTIONS.map((section) => {
+                      /* «صف قسمه» بيتسمّى باسم القسم الحقيقي عشان
+                         تبقى شايف هيروح فين بالظبط */
+                      const isCategory = section.key === 'category'
+                      const off = isCategory && !categoryName
+
+                      return (
+                        <label
+                          key={section.key}
+                          className={`flex items-start gap-2.5 rounded-xl border border-white/8 px-3 py-2.5 transition-colors ${
+                            off
+                              ? 'cursor-not-allowed opacity-50'
+                              : 'cursor-pointer hover:border-brand-500/40'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            name="home_sections"
+                            value={section.key}
+                            disabled={off}
+                            defaultChecked={(row.home_sections ?? []).includes(
+                              section.key
+                            )}
+                            className="mt-0.5 h-4 w-4 shrink-0 accent-[#12c9ee]"
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-[12.5px] font-bold">
+                              {isCategory && categoryName
+                                ? `صف «${categoryName}»`
+                                : section.label}
+                            </span>
+                            <span className="mt-0.5 block text-[10.5px] leading-relaxed text-mist">
+                              {off ? 'اختار القسم الأول' : section.hint}
+                            </span>
                           </span>
-                          <span className="mt-0.5 block text-[10.5px] leading-relaxed text-mist">
-                            {section.hint}
-                          </span>
-                        </span>
-                      </label>
-                    ))}
+                        </label>
+                      )
+                    })}
                   </div>
                 </div>
               </div>

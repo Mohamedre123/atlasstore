@@ -29,17 +29,23 @@ export default async function HomePage() {
     getSaleProducts(4),
   ])
 
-  /* صف لكل قسم رئيسي فيه منتجات — بيتولّد من الأقسام نفسها
-     فأي قسم جديد بيظهر هنا لوحده */
+  /**
+   * صف لكل قسم رئيسي فيه منتجات — بيتولّد من الأقسام نفسها
+   * من غير أي حد أقصى، فأي قسم جديد تعمله (بناطيل مثلًا)
+   * بيبقى ليه صف في الصفحة الرئيسية لوحده.
+   */
   const rails = await Promise.all(
-    tree.slice(0, 4).map(async (category, i) => ({
+    tree.map(async (category) => ({
       category,
-      index: String(i + 4).padStart(2, '0'),
       items: await getCategoryRail(category.slug),
     }))
   )
 
   const withItems = rails.filter((r) => r.items.length > 0)
+
+  /* أرقام السكاشن بتكمّل على بعض مهما زاد عدد الأقسام */
+  let step = 3
+  const nextIndex = () => String(++step).padStart(2, '0')
 
   return (
     <>
@@ -88,7 +94,7 @@ export default async function HomePage() {
       {withItems.map((rail) => (
         <Band key={rail.category.slug} className="!pt-14 lg:!pt-20">
           <SectionHead
-            index={rail.index}
+            index={nextIndex()}
             eyebrow={rail.category.slug}
             title={rail.category.name}
             description={rail.category.description}
@@ -108,7 +114,7 @@ export default async function HomePage() {
       {onSale.length > 0 && (
         <Band className="!pt-14 lg:!pt-20">
           <SectionHead
-            index="07"
+            index={nextIndex()}
             eyebrow="On Sale"
             title="عليها خصم دلوقتي"
             description="نفس الخامة ونفس القصّة — بسعر أقل."
@@ -123,7 +129,7 @@ export default async function HomePage() {
           ============================================================ */}
       <Band className="!pt-14 lg:!pt-20">
         <SectionHead
-          index="08"
+          index={nextIndex()}
           eyebrow="How It Works"
           title="الطلب في ٣ خطوات"
           description="من غير بطاقة ائتمان ولا خطوات معقّدة — بتدفع لما يوصلك."
@@ -136,7 +142,7 @@ export default async function HomePage() {
           09 — أسئلة + تواصل
           ============================================================ */}
       <Band className="!pt-14 lg:!pt-20">
-        <SectionHead index="09" eyebrow="Questions" title="أسئلة بتتسأل كتير" />
+        <SectionHead index={nextIndex()} eyebrow="Questions" title="أسئلة بتتسأل كتير" />
         <Closing />
       </Band>
 
